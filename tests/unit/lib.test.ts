@@ -158,7 +158,7 @@ describe("vCard", () => {
 });
 
 describe("conversation starters", () => {
-  const profile = { fullName: "Amara Okafor", title: "Product Designer", organization: "Studio North", networkingGoals: ["collaborators", "mentees"] as const };
+  const profile = { fullName: "Amara Okafor", title: "Product Designer", organization: "Studio North", networkingGoals: ["collaborators", "mentors"] as const };
   const sparse = { fullName: "Lee", title: null, organization: null, networkingGoals: [] };
 
   it("produces several clean drafts for every intent, with and without profile data", () => {

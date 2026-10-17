@@ -3,7 +3,6 @@ export const NETWORKING_GOALS = [
   { value: "collaborators", label: "Collaboration" },
   { value: "clients", label: "Client work" },
   { value: "mentors", label: "Mentorship" },
-  { value: "mentees", label: "Mentoring others" },
   { value: "jobs", label: "Job opportunities" },
   { value: "hiring", label: "Hiring" },
   { value: "investors", label: "Investment" },
@@ -40,6 +39,10 @@ export type ContactType = (typeof CONTACT_TYPES)[number]["value"];
 
 export function socialLabel(platform: string) {
   return SOCIAL_PLATFORMS.find((p) => p.value === platform)?.label ?? "Link";
+}
+
+export function isOfferedGoal(goal: string): goal is NetworkingGoal {
+  return NETWORKING_GOALS.some((g) => g.value === goal);
 }
 
 export function goalLabel(goal: string) {

@@ -52,9 +52,7 @@ const TEMPLATES: Record<StarterIntent, Template[]> = {
   ],
   learn: [
     (c) =>
-      `Hi ${c.name}, ${c.work ? `I've been reading about ${c.work} and ` : ""}I'd really value your perspective. ${
-        c.goals.has("mentees") ? "I saw you're open to mentoring — " : ""
-      }Would you be open to a short conversation sometime?`,
+      `Hi ${c.name}, ${c.work ? `I've been reading about ${c.work} and ` : ""}I'd really value your perspective. Would you be open to a short conversation sometime?`,
     (c) =>
       `Hi ${c.name}, I'm trying to grow in a similar direction and would appreciate learning how you approach your work. Do you have time for a quick call in the coming weeks?`,
     (c) =>

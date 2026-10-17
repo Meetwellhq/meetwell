@@ -4,7 +4,7 @@ import { SocialIcon } from "@/components/icons/social-icon";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonClass } from "@/components/ui/button";
 import { APP_NAME } from "@/lib/config";
-import { goalLabel, socialLabel } from "@/lib/profiles/constants";
+import { goalLabel, isOfferedGoal, socialLabel } from "@/lib/profiles/constants";
 import { contactActions, displayUrl, type ContactAction } from "@/lib/profiles/links";
 import type { PublicProfile } from "@/lib/profiles/types";
 import { ConversationStarter } from "./conversation-starter";
@@ -37,7 +37,7 @@ export function ProfileView({ profile, preview = false }: Props) {
   const actions = allActions.filter((a) => a.kind !== "website");
   const email = profile.contacts.find((c) => c.type === "email")?.value ?? null;
   // One networking goal per card (older cards may have saved several; show the first).
-  const goal = profile.networkingGoals[0] ?? null;
+  const goal = profile.networkingGoals.find(isOfferedGoal) ?? null;
   const subtitle = [profile.title, profile.organization].filter(Boolean).join(" · ");
 
   return (

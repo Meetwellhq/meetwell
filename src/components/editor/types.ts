@@ -1,4 +1,4 @@
-import type { ContactType, NetworkingGoal, SocialPlatform } from "@/lib/profiles/constants";
+import { isOfferedGoal, type ContactType, type NetworkingGoal, type SocialPlatform } from "@/lib/profiles/constants";
 import type { OwnProfile, PublicProfile } from "@/lib/profiles/types";
 
 export type FormValues = {
@@ -59,7 +59,8 @@ export function toFormValues(profile: OwnProfile | null, email: string | null): 
     bio: profile.bio ?? "",
     websiteUrl: profile.websiteUrl ?? "",
     websiteIsPublic: profile.websiteIsPublic,
-    networkingGoals: profile.networkingGoals.slice(0, 1),
+    // Drop goals no longer offered (e.g. "mentees") so saving still validates.
+    networkingGoals: profile.networkingGoals.filter(isOfferedGoal).slice(0, 1),
     contacts: withDefaultContacts(
       profile.contacts.map((c) => ({ type: c.type, value: c.value, label: c.label ?? "", isPublic: c.isPublic })),
       // Never re-add the account email to a card whose owner removed it.

@@ -247,28 +247,28 @@ export function SocialSection({ values, errors, set }: SectionProps) {
 }
 
 export function GoalsSection({ values, set }: SectionProps) {
-  // One goal only: picking another replaces it; tapping the selected one clears it.
-  const choose = (goal: (typeof NETWORKING_GOALS)[number]["value"]) =>
-    set("networkingGoals", values.networkingGoals[0] === goal ? [] : [goal]);
-
+  const current = values.networkingGoals[0] ?? "";
   return (
-    <fieldset className="flex flex-col gap-4">
-      <legend className="text-sm text-ink-2">
-        What are you open to right now? Pick one. It shows on your card and helps visitors write a relevant first message.
-      </legend>
-      <div role="radiogroup" aria-label="Networking goal" className="flex flex-wrap gap-2">
-        {NETWORKING_GOALS.map((g) => {
-          const active = values.networkingGoals[0] === g.value;
-          return (
-            <button key={g.value} type="button" role="radio" aria-checked={active} onClick={() => choose(g.value)}
-              className={cn("inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm transition-colors",
-                active ? "border-accent bg-accent-soft text-accent" : "border-border-strong text-ink-2 hover:text-ink")}>
-              {active && <Check className="size-4" aria-hidden />}
-              {g.label}
-            </button>
-          );
-        })}
-      </div>
-    </fieldset>
+    <Field
+      label="What are you open to right now?"
+      optional
+      hint="Shows on your card as “Open to …” and helps visitors write a relevant first message."
+    >
+      {({ id, describedBy }) => (
+        <Select
+          id={id}
+          aria-describedby={describedBy}
+          value={current}
+          onChange={(e) =>
+            set("networkingGoals", e.target.value ? [e.target.value as (typeof NETWORKING_GOALS)[number]["value"]] : [])
+          }
+        >
+          <option value="">No goal</option>
+          {NETWORKING_GOALS.map((g) => (
+            <option key={g.value} value={g.value}>{g.label}</option>
+          ))}
+        </Select>
+      )}
+    </Field>
   );
 }
