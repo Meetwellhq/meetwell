@@ -7,6 +7,14 @@ import { limitByClient } from "../rate-limit";
 import { createClient } from "../supabase/server";
 import { emailSchema, fieldErrors, passwordSchema } from "../validation";
 
+// Per-IP limits. Kept generous because attendees at an event often share one
+// Wi-Fi network (one IP); Supabase Auth applies its own limits as well.
+const LIMITS = {
+  signUp: { max: 30, windowMs: 10 * 60_000 },
+  signIn: { max: 60, windowMs: 10 * 60_000 },
+  reset: { max: 20, windowMs: 15 * 60_000 },
+};
+
 export type AuthFormState = {
   error?: string;
   message?: string;
@@ -24,7 +32,7 @@ const credentialsSchema = z.object({ email: emailSchema, password: passwordSchem
 
 export async function signUp(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "");
-  if (!(await limitByClient("sign-up", 5, 10 * 60_000))) {
+  if (!(await limitByClient("sign-up", LIMITS.signUp.max, LIMITS.signUp.windowMs))) {
     return { error: "Too many attempts. Please wait a few minutes and try again.", email };
   }
   const parsed = credentialsSchema.safeParse({ email, password: formData.get("password") });
@@ -52,7 +60,7 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
 
 export async function signIn(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "");
-  if (!(await limitByClient("sign-in", 10, 10 * 60_000))) {
+  if (!(await limitByClient("sign-in", LIMITS.signIn.max, LIMITS.signIn.windowMs))) {
     return { error: "Too many attempts. Please wait a few minutes and try again.", email };
   }
   const parsed = z
@@ -79,7 +87,7 @@ export async function signOut() {
 
 export async function requestPasswordReset(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "");
-  if (!(await limitByClient("reset", 5, 15 * 60_000))) {
+  if (!(await limitByClient("reset", LIMITS.reset.max, LIMITS.reset.windowMs))) {
     return { error: "Too many requests. Please wait a few minutes and try again.", email };
   }
   const parsed = emailSchema.safeParse(email);
