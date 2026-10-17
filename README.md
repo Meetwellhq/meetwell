@@ -38,6 +38,14 @@ A web MVP where people create a digital networking card, share it as a QR code, 
    npm run dev
    ```
 
+### Email templates (recommended)
+Supabase's default links only finish signing in on the browser that started sign-up, so they fail when people open the email on another device or inside the Gmail/Outlook app. Switch to `token_hash` links, which work anywhere. In *Authentication → Emails → Templates*, replace the link URL:
+
+- **Confirm signup:** `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email`
+- **Reset password:** `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery`
+
+(`RedirectTo` already contains `/auth/callback?next=…` from the app.)
+
 ### Optional: event retention
 Engagement events are meant to be kept for 13 months. With the `pg_cron` extension enabled:
 ```sql
