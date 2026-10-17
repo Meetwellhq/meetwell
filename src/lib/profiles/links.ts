@@ -63,34 +63,6 @@ export function contactActions(profile: Pick<PublicProfile, "contacts" | "websit
   return actions;
 }
 
-/**
- * Android Chrome downloads .vcf files instead of opening them. This intent
- * opens the Contacts app's "new contact" screen pre-filled instead, falling
- * back to the vCard URL if no app handles it.
- * Extras follow ContactsContract.Intents.Insert.
- */
-export function androidSaveContactIntent(
-  profile: Pick<PublicProfile, "fullName" | "title" | "organization" | "contacts">,
-  fallbackUrl: string,
-) {
-  const email = profile.contacts.find((c) => c.type === "email")?.value;
-  const phone = profile.contacts.find((c) => c.type === "phone")?.value;
-  const whatsapp = profile.contacts.find((c) => c.type === "whatsapp")?.value;
-  const extras: [string, string | null | undefined][] = [
-    ["name", profile.fullName],
-    ["email", email],
-    ["phone", phone ?? whatsapp],
-    ["secondary_phone", phone && whatsapp && whatsapp !== phone ? whatsapp : null],
-    ["company", profile.organization],
-    ["job_title", profile.title],
-    ["browser_fallback_url", fallbackUrl],
-  ];
-  const parts = extras
-    .filter(([, v]) => v)
-    .map(([k, v]) => `S.${k}=${encodeURIComponent(v as string)}`);
-  return `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir/raw_contact;${parts.join(";")};end`;
-}
-
 export function mailtoWithBody(email: string, subject: string, body: string) {
   const params = new URLSearchParams({ subject, body });
   // mailto expects %20 rather than + for spaces.
