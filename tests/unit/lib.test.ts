@@ -60,6 +60,13 @@ describe("profile schema", () => {
     expect(r.websiteUrl).toBe("https://amara.design/");
     expect(r.bio).toBeNull();
   });
+  it("requires a country code for WhatsApp", () => {
+    const wa = (value: string) =>
+      profileInputSchema.safeParse({ ...baseInput, contacts: [{ type: "whatsapp", value, label: "", isPublic: true }] });
+    expect(wa("0803 123 4567").success).toBe(false);
+    expect(wa("+234 803 123 4567").data?.contacts[0].value).toBe("+2348031234567");
+    expect(wa("00234 803 123 4567").data?.contacts[0].value).toBe("+2348031234567");
+  });
   it("does not require a phone number", () => {
     expect(profileInputSchema.safeParse({ ...baseInput, contacts: [] }).success).toBe(true);
   });

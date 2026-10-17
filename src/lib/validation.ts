@@ -98,7 +98,17 @@ const contactSchema = z
       }
       return { ...c, value: parsed.data } as const;
     }
-    const phone = normalizePhone(c.value);
+    // WhatsApp chat links (wa.me) only work with the full international number.
+    const raw = c.type === "whatsapp" ? c.value.trim().replace(/^00/, "+") : c.value;
+    if (c.type === "whatsapp" && !raw.startsWith("+")) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Start with your country code, e.g. +234 803 123 4567",
+        path: ["value"],
+      });
+      return z.NEVER;
+    }
+    const phone = normalizePhone(raw);
     if (!phone) {
       ctx.addIssue({
         code: "custom",

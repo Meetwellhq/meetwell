@@ -125,7 +125,7 @@ export function ContactSection({ values, errors, set }: SectionProps) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm text-ink-2">
-        Add the ways people can reach you. Only details switched to <strong className="font-medium text-ink">Public</strong> appear on your card. A phone number is optional.
+        Add the ways people can reach you. Only details switched to <strong className="font-medium text-ink">Public</strong> appear on your card. Phone and WhatsApp are optional.
       </p>
       {errors.contacts && <p className="text-sm text-danger">{errors.contacts}</p>}
       <ul className="flex flex-col gap-3">
@@ -139,7 +139,7 @@ export function ContactSection({ values, errors, set }: SectionProps) {
               </div>
               <div className="flex-1">
                 <Input
-                  aria-label={`${c.type === "email" ? "Email address" : "Phone number"}`}
+                  aria-label={c.type === "email" ? "Email address" : c.type === "whatsapp" ? "WhatsApp number" : "Phone number"}
                   invalid={!!errors[`contacts.${i}.value`]}
                   type={c.type === "email" ? "email" : "tel"}
                   inputMode={c.type === "email" ? "email" : "tel"}
@@ -147,7 +147,11 @@ export function ContactSection({ values, errors, set }: SectionProps) {
                   value={c.value}
                   onChange={(e) => update(i, { value: e.target.value })}
                 />
-                {errors[`contacts.${i}.value`] && <p className="mt-1 text-sm text-danger">{errors[`contacts.${i}.value`]}</p>}
+                {errors[`contacts.${i}.value`] ? (
+                  <p className="mt-1 text-sm text-danger">{errors[`contacts.${i}.value`]}</p>
+                ) : c.type === "whatsapp" ? (
+                  <p className="mt-1 text-sm text-ink-3">Include your country code. Visitors tap to open a chat with you in WhatsApp.</p>
+                ) : null}
               </div>
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -172,6 +176,14 @@ export function ContactSection({ values, errors, set }: SectionProps) {
           <Button variant="secondary" size="sm" icon={<Plus className="size-4" />}
             onClick={() => set("contacts", [...values.contacts, { type: "phone", value: "", label: "", isPublic: false }])}>
             Add phone
+          </Button>
+          <Button variant="secondary" size="sm" icon={<SocialIcon platform="whatsapp" className="size-4" />}
+            onClick={() => {
+              // Most people use their mobile number for WhatsApp, so start from it.
+              const phone = values.contacts.find((c) => c.type === "phone" && c.value.trim())?.value ?? "";
+              set("contacts", [...values.contacts, { type: "whatsapp", value: phone, label: "", isPublic: true }]);
+            }}>
+            Add WhatsApp
           </Button>
         </div>
       )}
