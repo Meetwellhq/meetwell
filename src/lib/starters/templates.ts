@@ -98,7 +98,7 @@ const TEMPLATES: Record<StarterIntent, Template[]> = {
     (c) =>
       `Hi ${c.name}, just reaching out to connect. Always happy to know more people ${c.work ? "doing interesting work" : "around here"} — let's keep in touch.`,
     (c) =>
-      `Hey ${c.name}, saying hi! ${c.goals.has("friends") ? "I saw you're open to meeting new people too. " : ""}Hope we can stay in touch.`,
+      `Hey ${c.name}, saying hi! Hope we can stay in touch.`,
   ],
 };
 

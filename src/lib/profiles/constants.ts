@@ -5,7 +5,6 @@ export const NETWORKING_GOALS = [
   { value: "jobs", label: "Job opportunities" },
   { value: "hiring", label: "Hiring" },
   { value: "investors", label: "Investment" },
-  { value: "friends", label: "Friendship" },
 ] as const;
 
 export type NetworkingGoal = (typeof NETWORKING_GOALS)[number]["value"];
