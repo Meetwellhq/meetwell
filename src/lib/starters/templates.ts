@@ -43,7 +43,7 @@ const TEMPLATES: Record<StarterIntent, Template[]> = {
   collaborate: [
     (c) =>
       `Hi ${c.name}, I came across your profile and ${c.work ? `${c.work} caught my attention` : "liked what I saw"}. ${
-        c.goals.has("collaborators") ? "I noticed you're open to collaboration — " : ""
+        c.goals.has("collaborators") ? "I noticed you're open to networking — " : ""
       }I'd love to explore whether there's a project we could work on together. Would you be open to a quick chat?`,
     (c) =>
       `Hi ${c.name}, I'm interested in ${c.focus} and think there could be a good fit for a collaboration. Could we find 20 minutes to compare notes?`,
@@ -94,7 +94,7 @@ const TEMPLATES: Record<StarterIntent, Template[]> = {
     (c) =>
       `Hi ${c.name}, just reaching out to connect. Always happy to know more people ${c.work ? "doing interesting work" : "around here"} — let's keep in touch.`,
     (c) =>
-      `Hey ${c.name}, saying hi! ${c.goals.has("networking") ? "I saw you're open to networking, so I wanted to connect. " : ""}Hope we can stay in touch.`,
+      `Hey ${c.name}, saying hi! ${c.goals.has("collaborators") ? "I saw you're open to networking, so I wanted to connect. " : ""}Hope we can stay in touch.`,
   ],
 };
 

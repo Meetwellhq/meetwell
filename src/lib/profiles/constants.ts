@@ -1,9 +1,9 @@
 export const NETWORKING_GOALS = [
   // Labels read naturally after "Open to …" on the card. Values are stored and must not change.
-  { value: "collaborators", label: "Collaboration" },
+  // Stored as "collaborators" (the old Collaboration option), shown as Networking.
+  { value: "collaborators", label: "Networking" },
   { value: "mentors", label: "Mentorship" },
   { value: "jobs", label: "Job opportunities" },
-  { value: "networking", label: "Networking" },
   // Stored as "investors" (the old Investment option), shown as Funding.
   { value: "investors", label: "Funding" },
 ] as const;

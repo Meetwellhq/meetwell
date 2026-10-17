@@ -89,9 +89,9 @@ describe("profile schema", () => {
     ).toBe(true);
   });
   it("allows only one networking goal", () => {
-    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["networking"] }).success).toBe(true);
+    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["collaborators"] }).success).toBe(true);
     expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: [] }).success).toBe(true);
-    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["networking", "mentors"] }).success).toBe(false);
+    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["collaborators", "mentors"] }).success).toBe(false);
   });
   it("rejects unknown goals and platforms", () => {
     expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["world-domination"] }).success).toBe(false);
@@ -178,7 +178,7 @@ describe("conversation starters", () => {
   it("uses profile context", () => {
     const [d] = templateStarters("collaborate", { ...profile, networkingGoals: ["collaborators"] });
     expect(d).toContain("Product Designer at Studio North");
-    expect(d).toContain("open to collaboration");
+    expect(d).toContain("open to networking");
   });
 
   it("never claims a meeting unless the visitor chose follow-up", () => {
