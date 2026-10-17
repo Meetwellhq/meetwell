@@ -52,10 +52,10 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         {deleted && <Alert tone="success">Your account and card have been deleted.</Alert>}
 
         {/* Hero */}
-        <Panel className="overflow-hidden px-0 pb-0 text-center sm:px-0 lg:px-0">
+        <Panel className="overflow-hidden border-0! px-0 pb-0 text-center sm:px-0 lg:px-0">
           <div className="px-5 sm:px-10">
             <h1 className="mx-auto max-w-4xl font-display text-[3.25rem] leading-[0.98] tracking-tight text-ink sm:text-7xl lg:text-[5.5rem]">
-              Meet someone. Make it a <span className="italic text-accent">connection.</span>
+              Meet someone. <span className="font-bold text-accent">Make it a connection.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-ink-2">
               Your networking card, contact details and a ready-to-send first message — all in one scan. So the people
