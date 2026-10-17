@@ -1,6 +1,6 @@
 import { Briefcase, GraduationCap, Lightbulb, Rocket, Ticket } from "lucide-react";
 import { CardPreview, StarterPreview } from "@/components/marketing/card-preview";
-import { Feature, HighlightsStrip, Panel, Pill, PrivacyVisual, ScanVisual } from "@/components/marketing/landing";
+import { Feature, HighlightsStrip, Panel, Pill, ScanVisual } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
@@ -24,7 +24,6 @@ const highlights = [
   "No app needed to scan",
   "Works with any phone camera",
   "Save contact in one tap",
-  "You choose what's public",
   "Update anytime — your QR code never changes",
   "Ready-to-send first messages",
 ];
@@ -119,27 +118,6 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               </div>
             }
             visualClassName="bg-clay"
-          />
-        </Panel>
-
-        {/* Privacy */}
-        <Panel id="privacy">
-          <Feature
-            label="Privacy & control"
-            title={<>You decide what people see.</>}
-            body={
-              <p>
-                Every contact detail has its own public/private switch. Private details never reach your public page or
-                the contact file people save. Unpublish or delete your card anytime.
-              </p>
-            }
-            action={
-              <a href="/privacy" className={buttonClass({ variant: "secondary" })}>
-                Read the privacy notice
-              </a>
-            }
-            visual={<PrivacyVisual />}
-            visualClassName="bg-accent"
           />
         </Panel>
 

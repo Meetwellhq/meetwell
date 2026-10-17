@@ -10,9 +10,6 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
           <a href="#how-it-works" className="hidden rounded-full px-3 py-2 text-sm text-ink-2 hover:text-ink md:inline">
             How it works
           </a>
-          <a href="#privacy" className="hidden rounded-full px-3 py-2 text-sm text-ink-2 hover:text-ink md:inline">
-            Privacy
-          </a>
           {signedIn ? (
             <ButtonLink href="/dashboard" size="sm">
               Dashboard

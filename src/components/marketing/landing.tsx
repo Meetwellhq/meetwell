@@ -1,4 +1,4 @@
-import { Check, Eye, EyeOff, ScanLine } from "lucide-react";
+import { Check, ScanLine } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
@@ -106,37 +106,6 @@ export function ScanVisual({ qrSvg }: { qrSvg: string }) {
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-/** Public/private switches, illustrating owner control. */
-export function PrivacyVisual() {
-  const rows = [
-    { label: "Email address", on: true },
-    { label: "WhatsApp", on: true },
-    { label: "Website", on: true },
-    { label: "Personal phone", on: false },
-  ];
-  return (
-    <div className="w-full max-w-sm rounded-[1.5rem] bg-white p-5 shadow-xl">
-      <p className="text-sm font-semibold text-ink">What people see</p>
-      <ul className="mt-4 divide-y divide-border">
-        {rows.map((r) => (
-          <li key={r.label} className="flex items-center justify-between py-3">
-            <span className="flex items-center gap-2.5 text-sm text-ink">
-              {r.on ? <Eye className="size-4 text-accent" aria-hidden /> : <EyeOff className="size-4 text-ink-3" aria-hidden />}
-              {r.label}
-            </span>
-            <span className="flex items-center gap-2 text-xs font-medium">
-              <span className={cn("relative inline-flex h-5 w-9 items-center rounded-full", r.on ? "bg-accent" : "bg-border-strong")}>
-                <span className={cn("inline-block size-4 rounded-full bg-white", r.on ? "translate-x-[18px]" : "translate-x-0.5")} />
-              </span>
-              <span className={cn("w-11", r.on ? "text-accent" : "text-ink-3")}>{r.on ? "Public" : "Private"}</span>
-            </span>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
