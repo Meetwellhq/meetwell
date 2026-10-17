@@ -19,7 +19,8 @@ export async function GET(_request: Request, { params }: RouteContext<"/p/[slug]
   return new Response(vcard, {
     headers: {
       "Content-Type": "text/vcard; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${vCardFileName(profile.fullName)}"`,
+      // inline lets iOS show "Create New Contact" instead of saving a file.
+      "Content-Disposition": `inline; filename="${vCardFileName(profile.fullName)}"`,
       "Cache-Control": "private, no-store",
       "X-Robots-Tag": "noindex",
     },

@@ -8,6 +8,7 @@ import { goalLabel, isOfferedGoal, socialLabel } from "@/lib/profiles/constants"
 import { contactActions, displayUrl, type ContactAction } from "@/lib/profiles/links";
 import type { PublicProfile } from "@/lib/profiles/types";
 import { ConversationStarter } from "./conversation-starter";
+import { SaveContactButton } from "./save-contact-button";
 import { TrackedLink } from "./tracking";
 
 const ACTION_ICON: Partial<Record<ContactAction["kind"], React.ReactNode>> = {
@@ -63,16 +64,7 @@ export function ProfileView({ profile, preview = false }: Props) {
               Save contact
             </span>
           ) : (
-            <TrackedLink
-              slug={slug}
-              event="save_contact"
-              href={`/p/${profile.slug}/vcard`}
-              download
-              className={buttonClass({ size: "lg", className: "w-full" })}
-            >
-              <UserRoundPlus className="size-5" aria-hidden />
-              Save contact
-            </TrackedLink>
+            <SaveContactButton profile={profile} />
           )}
         </div>
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { toPreview, toFormValues } from "@/components/editor/types";
-import { contactActions, mailtoWithBody } from "@/lib/profiles/links";
+import { androidSaveContactIntent, contactActions, mailtoWithBody } from "@/lib/profiles/links";
 import { toPublicView, type OwnProfile } from "@/lib/profiles/types";
 import { templateStarters } from "@/lib/starters/templates";
 import { STARTER_INTENTS } from "@/lib/starters/types";
@@ -188,6 +188,32 @@ describe("conversation starters", () => {
         expect(d).not.toMatch(/\bmet\b|meeting you|we spoke|our conversation|last week|at the event/i);
       }
     }
+  });
+});
+
+describe("android save contact", () => {
+  it("builds a pre-filled Contacts intent with a vCard fallback", () => {
+    const url = androidSaveContactIntent(
+      {
+        fullName: "Amara O'Kafor; Jr",
+        title: "Product Designer",
+        organization: "Studio North",
+        contacts: [
+          { type: "email", value: "a@x.test", label: null },
+          { type: "whatsapp", value: "+2348031234567", label: null },
+        ],
+      },
+      "https://app.test/p/amara/vcard",
+    );
+    expect(url.startsWith("intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir/raw_contact;")).toBe(true);
+    expect(url.endsWith(";end")).toBe(true);
+    expect(url).toContain("S.name=Amara%20O'Kafor%3B%20Jr"); // ";" escaped so it can't break the intent
+    expect(url).toContain("S.email=a%40x.test");
+    expect(url).toContain("S.phone=%2B2348031234567"); // WhatsApp used as the phone when there's no phone
+    expect(url).toContain("S.company=Studio%20North");
+    expect(url).toContain("S.job_title=Product%20Designer");
+    expect(url).toContain("S.browser_fallback_url=https%3A%2F%2Fapp.test%2Fp%2Famara%2Fvcard");
+    expect(url).not.toContain("secondary_phone");
   });
 });
 
