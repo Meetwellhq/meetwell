@@ -19,6 +19,11 @@
   --success: #067647;
   --success-soft: #ecfdf3;
   --focus: #2e6b58;
+  /* Landing page surfaces: warm sand backdrop with cream sheets. */
+  --sand: #ece5d8;
+  --cream: #fbf8f2;
+  --clay: #d9c7ab;
+  --sage: #cfe0d4;
 }
 
 @theme inline {
@@ -38,6 +43,11 @@
   --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
+  --color-sand: var(--sand);
+  --color-cream: var(--cream);
+  --color-clay: var(--clay);
+  --color-sage: var(--sage);
+  --animate-marquee: marquee 40s linear infinite;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
@@ -84,5 +94,14 @@ dialog::backdrop {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }

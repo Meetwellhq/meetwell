@@ -2,10 +2,10 @@ import Link from "next/link";
 import { APP_NAME, SUPPORT_EMAIL } from "@/lib/config";
 import { Logo } from "./logo";
 
-export function SiteFooter() {
+export function SiteFooter({ bordered = true, wide = false }: { bordered?: boolean; wide?: boolean }) {
   return (
-    <footer className="border-t border-border">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <footer className={bordered ? "border-t border-border" : undefined}>
+      <div className={`mx-auto flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
         <div className="flex flex-col gap-2">
           <Logo />
           <p className="text-sm text-ink-3">
