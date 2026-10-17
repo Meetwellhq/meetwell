@@ -31,9 +31,10 @@ type Props = {
 export function ProfileView({ profile, preview = false }: Props) {
   const slug = preview ? null : profile.slug;
   const allActions = contactActions(profile);
-  // Email sits at the top of the links list; calls, texts and the website stay as quick actions.
-  const emailActions = allActions.filter((a) => a.kind === "email");
-  const actions = allActions.filter((a) => a.kind !== "email");
+  // The website sits at the top of the links list with the social profiles;
+  // email, calls, texts and WhatsApp stay as quick actions.
+  const websiteActions = allActions.filter((a) => a.kind === "website");
+  const actions = allActions.filter((a) => a.kind !== "website");
   const email = profile.contacts.find((c) => c.type === "email")?.value ?? null;
   const subtitle = [profile.title, profile.organization].filter(Boolean).join(" · ");
 
@@ -102,28 +103,31 @@ export function ProfileView({ profile, preview = false }: Props) {
         )}
       </section>
 
-      {(emailActions.length > 0 || profile.socials.length > 0) && (
+      {(websiteActions.length > 0 || profile.socials.length > 0) && (
         <section aria-labelledby="socials-title" className="rounded-2xl border border-border bg-surface p-2">
           <h2 id="socials-title" className="sr-only">
-            Email and social profiles
+            Website and social profiles
           </h2>
           <ul className="divide-y divide-border">
-            {emailActions.map((a) => (
+            {websiteActions.map((a) => (
               <li key={a.key}>
                 <TrackedLink
                   slug={slug}
                   event={a.event}
                   href={a.href}
+                  target="_blank"
+                  rel="noopener noreferrer me"
                   className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-surface-2"
                 >
                   <span className="grid size-9 place-items-center rounded-full bg-surface-2 text-ink">
-                    <Mail className="size-[18px]" aria-hidden />
+                    <Globe className="size-[18px]" aria-hidden />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium text-ink">{a.label}</span>
                     <span className="block truncate text-xs text-ink-3">{a.detail}</span>
                   </span>
                   <ArrowUpRight className="size-4 text-ink-3" aria-hidden />
+                  <span className="sr-only">(opens in a new tab)</span>
                 </TrackedLink>
               </li>
             ))}
