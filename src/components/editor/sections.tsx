@@ -121,6 +121,13 @@ export function BasicsSection({
 export function ContactSection({ values, errors, set }: SectionProps) {
   const update = (i: number, patch: Partial<SectionProps["values"]["contacts"][number]>) =>
     set("contacts", values.contacts.map((c, j) => (j === i ? { ...c, ...patch } : c)));
+  // Rows are fixed (one email, one WhatsApp), so removing the only row of a type clears it instead.
+  const remove = (i: number) => {
+    const target = values.contacts[i];
+    const sameType = values.contacts.filter((c) => c.type === target.type).length;
+    if (sameType > 1) set("contacts", values.contacts.filter((_, j) => j !== i));
+    else update(i, { value: "" });
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -149,7 +156,7 @@ export function ContactSection({ values, errors, set }: SectionProps) {
                   onChange={(e) => update(i, { type: e.target.value as typeof c.type })}>
                   {options.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
-                <Button variant="ghost" size="sm" className="ml-auto" aria-label="Remove contact method" onClick={() => set("contacts", values.contacts.filter((_, j) => j !== i))}>
+                <Button variant="ghost" size="sm" className="ml-auto" aria-label="Remove contact method" onClick={() => remove(i)}>
                   <Trash2 className="size-4" />
                 </Button>
               </div>
@@ -175,22 +182,6 @@ export function ContactSection({ values, errors, set }: SectionProps) {
           );
         })}
       </ul>
-      {values.contacts.length < LIMITS.contacts && (
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" size="sm" icon={<Mail className="size-4" />}
-            onClick={() => set("contacts", [...values.contacts, { type: "email", value: "", label: "", isPublic: true }])}>
-            Add email address
-          </Button>
-          <Button variant="secondary" size="sm" icon={<SocialIcon platform="whatsapp" className="size-4" />}
-            onClick={() => {
-              // Most people use their mobile number for WhatsApp, so start from it.
-              const phone = values.contacts.find((c) => c.type === "phone" && c.value.trim())?.value ?? "";
-              set("contacts", [...values.contacts, { type: "whatsapp", value: phone, label: "", isPublic: true }]);
-            }}>
-            Add WhatsApp
-          </Button>
-        </div>
-      )}
 
       <div className="border-t border-border pt-5">
         <Field label="Website" optional error={errors.websiteUrl}>
