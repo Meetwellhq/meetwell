@@ -1,13 +1,13 @@
 "use client";
 
-import { Check, Lock, Mail, Phone, Trash2 } from "lucide-react";
+import { Check, Lock, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { checkSlugAvailability } from "@/lib/profiles/actions";
-import { CONTACT_TYPES, LIMITS, NETWORKING_GOALS, SOCIAL_PLATFORMS } from "@/lib/profiles/constants";
+import { LIMITS, NETWORKING_GOALS, SOCIAL_PLATFORMS } from "@/lib/profiles/constants";
 import { cn } from "@/lib/cn";
 import { slugify } from "@/lib/validation";
 import { AvatarUpload } from "./avatar-upload";
@@ -121,79 +121,52 @@ export function BasicsSection({
 export function ContactSection({ values, errors, set }: SectionProps) {
   const update = (i: number, patch: Partial<SectionProps["values"]["contacts"][number]>) =>
     set("contacts", values.contacts.map((c, j) => (j === i ? { ...c, ...patch } : c)));
-  // Rows are fixed (one email, one WhatsApp), so removing the only row of a type clears it instead.
-  const remove = (i: number) => {
-    const target = values.contacts[i];
-    const sameType = values.contacts.filter((c) => c.type === target.type).length;
-    if (sameType > 1) set("contacts", values.contacts.filter((_, j) => j !== i));
-    else update(i, { value: "" });
-  };
+
+  const LABELS = { email: "Email address", whatsapp: "WhatsApp", phone: "Phone" } as const;
 
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm text-ink-2">
-        Add the ways people can reach you. Only details switched to <strong className="font-medium text-ink">Public</strong> appear on your card. WhatsApp is optional.
+        Add the ways people can reach you. Only details switched to <strong className="font-medium text-ink">Public</strong> appear on your card.
       </p>
       {errors.contacts && <p className="text-sm text-danger">{errors.contacts}</p>}
-      <ul className="flex flex-col gap-3">
-        {values.contacts.map((c, i) => {
-          const error = errors[`contacts.${i}.value`];
-          // Email and WhatsApp are offered; Phone only stays for numbers saved earlier.
-          const options = CONTACT_TYPES.filter((t) => t.value !== "phone" || c.type === "phone");
-          return (
-            <li key={i} className="rounded-xl border border-border p-3.5">
-              <div className="flex items-center gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-2 text-ink">
-                  {c.type === "email" ? (
-                    <Mail className="size-4" aria-hidden />
-                  ) : c.type === "whatsapp" ? (
-                    <SocialIcon platform="whatsapp" className="size-4" />
-                  ) : (
-                    <Phone className="size-4" aria-hidden />
-                  )}
-                </span>
-                <Select aria-label="Contact type" className="h-9 min-w-0 flex-1 text-sm sm:max-w-[11rem]" value={c.type}
-                  onChange={(e) => update(i, { type: e.target.value as typeof c.type })}>
-                  {options.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </Select>
-                <Button variant="ghost" size="sm" className="ml-auto" aria-label="Remove contact method" onClick={() => remove(i)}>
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
+      {/* Same layout as Website: a labelled field with its Public switch. Leave a field empty to leave it off. */}
+      {values.contacts.map((c, i) => (
+        <Field
+          key={i}
+          label={LABELS[c.type]}
+          optional={c.type !== "email"}
+          error={errors[`contacts.${i}.value`]}
+          hint={c.type === "whatsapp" ? "Include your country code. Visitors tap to open a chat with you in WhatsApp." : undefined}
+        >
+          {({ id, describedBy, invalid }) => (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Input
-                className="mt-3"
-                aria-label={c.type === "email" ? "Email address" : c.type === "whatsapp" ? "WhatsApp number" : "Phone number"}
-                invalid={!!error}
+                id={id}
+                aria-describedby={describedBy}
+                invalid={invalid}
                 type={c.type === "email" ? "email" : "tel"}
                 inputMode={c.type === "email" ? "email" : "tel"}
+                autoComplete={c.type === "email" ? "email" : "tel"}
                 placeholder={c.type === "email" ? "you@example.com" : "+234 803 123 4567"}
                 value={c.value}
                 onChange={(e) => update(i, { value: e.target.value })}
               />
-              {error ? (
-                <p className="mt-1 text-sm text-danger">{error}</p>
-              ) : c.type === "whatsapp" ? (
-                <p className="mt-1 text-sm text-ink-3">Include your country code. Visitors tap to open a chat with you in WhatsApp.</p>
-              ) : null}
-              <div className="mt-3 flex justify-end">
-                <Switch checked={c.isPublic} onChange={(v) => update(i, { isPublic: v })} label={`Show ${c.type} ${c.value} publicly`} />
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="border-t border-border pt-5">
-        <Field label="Website" optional error={errors.websiteUrl}>
-          {({ id, describedBy, invalid }) => (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Input id={id} aria-describedby={describedBy} invalid={invalid} type="url" inputMode="url" placeholder="example.com"
-                value={values.websiteUrl} onChange={(e) => set("websiteUrl", e.target.value)} />
-              <Switch checked={values.websiteIsPublic} onChange={(v) => set("websiteIsPublic", v)} label="Show website publicly" />
+              <Switch checked={c.isPublic} onChange={(v) => update(i, { isPublic: v })} label={`Show ${LABELS[c.type].toLowerCase()} publicly`} />
             </div>
           )}
         </Field>
-      </div>
+      ))}
+
+      <Field label="Website" optional error={errors.websiteUrl}>
+        {({ id, describedBy, invalid }) => (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Input id={id} aria-describedby={describedBy} invalid={invalid} type="url" inputMode="url" placeholder="example.com"
+              value={values.websiteUrl} onChange={(e) => set("websiteUrl", e.target.value)} />
+            <Switch checked={values.websiteIsPublic} onChange={(v) => set("websiteIsPublic", v)} label="Show website publicly" />
+          </div>
+        )}
+      </Field>
     </div>
   );
 }
