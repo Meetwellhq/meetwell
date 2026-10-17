@@ -17,8 +17,7 @@ export function CardPreview({ qrSvg }: { qrSvg: string }) {
           Designing calm, useful software. Always up for a coffee chat about design systems.
         </p>
         <div className="mt-4 flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">Open to collaborators</span>
-          <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">Open to mentees</span>
+          <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">Open to collaboration</span>
         </div>
         <div className="mt-5 flex h-11 items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-medium text-accent-ink">
           <UserRoundPlus className="size-[18px]" aria-hidden />
@@ -68,7 +67,7 @@ export function StarterPreview() {
       </div>
       <div className="mt-4 rounded-xl border border-border-strong bg-bg px-3.5 py-3 text-[15px] leading-relaxed text-ink">
         Hi Amara, I came across your profile and your work as a Product Designer at Studio North caught my
-        attention. I noticed you&apos;re open to collaborators — I&apos;d love to explore whether there&apos;s a
+        attention. I noticed you&apos;re open to collaboration — I&apos;d love to explore whether there&apos;s a
         project we could work on together.
       </div>
       <div className="mt-3 flex gap-2">

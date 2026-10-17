@@ -43,7 +43,7 @@ const TEMPLATES: Record<StarterIntent, Template[]> = {
   collaborate: [
     (c) =>
       `Hi ${c.name}, I came across your profile and ${c.work ? `${c.work} caught my attention` : "liked what I saw"}. ${
-        c.goals.has("collaborators") ? "I noticed you're open to collaborators — " : ""
+        c.goals.has("collaborators") ? "I noticed you're open to collaboration — " : ""
       }I'd love to explore whether there's a project we could work on together. Would you be open to a quick chat?`,
     (c) =>
       `Hi ${c.name}, I'm interested in ${c.focus} and think there could be a good fit for a collaboration. Could we find 20 minutes to compare notes?`,

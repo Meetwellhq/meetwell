@@ -1,12 +1,13 @@
 export const NETWORKING_GOALS = [
-  { value: "collaborators", label: "Collaborators" },
-  { value: "clients", label: "New clients" },
-  { value: "mentors", label: "Mentors" },
-  { value: "mentees", label: "People to mentor" },
+  // Labels read naturally after "Open to …" on the card. Values are stored and must not change.
+  { value: "collaborators", label: "Collaboration" },
+  { value: "clients", label: "Client work" },
+  { value: "mentors", label: "Mentorship" },
+  { value: "mentees", label: "Mentoring others" },
   { value: "jobs", label: "Job opportunities" },
-  { value: "hiring", label: "People to hire" },
-  { value: "investors", label: "Investors" },
-  { value: "friends", label: "New friends" },
+  { value: "hiring", label: "Hiring" },
+  { value: "investors", label: "Investment" },
+  { value: "friends", label: "Friendship" },
 ] as const;
 
 export type NetworkingGoal = (typeof NETWORKING_GOALS)[number]["value"];

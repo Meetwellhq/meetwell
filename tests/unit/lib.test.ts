@@ -178,7 +178,7 @@ describe("conversation starters", () => {
   it("uses profile context", () => {
     const [d] = templateStarters("collaborate", { ...profile, networkingGoals: ["collaborators"] });
     expect(d).toContain("Product Designer at Studio North");
-    expect(d).toContain("open to collaborators");
+    expect(d).toContain("open to collaboration");
   });
 
   it("never claims a meeting unless the visitor chose follow-up", () => {
