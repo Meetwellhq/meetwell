@@ -89,9 +89,9 @@ describe("profile schema", () => {
     ).toBe(true);
   });
   it("allows only one networking goal", () => {
-    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["clients"] }).success).toBe(true);
+    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["hiring"] }).success).toBe(true);
     expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: [] }).success).toBe(true);
-    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["clients", "mentors"] }).success).toBe(false);
+    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["hiring", "mentors"] }).success).toBe(false);
   });
   it("rejects unknown goals and platforms", () => {
     expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["world-domination"] }).success).toBe(false);

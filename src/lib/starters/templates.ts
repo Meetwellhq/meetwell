@@ -61,7 +61,7 @@ const TEMPLATES: Record<StarterIntent, Template[]> = {
   offer_services: [
     (c) =>
       `Hi ${c.name}, ${
-        c.goals.has("clients") || c.goals.has("hiring")
+        c.goals.has("hiring")
           ? "I noticed you might be looking for extra help, so I wanted to reach out. "
           : ""
       }I think what I do could support ${c.focus}. If it's ever useful, I'd be happy to share a few ideas — no obligation.`,
