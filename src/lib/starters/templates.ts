@@ -60,11 +60,7 @@ const TEMPLATES: Record<StarterIntent, Template[]> = {
   ],
   offer_services: [
     (c) =>
-      `Hi ${c.name}, ${
-        c.goals.has("hiring")
-          ? "I noticed you might be looking for extra help, so I wanted to reach out. "
-          : ""
-      }I think what I do could support ${c.focus}. If it's ever useful, I'd be happy to share a few ideas — no obligation.`,
+      `Hi ${c.name}, I think what I do could support ${c.focus}. If it's ever useful, I'd be happy to share a few ideas — no obligation.`,
     (c) =>
       `Hi ${c.name}, I wanted to briefly introduce what I do in case it's relevant to ${c.focus}. Happy to send a short overview if you're interested.`,
     (c) =>
@@ -72,9 +68,7 @@ const TEMPLATES: Record<StarterIntent, Template[]> = {
   ],
   business: [
     (c) =>
-      `Hi ${c.name}, I have a business idea that I think could be relevant to ${c.focus}. ${
-        c.goals.has("investors") ? "I saw you're connecting with investors, so the timing may be right. " : ""
-      }Would you be open to a short call to explore it?`,
+      `Hi ${c.name}, I have a business idea that I think could be relevant to ${c.focus}. Would you be open to a short call to explore it?`,
     (c) =>
       `Hi ${c.name}, I'd like to discuss a potential opportunity that might interest you${c.work ? `, given ${c.work}` : ""}. When would be a good time to talk?`,
     (c) =>
@@ -98,7 +92,7 @@ const TEMPLATES: Record<StarterIntent, Template[]> = {
     (c) =>
       `Hi ${c.name}, just reaching out to connect. Always happy to know more people ${c.work ? "doing interesting work" : "around here"} — let's keep in touch.`,
     (c) =>
-      `Hey ${c.name}, saying hi! Hope we can stay in touch.`,
+      `Hey ${c.name}, saying hi! ${c.goals.has("networking") ? "I saw you're open to networking, so I wanted to connect. " : ""}Hope we can stay in touch.`,
   ],
 };
 

@@ -3,8 +3,7 @@ export const NETWORKING_GOALS = [
   { value: "collaborators", label: "Collaboration" },
   { value: "mentors", label: "Mentorship" },
   { value: "jobs", label: "Job opportunities" },
-  { value: "hiring", label: "Hiring" },
-  { value: "investors", label: "Investment" },
+  { value: "networking", label: "Networking" },
 ] as const;
 
 export type NetworkingGoal = (typeof NETWORKING_GOALS)[number]["value"];

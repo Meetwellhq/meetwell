@@ -152,6 +152,14 @@ describe("profile rules", () => {
     await expect(as(BOB, "update public.profiles set slug = 'Bad Slug' where user_id = $1", [BOB])).rejects.toThrow(/check/);
   });
 
+  it("accepts the networking goal and rejects unknown goals", async () => {
+    const rows = await as(BOB, "update public.profiles set networking_goals = '{networking}' where user_id = $1 returning networking_goals", [BOB]);
+    expect(rows).toEqual([{ networking_goals: ["networking"] }]);
+    await expect(
+      as(BOB, "update public.profiles set networking_goals = '{world-domination}' where user_id = $1", [BOB]),
+    ).rejects.toThrow(/check/);
+  });
+
   it("rejects unsafe URL schemes", async () => {
     await expect(
       as(BOB, "update public.profiles set website_url = 'javascript:alert(1)' where user_id = $1", [BOB]),
