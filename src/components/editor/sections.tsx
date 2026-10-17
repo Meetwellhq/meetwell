@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Lock, Mail, Plus, Trash2 } from "lucide-react";
+import { Check, Lock, Mail, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { Button } from "@/components/ui/button";
@@ -125,7 +125,7 @@ export function ContactSection({ values, errors, set }: SectionProps) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm text-ink-2">
-        Add the ways people can reach you. Only details switched to <strong className="font-medium text-ink">Public</strong> appear on your card. Phone and WhatsApp are optional.
+        Add the ways people can reach you. Only details switched to <strong className="font-medium text-ink">Public</strong> appear on your card. WhatsApp is optional.
       </p>
       {errors.contacts && <p className="text-sm text-danger">{errors.contacts}</p>}
       <ul className="flex flex-col gap-3">
@@ -154,9 +154,7 @@ export function ContactSection({ values, errors, set }: SectionProps) {
                 ) : null}
               </div>
             </div>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <Input aria-label="Label (optional)" placeholder="Label, e.g. Work (optional)" value={c.label} maxLength={40}
-                className="h-9 max-w-[14rem] text-sm" onChange={(e) => update(i, { label: e.target.value })} />
+            <div className="mt-3 flex items-center justify-end">
               <div className="flex items-center gap-1">
                 <Switch checked={c.isPublic} onChange={(v) => update(i, { isPublic: v })} label={`Show ${c.type} ${c.value} publicly`} />
                 <Button variant="ghost" size="sm" aria-label="Remove contact method" onClick={() => set("contacts", values.contacts.filter((_, j) => j !== i))}>
@@ -172,10 +170,6 @@ export function ContactSection({ values, errors, set }: SectionProps) {
           <Button variant="secondary" size="sm" icon={<Mail className="size-4" />}
             onClick={() => set("contacts", [...values.contacts, { type: "email", value: "", label: "", isPublic: true }])}>
             Add email address
-          </Button>
-          <Button variant="secondary" size="sm" icon={<Plus className="size-4" />}
-            onClick={() => set("contacts", [...values.contacts, { type: "phone", value: "", label: "", isPublic: false }])}>
-            Add phone
           </Button>
           <Button variant="secondary" size="sm" icon={<SocialIcon platform="whatsapp" className="size-4" />}
             onClick={() => {

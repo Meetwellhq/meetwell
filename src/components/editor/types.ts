@@ -58,7 +58,8 @@ export function toFormValues(profile: OwnProfile | null, email: string | null): 
 export function toInput(values: FormValues) {
   return {
     ...values,
-    contacts: values.contacts.filter((c) => c.value.trim()),
+    // The editor no longer offers contact labels, so clear any saved earlier.
+    contacts: values.contacts.filter((c) => c.value.trim()).map((c) => ({ ...c, label: "" })),
     socials: values.socials.filter((s) => s.url.trim()),
   };
 }
@@ -78,7 +79,7 @@ export function toPreview(values: FormValues): PublicProfile {
     networkingGoals: values.networkingGoals,
     contacts: values.contacts
       .filter((c) => c.isPublic && c.value.trim())
-      .map((c) => ({ type: c.type, value: c.value.trim(), label: c.label.trim() || null })),
+      .map((c) => ({ type: c.type, value: c.value.trim(), label: null })),
     socials: values.socials
       .filter((s) => s.isPublic && s.url.trim())
       .map((s) => ({ platform: s.platform, url: s.url.trim() })),
