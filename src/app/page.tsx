@@ -55,7 +55,8 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         <Panel className="overflow-hidden border-0! px-0 pb-0 text-center sm:px-0 lg:px-0">
           <div className="px-5 sm:px-10">
             <h1 className="mx-auto max-w-4xl font-display text-[3.25rem] leading-[0.98] tracking-tight text-ink sm:text-7xl lg:text-[5.5rem]">
-              Meet someone. <span className="font-bold text-accent">Make it a connection.</span>
+              Meet someone. {/* Instrument Serif has one weight; a hairline stroke gives a medium look. */}
+              <span className="font-medium text-accent [-webkit-text-stroke:0.018em_currentColor]">Make it a connection.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-ink-2">
               Your networking card, contact details and a ready-to-send first message — all in one scan. So the people
