@@ -1,9 +1,9 @@
-import { Briefcase, GraduationCap, Lightbulb, Rocket, Ticket } from "lucide-react";
+import { ArrowDown, Briefcase, GraduationCap, Lightbulb, Rocket, Ticket } from "lucide-react";
 import { CardPreview, StarterPreview } from "@/components/marketing/card-preview";
 import { Feature, HighlightsStrip, Panel, Pill, ScanVisual } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
-import { ButtonLink, buttonClass } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { Alert } from "@/components/ui/misc";
 import { getSiteUrl, isSupabaseConfigured } from "@/lib/config";
 import { qrSvg } from "@/lib/qr";
@@ -63,11 +63,15 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               you meet actually follow up.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <ButtonLink href={cta} size="lg" variant="secondary">
+              <ButtonLink href={cta} size="lg">
                 {ctaLabel}
               </ButtonLink>
-              <a href="#how-it-works" className={buttonClass({ size: "lg", variant: "secondary" })}>
+              <a
+                href="#how-it-works"
+                className="inline-flex h-12 items-center justify-center gap-1.5 px-2 text-base font-medium text-ink underline-offset-4 hover:underline"
+              >
                 See how it works
+                <ArrowDown className="size-4" aria-hidden />
               </a>
             </div>
           </div>
@@ -93,7 +97,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
                 form. Your code points to your profile link, so it never needs reprinting.
               </p>
             }
-            action={<ButtonLink href={cta} variant="secondary">{ctaLabel}</ButtonLink>}
+            action={<ButtonLink href={cta}>{ctaLabel}</ButtonLink>}
             visual={<ScanVisual qrSvg={qr} />}
             visualClassName="bg-sage"
           />
@@ -112,7 +116,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
                 shared history.
               </p>
             }
-            action={<ButtonLink href={cta} variant="secondary">{ctaLabel}</ButtonLink>}
+            action={<ButtonLink href={cta}>{ctaLabel}</ButtonLink>}
             visual={
               <div className="w-full max-w-md">
                 <StarterPreview />
