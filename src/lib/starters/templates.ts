@@ -68,7 +68,9 @@ const TEMPLATES: Record<StarterIntent, Template[]> = {
   ],
   business: [
     (c) =>
-      `Hi ${c.name}, I have a business idea that I think could be relevant to ${c.focus}. Would you be open to a short call to explore it?`,
+      `Hi ${c.name}, I have a business idea that I think could be relevant to ${c.focus}. ${
+        c.goals.has("investors") ? "I saw you're open to funding conversations, so the timing may be right. " : ""
+      }Would you be open to a short call to explore it?`,
     (c) =>
       `Hi ${c.name}, I'd like to discuss a potential opportunity that might interest you${c.work ? `, given ${c.work}` : ""}. When would be a good time to talk?`,
     (c) =>

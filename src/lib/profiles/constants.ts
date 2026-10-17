@@ -4,6 +4,8 @@ export const NETWORKING_GOALS = [
   { value: "mentors", label: "Mentorship" },
   { value: "jobs", label: "Job opportunities" },
   { value: "networking", label: "Networking" },
+  // Stored as "investors" (the old Investment option), shown as Funding.
+  { value: "investors", label: "Funding" },
 ] as const;
 
 export type NetworkingGoal = (typeof NETWORKING_GOALS)[number]["value"];
