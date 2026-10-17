@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Lock, Mail, Trash2 } from "lucide-react";
+import { Check, Lock, Mail, Phone, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { Button } from "@/components/ui/button";
@@ -129,41 +129,51 @@ export function ContactSection({ values, errors, set }: SectionProps) {
       </p>
       {errors.contacts && <p className="text-sm text-danger">{errors.contacts}</p>}
       <ul className="flex flex-col gap-3">
-        {values.contacts.map((c, i) => (
-          <li key={i} className="rounded-xl border border-border p-3.5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-              <div className="sm:w-36">
-                <Select aria-label="Contact type" value={c.type} onChange={(e) => update(i, { type: e.target.value as typeof c.type })}>
-                  {CONTACT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+        {values.contacts.map((c, i) => {
+          const error = errors[`contacts.${i}.value`];
+          // Email and WhatsApp are offered; Phone only stays for numbers saved earlier.
+          const options = CONTACT_TYPES.filter((t) => t.value !== "phone" || c.type === "phone");
+          return (
+            <li key={i} className="rounded-xl border border-border p-3.5">
+              <div className="flex items-center gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-2 text-ink">
+                  {c.type === "email" ? (
+                    <Mail className="size-4" aria-hidden />
+                  ) : c.type === "whatsapp" ? (
+                    <SocialIcon platform="whatsapp" className="size-4" />
+                  ) : (
+                    <Phone className="size-4" aria-hidden />
+                  )}
+                </span>
+                <Select aria-label="Contact type" className="h-9 min-w-0 flex-1 text-sm sm:max-w-[11rem]" value={c.type}
+                  onChange={(e) => update(i, { type: e.target.value as typeof c.type })}>
+                  {options.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </Select>
-              </div>
-              <div className="flex-1">
-                <Input
-                  aria-label={c.type === "email" ? "Email address" : c.type === "whatsapp" ? "WhatsApp number" : "Phone number"}
-                  invalid={!!errors[`contacts.${i}.value`]}
-                  type={c.type === "email" ? "email" : "tel"}
-                  inputMode={c.type === "email" ? "email" : "tel"}
-                  placeholder={c.type === "email" ? "you@example.com" : "+1 415 555 0100"}
-                  value={c.value}
-                  onChange={(e) => update(i, { value: e.target.value })}
-                />
-                {errors[`contacts.${i}.value`] ? (
-                  <p className="mt-1 text-sm text-danger">{errors[`contacts.${i}.value`]}</p>
-                ) : c.type === "whatsapp" ? (
-                  <p className="mt-1 text-sm text-ink-3">Include your country code. Visitors tap to open a chat with you in WhatsApp.</p>
-                ) : null}
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-end">
-              <div className="flex items-center gap-1">
-                <Switch checked={c.isPublic} onChange={(v) => update(i, { isPublic: v })} label={`Show ${c.type} ${c.value} publicly`} />
-                <Button variant="ghost" size="sm" aria-label="Remove contact method" onClick={() => set("contacts", values.contacts.filter((_, j) => j !== i))}>
+                <Button variant="ghost" size="sm" className="ml-auto" aria-label="Remove contact method" onClick={() => set("contacts", values.contacts.filter((_, j) => j !== i))}>
                   <Trash2 className="size-4" />
                 </Button>
               </div>
-            </div>
-          </li>
-        ))}
+              <Input
+                className="mt-3"
+                aria-label={c.type === "email" ? "Email address" : c.type === "whatsapp" ? "WhatsApp number" : "Phone number"}
+                invalid={!!error}
+                type={c.type === "email" ? "email" : "tel"}
+                inputMode={c.type === "email" ? "email" : "tel"}
+                placeholder={c.type === "email" ? "you@example.com" : "+234 803 123 4567"}
+                value={c.value}
+                onChange={(e) => update(i, { value: e.target.value })}
+              />
+              {error ? (
+                <p className="mt-1 text-sm text-danger">{error}</p>
+              ) : c.type === "whatsapp" ? (
+                <p className="mt-1 text-sm text-ink-3">Include your country code. Visitors tap to open a chat with you in WhatsApp.</p>
+              ) : null}
+              <div className="mt-3 flex justify-end">
+                <Switch checked={c.isPublic} onChange={(v) => update(i, { isPublic: v })} label={`Show ${c.type} ${c.value} publicly`} />
+              </div>
+            </li>
+          );
+        })}
       </ul>
       {values.contacts.length < LIMITS.contacts && (
         <div className="flex flex-wrap gap-2">

@@ -23,6 +23,17 @@ export type SectionProps = {
   set: <K extends keyof FormValues>(key: K, value: FormValues[K]) => void;
 };
 
+/**
+ * Make sure an email row and a WhatsApp row are always ready to fill in.
+ * Rows left empty are dropped on save (see toInput), so they never reach the card.
+ */
+function withDefaultContacts(contacts: FormValues["contacts"], email: string | null): FormValues["contacts"] {
+  const out = [...contacts];
+  if (!out.some((c) => c.type === "email")) out.unshift({ type: "email", value: email ?? "", label: "", isPublic: true });
+  if (!out.some((c) => c.type === "whatsapp")) out.push({ type: "whatsapp", value: "", label: "", isPublic: true });
+  return out;
+}
+
 export function toFormValues(profile: OwnProfile | null, email: string | null): FormValues {
   if (!profile) {
     return {
@@ -35,7 +46,7 @@ export function toFormValues(profile: OwnProfile | null, email: string | null): 
       websiteUrl: "",
       websiteIsPublic: true,
       networkingGoals: [],
-      contacts: email ? [{ type: "email", value: email, label: "", isPublic: true }] : [],
+      contacts: withDefaultContacts([], email),
       socials: [],
     };
   }
@@ -49,7 +60,11 @@ export function toFormValues(profile: OwnProfile | null, email: string | null): 
     websiteUrl: profile.websiteUrl ?? "",
     websiteIsPublic: profile.websiteIsPublic,
     networkingGoals: profile.networkingGoals,
-    contacts: profile.contacts.map((c) => ({ type: c.type, value: c.value, label: c.label ?? "", isPublic: c.isPublic })),
+    contacts: withDefaultContacts(
+      profile.contacts.map((c) => ({ type: c.type, value: c.value, label: c.label ?? "", isPublic: c.isPublic })),
+      // Never re-add the account email to a card whose owner removed it.
+      null,
+    ),
     socials: profile.socials.map((s) => ({ platform: s.platform, url: s.url, isPublic: s.isPublic })),
   };
 }
