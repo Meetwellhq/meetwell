@@ -96,7 +96,7 @@ export function AvatarUpload({
         />
       </div>
       <p className={error ? "mt-2 text-sm text-danger" : "mt-2 text-sm text-ink-3"}>
-        {error ?? "Optional. A clear photo helps people remember you. We'll crop it to a square."}
+        {error ?? "Optional. A clear photo helps people remember you. We'll crop it to a circle."}
       </p>
     </div>
   );
