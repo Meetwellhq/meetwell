@@ -46,7 +46,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
   const ctaLabel = signedIn ? "Go to your dashboard" : "Create your free card";
 
   return (
-    <div className="flex min-h-full flex-col bg-sand">
+    <div className="flex min-h-full flex-col bg-white">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
         {deleted && <Alert tone="success">Your account and card have been deleted.</Alert>}
@@ -62,10 +62,10 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               you meet actually follow up.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <ButtonLink href={cta} size="lg">
+              <ButtonLink href={cta} size="lg" variant="secondary">
                 {ctaLabel}
               </ButtonLink>
-              <a href="#how-it-works" className={buttonClass({ size: "lg", className: "bg-ink text-white hover:bg-ink/85" })}>
+              <a href="#how-it-works" className={buttonClass({ size: "lg", variant: "secondary" })}>
                 See how it works
               </a>
             </div>
@@ -92,7 +92,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
                 form. Your code points to your profile link, so it never needs reprinting.
               </p>
             }
-            action={<ButtonLink href={cta}>{ctaLabel}</ButtonLink>}
+            action={<ButtonLink href={cta} variant="secondary">{ctaLabel}</ButtonLink>}
             visual={<ScanVisual qrSvg={qr} />}
             visualClassName="bg-sage"
           />
@@ -111,7 +111,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
                 shared history.
               </p>
             }
-            action={<ButtonLink href={cta}>{ctaLabel}</ButtonLink>}
+            action={<ButtonLink href={cta} variant="secondary">{ctaLabel}</ButtonLink>}
             visual={
               <div className="w-full max-w-md">
                 <StarterPreview />
@@ -131,8 +131,8 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           </div>
           <ul className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {useCases.map((u) => (
-              <li key={u.title} className="rounded-[1.5rem] bg-sand/60 p-6">
-                <span className="grid size-10 place-items-center rounded-full bg-white text-accent">
+              <li key={u.title} className="rounded-[1.5rem] border border-border bg-white p-6">
+                <span className="grid size-10 place-items-center rounded-full bg-accent-soft text-accent">
                   <u.icon className="size-5" aria-hidden />
                 </span>
                 <h3 className="mt-5 font-semibold text-ink">{u.title}</h3>

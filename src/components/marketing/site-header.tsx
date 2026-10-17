@@ -3,7 +3,7 @@ import { Logo } from "./logo";
 
 export function SiteHeader({ signedIn }: { signedIn: boolean }) {
   return (
-    <header className="sticky top-0 z-40 bg-sand/90 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-[90rem] items-center justify-between px-5 sm:px-8">
         <Logo />
         <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
@@ -11,7 +11,7 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
             How it works
           </a>
           {signedIn ? (
-            <ButtonLink href="/dashboard" size="sm">
+            <ButtonLink href="/dashboard" size="sm" variant="secondary">
               Dashboard
             </ButtonLink>
           ) : (
@@ -19,7 +19,7 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
               <ButtonLink href="/sign-in" variant="ghost" size="sm" className="max-sm:px-2.5!">
                 Sign in
               </ButtonLink>
-              <ButtonLink href="/sign-up" size="sm">
+              <ButtonLink href="/sign-up" size="sm" variant="secondary">
                 <span className="sm:hidden">Sign up</span>
                 <span className="hidden sm:inline">Create your card</span>
               </ButtonLink>

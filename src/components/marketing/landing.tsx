@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 /** A rounded cream "sheet" sitting on the sand page background. */
 export function Panel({ id, className, children }: { id?: string; className?: string; children: ReactNode }) {
   return (
-    <section id={id} className={cn("scroll-mt-20 rounded-[2rem] bg-cream px-5 py-14 sm:px-10 sm:py-20 lg:px-16", className)}>
+    <section id={id} className={cn("scroll-mt-20 rounded-[2rem] border border-border bg-white px-5 py-14 sm:px-10 sm:py-20 lg:px-16", className)}>
       {children}
     </section>
   );
