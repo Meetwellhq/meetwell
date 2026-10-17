@@ -134,6 +134,7 @@ export function ContactSection({ values, errors, set }: SectionProps) {
       {values.contacts.map((c, i) => (
         <Field
           key={i}
+          className={i > 0 ? "border-t border-border pt-5" : undefined}
           label={LABELS[c.type]}
           optional={c.type !== "email"}
           error={errors[`contacts.${i}.value`]}
@@ -158,7 +159,7 @@ export function ContactSection({ values, errors, set }: SectionProps) {
         </Field>
       ))}
 
-      <Field label="Website" optional error={errors.websiteUrl}>
+      <Field label="Website" optional error={errors.websiteUrl} className="border-t border-border pt-5">
         {({ id, describedBy, invalid }) => (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Input id={id} aria-describedby={describedBy} invalid={invalid} type="url" inputMode="url" placeholder="example.com"
