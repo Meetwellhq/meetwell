@@ -1,6 +1,6 @@
 export const APP_NAME = "Meetwell";
 export const APP_TAGLINE = "Meet someone. Make it a connection.";
-export const SUPPORT_EMAIL = "hello@meetwell.app";
+export const SUPPORT_EMAIL = "hello@meetwell.me";
 
 export function getSupabaseEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
