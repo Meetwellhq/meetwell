@@ -19,11 +19,12 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
             </ButtonLink>
           ) : (
             <>
-              <ButtonLink href="/sign-in" variant="ghost" size="sm">
+              <ButtonLink href="/sign-in" variant="ghost" size="sm" className="max-sm:px-2.5!">
                 Sign in
               </ButtonLink>
               <ButtonLink href="/sign-up" size="sm">
-                Create your card
+                <span className="sm:hidden">Sign up</span>
+                <span className="hidden sm:inline">Create your card</span>
               </ButtonLink>
             </>
           )}

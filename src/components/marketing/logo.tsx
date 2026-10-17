@@ -19,6 +19,10 @@ export function Logo({ href = "/", className }: { href?: string; className?: str
     <Link href={href} className={cn("inline-flex items-center gap-2 font-semibold tracking-tight text-ink", className)}>
       <LogoMark />
       <span className="text-[17px]">{APP_NAME}</span>
+      {/* Remove once the product leaves beta testing. */}
+      <span className="rounded-full border border-accent/25 bg-accent-soft px-1.5 py-px text-[10px] font-semibold uppercase leading-4 tracking-wider text-accent">
+        Beta
+      </span>
     </Link>
   );
 }
