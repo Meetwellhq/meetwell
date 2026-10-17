@@ -247,21 +247,20 @@ export function SocialSection({ values, errors, set }: SectionProps) {
 }
 
 export function GoalsSection({ values, set }: SectionProps) {
-  const toggle = (goal: (typeof NETWORKING_GOALS)[number]["value"]) =>
-    set("networkingGoals", values.networkingGoals.includes(goal)
-      ? values.networkingGoals.filter((g) => g !== goal)
-      : [...values.networkingGoals, goal]);
+  // One goal only: picking another replaces it; tapping the selected one clears it.
+  const choose = (goal: (typeof NETWORKING_GOALS)[number]["value"]) =>
+    set("networkingGoals", values.networkingGoals[0] === goal ? [] : [goal]);
 
   return (
     <fieldset className="flex flex-col gap-4">
       <legend className="text-sm text-ink-2">
-        What are you open to? These show on your card and help visitors write a relevant first message.
+        What are you open to right now? Pick one. It shows on your card and helps visitors write a relevant first message.
       </legend>
-      <div className="flex flex-wrap gap-2">
+      <div role="radiogroup" aria-label="Networking goal" className="flex flex-wrap gap-2">
         {NETWORKING_GOALS.map((g) => {
-          const active = values.networkingGoals.includes(g.value);
+          const active = values.networkingGoals[0] === g.value;
           return (
-            <button key={g.value} type="button" aria-pressed={active} onClick={() => toggle(g.value)}
+            <button key={g.value} type="button" role="radio" aria-checked={active} onClick={() => choose(g.value)}
               className={cn("inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm transition-colors",
                 active ? "border-accent bg-accent-soft text-accent" : "border-border-strong text-ink-2 hover:text-ink")}>
               {active && <Check className="size-4" aria-hidden />}

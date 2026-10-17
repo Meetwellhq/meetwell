@@ -59,7 +59,7 @@ export function toFormValues(profile: OwnProfile | null, email: string | null): 
     bio: profile.bio ?? "",
     websiteUrl: profile.websiteUrl ?? "",
     websiteIsPublic: profile.websiteIsPublic,
-    networkingGoals: profile.networkingGoals,
+    networkingGoals: profile.networkingGoals.slice(0, 1),
     contacts: withDefaultContacts(
       profile.contacts.map((c) => ({ type: c.type, value: c.value, label: c.label ?? "", isPublic: c.isPublic })),
       // Never re-add the account email to a card whose owner removed it.
@@ -91,7 +91,7 @@ export function toPreview(values: FormValues): PublicProfile {
     bio: values.bio.trim() || null,
     websiteUrl:
       values.websiteIsPublic && website ? (/^https?:\/\//i.test(website) ? website : `https://${website}`) : null,
-    networkingGoals: values.networkingGoals,
+    networkingGoals: values.networkingGoals.slice(0, 1),
     contacts: values.contacts
       .filter((c) => c.isPublic && c.value.trim())
       .map((c) => ({ type: c.type, value: c.value.trim(), label: null })),

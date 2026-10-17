@@ -184,7 +184,7 @@ export const profileInputSchema = z
     websiteIsPublic: z.boolean(),
     networkingGoals: z
       .array(z.enum(NETWORKING_GOALS.map((g) => g.value) as [string, ...string[]]))
-      .max(NETWORKING_GOALS.length)
+      .max(1, "Pick one goal")
       .transform((goals) => [...new Set(goals)]),
     contacts: z.array(contactSchema).max(LIMITS.contacts, `Add up to ${LIMITS.contacts} contact methods`),
     socials: z.array(socialSchema).max(LIMITS.socials, `Add up to ${LIMITS.socials} links`),

@@ -36,6 +36,8 @@ export function ProfileView({ profile, preview = false }: Props) {
   const websiteActions = allActions.filter((a) => a.kind === "website");
   const actions = allActions.filter((a) => a.kind !== "website");
   const email = profile.contacts.find((c) => c.type === "email")?.value ?? null;
+  // One networking goal per card (older cards may have saved several; show the first).
+  const goal = profile.networkingGoals[0] ?? null;
   const subtitle = [profile.title, profile.organization].filter(Boolean).join(" · ");
 
   return (
@@ -46,17 +48,12 @@ export function ProfileView({ profile, preview = false }: Props) {
         {subtitle && <p className="mt-1 text-[15px] text-ink-2">{subtitle}</p>}
         {profile.bio && <p className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-ink-2">{profile.bio}</p>}
 
-        {profile.networkingGoals.length > 0 && (
-          <div className="mt-4">
-            <p className="sr-only">Open to</p>
-            <ul className="flex flex-wrap justify-center gap-1.5" aria-label="Open to">
-              {profile.networkingGoals.map((g) => (
-                <li key={g} className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">
-                  Open to {goalLabel(g).toLowerCase()}
-                </li>
-              ))}
-            </ul>
-          </div>
+        {goal && (
+          <p className="mt-4">
+            <span className="inline-block rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">
+              Open to {goalLabel(goal).toLowerCase()}
+            </span>
+          </p>
         )}
 
         <div className="mt-6">
@@ -162,7 +159,7 @@ export function ProfileView({ profile, preview = false }: Props) {
           fullName: profile.fullName,
           title: profile.title,
           organization: profile.organization,
-          networkingGoals: profile.networkingGoals,
+          networkingGoals: goal ? [goal] : [],
         }}
         email={email}
         slug={slug}

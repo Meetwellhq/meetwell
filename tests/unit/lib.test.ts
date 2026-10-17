@@ -88,6 +88,11 @@ describe("profile schema", () => {
       profileInputSchema.safeParse({ ...baseInput, avatarUrl: "https://proj.supabase.co/storage/v1/object/public/avatars/u/1.jpg" }).success,
     ).toBe(true);
   });
+  it("allows only one networking goal", () => {
+    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["clients"] }).success).toBe(true);
+    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: [] }).success).toBe(true);
+    expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["clients", "mentors"] }).success).toBe(false);
+  });
   it("rejects unknown goals and platforms", () => {
     expect(profileInputSchema.safeParse({ ...baseInput, networkingGoals: ["world-domination"] }).success).toBe(false);
     expect(profileInputSchema.safeParse({ ...baseInput, socials: [{ platform: "myspace", url: "https://myspace.com", isPublic: true }] }).success).toBe(false);
