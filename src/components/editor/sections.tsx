@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Lock, Plus, Trash2 } from "lucide-react";
+import { Check, Lock, Mail, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { Button } from "@/components/ui/button";
@@ -169,9 +169,9 @@ export function ContactSection({ values, errors, set }: SectionProps) {
       </ul>
       {values.contacts.length < LIMITS.contacts && (
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" size="sm" icon={<Plus className="size-4" />}
+          <Button variant="secondary" size="sm" icon={<Mail className="size-4" />}
             onClick={() => set("contacts", [...values.contacts, { type: "email", value: "", label: "", isPublic: true }])}>
-            Add email
+            Add email address
           </Button>
           <Button variant="secondary" size="sm" icon={<Plus className="size-4" />}
             onClick={() => set("contacts", [...values.contacts, { type: "phone", value: "", label: "", isPublic: false }])}>
