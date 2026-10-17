@@ -19,7 +19,7 @@ export function CardPreview({ qrSvg }: { qrSvg: string }) {
         <div className="mt-4 flex flex-wrap gap-1.5">
           <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">Open to networking</span>
         </div>
-        <div className="mt-5 flex h-11 items-center justify-center gap-2 rounded-full bg-accent text-[15px] font-medium text-accent-ink">
+        <div className="mt-5 flex h-11 items-center justify-center gap-2 rounded-lg bg-accent text-[15px] font-medium text-accent-ink">
           <UserRoundPlus className="size-[18px]" aria-hidden />
           Save contact
         </div>
@@ -71,8 +71,8 @@ export function StarterPreview() {
         project we could work on together.
       </div>
       <div className="mt-3 flex gap-2">
-        <span className="inline-flex h-9 items-center rounded-full bg-accent px-4 text-sm font-medium text-accent-ink">Copy message</span>
-        <span className="inline-flex h-9 items-center rounded-full px-3 text-sm text-ink-2">Try another</span>
+        <span className="inline-flex h-9 items-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-ink">Copy message</span>
+        <span className="inline-flex h-9 items-center rounded-lg px-3 text-sm text-ink-2">Try another</span>
       </div>
     </div>
   );

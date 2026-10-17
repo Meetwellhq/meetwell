@@ -1,4 +1,4 @@
-import { ArrowDown, Briefcase, GraduationCap, Lightbulb, Rocket, Ticket } from "lucide-react";
+import { ArrowRight, Briefcase, GraduationCap, Lightbulb, Rocket, Ticket } from "lucide-react";
 import { CardPreview, StarterPreview } from "@/components/marketing/card-preview";
 import { Feature, HighlightsStrip, Panel, Pill, ScanVisual } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
@@ -71,7 +71,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
                 className="inline-flex h-12 items-center justify-center gap-1.5 px-2 text-base font-medium text-ink underline-offset-4 hover:underline"
               >
                 See how it works
-                <ArrowDown className="size-4" aria-hidden />
+                <ArrowRight className="size-4" aria-hidden />
               </a>
             </div>
           </div>
