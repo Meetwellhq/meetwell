@@ -13,7 +13,7 @@ import {
   UserRoundPlus,
 } from "lucide-react";
 import { StarterPreview } from "@/components/marketing/card-preview";
-import { HeroPhones } from "@/components/marketing/hero-phones";
+import { HeroPhoto } from "@/components/marketing/hero-photo";
 import { Feature, HighlightsStrip, Panel, ScanVisual } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
@@ -95,8 +95,8 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           </div>
 
           {/* Phone illustration below the text; hidden on mobile. */}
-          <div className="mx-3 mt-12 hidden items-center justify-center overflow-hidden rounded-[1.25rem] bg-accent px-4 py-14 sm:mx-10 sm:flex lg:mx-16">
-            <HeroPhones qrSvg={qr} />
+          <div className="mx-3 mt-12 hidden sm:mx-10 sm:block lg:mx-16">
+            <HeroPhoto qrSvg={qr} />
           </div>
           <div className="h-3 sm:h-10 lg:h-16" />
         </Panel>

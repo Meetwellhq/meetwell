@@ -61,7 +61,7 @@ function OwnerScreen({ qrSvg }: { qrSvg: string }) {
 }
 
 /** The visitor's camera locked on the QR code, offering to save the contact. */
-function ScannerScreen({ qrSvg }: { qrSvg: string }) {
+export function ScannerScreen({ qrSvg }: { qrSvg: string }) {
   return (
     <div className="relative flex h-full flex-col bg-gradient-to-b from-[#3a3a37] via-[#2a2a28] to-[#1e1e1d] px-3 pb-3 pt-8">
       {/* QR link banner, like the camera app shows */}
