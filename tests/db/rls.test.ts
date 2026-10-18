@@ -319,3 +319,12 @@ describe("invites", () => {
     await expect(as(ALICE, "select public.admin_invite('nobody@test')")).rejects.toThrow(/not on the waiting list/);
   });
 });
+
+describe("internal functions", () => {
+  it("can't be called by visitors", async () => {
+    await expect(as(null, "select public.purge_old_profile_events()")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select public.purge_old_profile_events()")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select public.admin_invite('x@test')")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select * from public.admin_list_waitlist()")).rejects.toThrow(/permission denied/);
+  });
+});
