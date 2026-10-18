@@ -5,29 +5,14 @@ import { cn } from "@/lib/cn";
 /** A rounded cream "sheet" sitting on the sand page background. */
 export function Panel({ id, className, children }: { id?: string; className?: string; children: ReactNode }) {
   return (
-    <section id={id} className={cn("scroll-mt-20 rounded-[2rem] border border-border bg-white px-5 py-14 sm:px-10 sm:py-20 lg:px-16", className)}>
+    <section id={id} className={cn("scroll-mt-20 rounded-[1.5rem] border border-border bg-white px-5 py-14 sm:px-10 sm:py-20 lg:px-16", className)}>
       {children}
     </section>
   );
 }
 
-/** Small label pill shown above feature headings. */
-export function Pill({ children, tone = "light" }: { children: ReactNode; tone?: "light" | "dark" }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
-        tone === "dark" ? "bg-ink text-white" : "border border-border bg-white text-ink-2",
-      )}
-    >
-      {children}
-    </span>
-  );
-}
-
 /** Two-column feature: copy on one side, a bold rounded visual on the other. */
 export function Feature({
-  label,
   title,
   body,
   action,
@@ -35,7 +20,6 @@ export function Feature({
   visualClassName,
   reverse,
 }: {
-  label: string;
   title: ReactNode;
   body: ReactNode;
   action?: ReactNode;
@@ -46,14 +30,13 @@ export function Feature({
   return (
     <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
       <div className={cn(reverse && "lg:order-2")}>
-        <Pill>{label}</Pill>
-        <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">{title}</h2>
+        <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">{title}</h2>
         <div className="mt-5 max-w-md text-[17px] leading-relaxed text-ink-2">{body}</div>
         {action && <div className="mt-8">{action}</div>}
       </div>
       <div
         className={cn(
-          "relative flex min-h-[22rem] items-center justify-center overflow-hidden rounded-[1.75rem] p-6 sm:min-h-[28rem] sm:p-10",
+          "relative flex min-h-[22rem] items-center justify-center overflow-hidden rounded-[1.25rem] p-6 sm:min-h-[28rem] sm:p-10",
           visualClassName,
           reverse && "lg:order-1",
         )}

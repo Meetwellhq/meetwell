@@ -1,6 +1,6 @@
 import { ArrowRight, Briefcase, GraduationCap, Lightbulb, Rocket, Ticket } from "lucide-react";
 import { CardPreview, StarterPreview } from "@/components/marketing/card-preview";
-import { Feature, HighlightsStrip, Panel, Pill, ScanVisual } from "@/components/marketing/landing";
+import { Feature, HighlightsStrip, Panel, ScanVisual } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink } from "@/components/ui/button";
@@ -80,7 +80,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             <HighlightsStrip items={highlights} />
           </div>
 
-          <div className="mx-3 mt-12 flex min-h-[26rem] items-center justify-center rounded-[1.75rem] bg-accent px-6 pb-20 pt-14 sm:mx-10 sm:min-h-[32rem] lg:mx-16">
+          <div className="mx-3 mt-12 flex min-h-[26rem] items-center justify-center rounded-[1.25rem] bg-accent px-6 pb-20 pt-14 sm:mx-10 sm:min-h-[32rem] lg:mx-16">
             <CardPreview qrSvg={qr} />
           </div>
           <div className="h-3 sm:h-10 lg:h-16" />
@@ -89,7 +89,6 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         {/* Scan */}
         <Panel id="how-it-works">
           <Feature
-            label="Scan"
             title={<>One scan. No app. No typing.</>}
             body={
               <p>
@@ -107,7 +106,6 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         <Panel>
           <Feature
             reverse
-            label="Start the conversation"
             title={<>Never stare at a blank message again.</>}
             body={
               <p>
@@ -129,14 +127,13 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         {/* Use cases */}
         <Panel>
           <div className="max-w-2xl">
-            <Pill tone="dark">Who it&apos;s for</Pill>
-            <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
+            <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
               Made for people who meet people.
             </h2>
           </div>
           <ul className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {useCases.map((u) => (
-              <li key={u.title} className="rounded-[1.5rem] border border-border bg-white p-6">
+              <li key={u.title} className="rounded-[1rem] border border-border bg-white p-6">
                 <span className="grid size-10 place-items-center rounded-full bg-accent-soft text-accent">
                   <u.icon className="size-5" aria-hidden />
                 </span>
@@ -148,7 +145,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         </Panel>
 
         {/* Final CTA */}
-        <section className="rounded-[2rem] bg-accent px-6 py-20 text-center text-white sm:py-28">
+        <section className="rounded-[1.5rem] bg-accent px-6 py-20 text-center text-white sm:py-28">
           <h2 className="mx-auto max-w-3xl font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl">
             Your next connection is one scan away.
           </h2>
