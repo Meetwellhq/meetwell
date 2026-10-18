@@ -1,4 +1,17 @@
-import { ArrowRight, Briefcase, GraduationCap, Lightbulb, Rocket, Ticket } from "lucide-react";
+import {
+  ArrowRight,
+  Briefcase,
+  Camera,
+  Gift,
+  GraduationCap,
+  Lightbulb,
+  MessageSquareText,
+  QrCode,
+  Rocket,
+  Smartphone,
+  Ticket,
+  UserRoundPlus,
+} from "lucide-react";
 import { StarterPreview } from "@/components/marketing/card-preview";
 import { HeroPhones } from "@/components/marketing/hero-phones";
 import { Feature, HighlightsStrip, Panel, ScanVisual } from "@/components/marketing/landing";
@@ -21,12 +34,12 @@ async function isSignedIn() {
 
 // Product facts only — no invented stats, ratings or customer names.
 const highlights = [
-  "Free to create",
-  "No app needed to scan",
-  "Works with any phone camera",
-  "Save contact in one tap",
-  "Update anytime — your QR code never changes",
-  "Ready-to-send first messages",
+  { icon: Gift, label: "Free to use" },
+  { icon: Smartphone, label: "No app needed" },
+  { icon: Camera, label: "Any phone camera" },
+  { icon: UserRoundPlus, label: "One-tap save" },
+  { icon: QrCode, label: "Permanent QR code" },
+  { icon: MessageSquareText, label: "Ready-made messages" },
 ];
 
 const useCases = [
@@ -69,7 +82,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               </ButtonLink>
               <a
                 href="#how-it-works"
-                className="inline-flex h-12 items-center justify-center gap-1.5 px-2 text-base font-medium text-ink underline-offset-4 hover:underline"
+                className="inline-flex h-12 items-center justify-center gap-1.5 px-2 text-base font-medium text-accent underline-offset-4 hover:underline"
               >
                 See how it works
                 <ArrowRight className="size-4" aria-hidden />

@@ -1,4 +1,4 @@
-import { Check, ScanLine } from "lucide-react";
+import { ScanLine, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
@@ -48,13 +48,16 @@ export function Feature({
 }
 
 /** Honest, product-fact highlights in a gently scrolling strip. */
-export function HighlightsStrip({ items }: { items: string[] }) {
+export function HighlightsStrip({ items }: { items: { icon: LucideIcon; label: string }[] }) {
   const row = (hidden: boolean) => (
-    <ul className="flex shrink-0 items-center gap-10 pr-10" aria-hidden={hidden || undefined}>
-      {items.map((item) => (
-        <li key={item} className="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-ink-2">
-          <Check className="size-4 text-accent" aria-hidden />
-          {item}
+    <ul className="flex shrink-0 items-center gap-3 pr-3" aria-hidden={hidden || undefined}>
+      {items.map(({ icon: Icon, label }) => (
+        <li
+          key={label}
+          className="flex items-center gap-2 whitespace-nowrap rounded-full bg-accent-soft px-3.5 py-2 text-sm font-medium text-accent"
+        >
+          <Icon className="size-4" aria-hidden />
+          {label}
         </li>
       ))}
     </ul>
