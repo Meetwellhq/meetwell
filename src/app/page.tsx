@@ -44,11 +44,11 @@ const highlights = [
 ];
 
 const useCases = [
-  { icon: Briefcase, title: "Professionals", body: "Designers, developers and other tech folks who want contacts that turn into conversations." },
-  { icon: Rocket, title: "Founders", body: "Share what you're building and make it easy for collaborators and backers to reach out." },
-  { icon: Lightbulb, title: "Freelancers & creators", body: "Point new clients to your work and make the first message effortless." },
-  { icon: Ticket, title: "Event attendees", body: "Swap details at conferences, meetups and career fairs in the time it takes to say hello." },
-  { icon: GraduationCap, title: "Students & job seekers", body: "Leave recruiters and mentors with a card they can actually act on." },
+  { icon: Briefcase, title: "Professionals", body: "Turn new contacts into real conversations." },
+  { icon: Rocket, title: "Founders", body: "Share what you're building." },
+  { icon: Lightbulb, title: "Freelancers & creators", body: "Send new clients straight to your work." },
+  { icon: Ticket, title: "Event attendees", body: "Swap details in seconds." },
+  { icon: GraduationCap, title: "Students & job seekers", body: "Give recruiters a card they can use." },
 ];
 
 export default async function LandingPage({ searchParams }: PageProps<"/">) {
@@ -75,8 +75,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               <span className="font-medium italic text-accent [-webkit-text-stroke:0.008em_currentColor]">Make it a connection.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-ink-2">
-              Your networking card, contact details and a ready-to-send first message — all in one scan. So the people
-              you meet actually follow up.
+              Share your card with one scan. Make it easy for people to follow up.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <ButtonLink href={cta} size="lg">
@@ -103,8 +102,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             title={<>One scan. No app. No typing.</>}
             body={
               <p>
-                Show your QR code and anyone can open your card with their phone camera — no download, no account, no
-                form. Your code points to your profile link, so it never needs reprinting.
+                People scan your code with their camera and your card opens. Nothing to install.
               </p>
             }
             action={<ButtonLink href={cta}>
@@ -123,9 +121,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             title={<>Never stare at a blank message again.</>}
             body={
               <p>
-                Visitors pick what they want — to network, learn, offer services or follow up — and get a short, natural
-                draft based on your card. They edit it and send it from their own email or chat app. Drafts never invent
-                shared history.
+                Visitors get a short first message based on your card, ready to edit and send.
               </p>
             }
             action={<ButtonLink href={cta}>
@@ -167,7 +163,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             Your next connection is one scan away.
           </h2>
           <p className="mx-auto mt-5 max-w-md text-lg text-white/75">
-            {SIGNUPS_OPEN ? "Create a free card in a few minutes." : "We're letting people in gradually. Get on the list."}
+            {SIGNUPS_OPEN ? "Create a free card in a few minutes." : "We're letting people in slowly."}
           </p>
           <div className="mt-9">
             <ButtonLink href={cta} size="lg" variant="secondary" className="border-transparent">
