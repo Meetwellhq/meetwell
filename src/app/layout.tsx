@@ -16,9 +16,11 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: { default: `${APP_NAME} — Meet someone. Make it a connection.`, template: `%s · ${APP_NAME}` },
-  description:
-    "Your networking card, contact details and conversation starters — all accessible with one scan.",
+  description: "Share your card with one scan. Make it easy for people to follow up.",
   applicationName: APP_NAME,
+  // The share image itself comes from app/opengraph-image.png (a screenshot of the landing hero).
+  openGraph: { type: "website", siteName: APP_NAME },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
