@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { waitlistEmail } from "@/lib/waitlist-email";
 
-const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg" };
+const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "hello@meetwell.me" };
 
 describe("waitlist email", () => {
   it("greets by first name and signs off from the founder with a photo", () => {
@@ -11,6 +11,8 @@ describe("waitlist email", () => {
     expect(text).toContain("I'm so happy to have you here");
     expect(html).toContain('src="https://meetwell.me/founder/rasheed.jpg"');
     expect(html).toContain("Founder, Meetwell");
+    expect(text).toContain("Drop me a line at hello@meetwell.me.");
+    expect(html).toContain('href="mailto:hello@meetwell.me"');
   });
 
   it("escapes names typed into the public form", () => {

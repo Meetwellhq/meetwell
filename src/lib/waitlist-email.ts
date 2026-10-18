@@ -15,12 +15,15 @@ export function waitlistEmail({
   appName,
   siteUrl,
   photoUrl,
+  replyEmail,
 }: {
   fullName: string;
   appName: string;
   siteUrl: string;
   /** Absolute URL of the founder's photo (email clients can't load relative paths). */
   photoUrl: string;
+  /** Where people should write back; the email itself comes from a no-reply address. */
+  replyEmail: string;
 }) {
   const firstName = fullName.trim().split(/\s+/)[0] || "there";
   const siteLabel = siteUrl.replace(/^https?:\/\//, "");
@@ -29,16 +32,19 @@ export function waitlistEmail({
     `I'm so happy to have you here, and thank you for joining the ${appName} private beta.`,
     `A little about ${appName}: it gives you a networking card with its own QR code. Someone scans it with their phone camera, saves your contact in one tap, and gets a ready-made first message, so following up is easy. No app needed.`,
     `I'm ${FOUNDER_NAME}, the founder. I'm letting people in a few at a time so I can listen properly to everyone early on. When your spot is ready, I'll send you an access code.`,
-    "In the meantime, I'd love to know where you usually meet new people: events, work, church, campus? Just hit reply.",
   ];
+  // Built separately so the address can be a link in the HTML version.
+  const ask =
+    "In the meantime, I'd love to know where you usually meet new people: events, work, church, campus? Drop me a line at";
 
   const subject = `Thanks for joining the ${appName} private beta`;
 
-  const text = [`Hi ${firstName},`, ...paragraphs, `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`].join("\n\n");
+  const text = [`Hi ${firstName},`, ...paragraphs, `${ask} ${replyEmail}.`, `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`].join("\n\n");
 
   const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1c1c1a;font-size:16px;line-height:1.65">
   <p>Hi ${escapeHtml(firstName)},</p>
   ${paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join("\n  ")}
+  <p>${escapeHtml(ask)} <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>
   <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:28px;border-collapse:collapse">
     <tr>
       <td style="padding-right:14px;vertical-align:middle">

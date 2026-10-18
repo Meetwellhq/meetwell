@@ -2,7 +2,8 @@ import "server-only";
 import { APP_NAME, getSiteUrl, SUPPORT_EMAIL } from "./config";
 import { FOUNDER_NAME, waitlistEmail } from "./waitlist-email";
 
-// A personal note from the founder. Replies go to SUPPORT_EMAIL.
+// A personal note from the founder, sent from a no-reply address. The email
+// asks people to write to SUPPORT_EMAIL, and reply-to points there as well.
 const FROM = `${FOUNDER_NAME} from ${APP_NAME} <noreply@meetwell.me>`;
 
 /**
@@ -22,6 +23,7 @@ export async function sendWaitlistEmail(to: string, fullName: string): Promise<b
     appName: APP_NAME,
     siteUrl: site,
     photoUrl: `${site}/founder/rasheed.jpg`,
+    replyEmail: SUPPORT_EMAIL,
   });
 
   try {
