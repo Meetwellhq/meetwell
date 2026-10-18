@@ -3,7 +3,9 @@ import { ArrowUpRight, Globe, Mail, Phone, UserRoundPlus } from "lucide-react";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonClass } from "@/components/ui/button";
-import { APP_NAME, JOIN_CTA, SIGNUPS_OPEN } from "@/lib/config";
+import { LogoMark } from "@/components/marketing/logo";
+import { cn } from "@/lib/cn";
+import { APP_NAME, SIGNUPS_OPEN } from "@/lib/config";
 import { goalLabel, isOfferedGoal, socialLabel } from "@/lib/profiles/constants";
 import { contactActions, displayUrl, type ContactAction } from "@/lib/profiles/links";
 import type { PublicProfile } from "@/lib/profiles/types";
@@ -132,21 +134,36 @@ export function ProfileView({ profile, preview = false }: Props) {
         slug={slug}
       />
 
-      <p className="py-4 text-center text-xs text-ink-3">
-        {preview ? (
-          <>Preview — this is what visitors see.</>
-        ) : (
-          <>
-            Shared with{" "}
-            <a href="/home" className="font-medium text-ink-2 underline-offset-2 hover:underline">
-              {APP_NAME}
-            </a>{" "}
-            · <Link href={JOIN_CTA.href} className="underline-offset-2 hover:underline">
-              {SIGNUPS_OPEN ? "Create your own card" : "Get your own card"}
-            </Link>
-          </>
-        )}
-      </p>
+      {preview ? (
+        <>
+          <div className={CREATE_BAR} aria-hidden>
+            <CreateBarContent />
+          </div>
+          <p className="pb-4 text-center text-xs text-ink-3">Preview — this is what visitors see.</p>
+        </>
+      ) : (
+        // Floats at the bottom of the screen while visitors scroll the card.
+        <Link href={CREATE_HREF} className={cn(CREATE_BAR, "sticky bottom-4 mb-4 transition-colors hover:bg-[#e3e2de]")}>
+          <CreateBarContent />
+        </Link>
+      )}
     </div>
+  );
+}
+
+// During the private beta, the log-in page offers access codes and early access.
+const CREATE_HREF = SIGNUPS_OPEN ? "/sign-up" : "/sign-in";
+const CREATE_BAR =
+  "flex h-14 items-center justify-between rounded-2xl bg-[#ecebe8] px-5 text-[17px] font-semibold text-ink shadow-[0_10px_30px_-12px_rgb(0_0_0/0.35)]";
+
+function CreateBarContent() {
+  return (
+    <>
+      <span className="flex items-center gap-2.5">
+        <LogoMark className="size-6" />
+        {APP_NAME}
+      </span>
+      <span>Create card</span>
+    </>
   );
 }
