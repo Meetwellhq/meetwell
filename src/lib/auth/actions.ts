@@ -16,6 +16,7 @@ const LIMITS = {
   signIn: { max: 60, windowMs: 10 * 60_000 },
   reset: { max: 20, windowMs: 15 * 60_000 },
   waitlist: { max: 20, windowMs: 10 * 60_000 },
+  accessCode: { max: 20, windowMs: 10 * 60_000 },
 };
 
 export type AuthFormState = {
@@ -33,11 +34,32 @@ function safeNext(value: FormDataEntryValue | null, fallback = "/dashboard") {
 
 const credentialsSchema = z.object({ email: emailSchema, password: passwordSchema });
 
+const INVALID_CODE = "That access code isn't valid or has already been used. Check your invite, or request early access.";
+
+export type AccessCodeState = { error?: string; code?: string; input?: string };
+
+/** Step 1 of invite sign-up: check the code before asking for email and password. */
+export async function verifyAccessCode(_: AccessCodeState, formData: FormData): Promise<AccessCodeState> {
+  const code = String(formData.get("code") ?? "").trim();
+  if (!(await limitByClient("access-code", LIMITS.accessCode.max, LIMITS.accessCode.windowMs))) {
+    return { error: "Too many attempts. Please wait a few minutes and try again.", input: code };
+  }
+  if (!code) return { error: "Enter the access code from your invite." };
+  if (code.length > 64) return { error: INVALID_CODE, input: code.slice(0, 64) };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("check_access_code", { p_code: code });
+  if (error) {
+    console.error("check_access_code failed", error.code, error.message);
+    return { error: "We couldn't check that code right now. Please try again in a moment.", input: code };
+  }
+  return data === true ? { code } : { error: INVALID_CODE, input: code };
+}
+
 export async function signUp(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "");
-  if (!SIGNUPS_OPEN) {
-    return { error: "Meetwell is in private beta. Join the early access list and we'll invite you soon.", email };
-  }
+  // During the private beta, new accounts need an access code (also enforced in the database).
+  const accessCode = String(formData.get("accessCode") ?? "").trim().slice(0, 64);
   if (!(await limitByClient("sign-up", LIMITS.signUp.max, LIMITS.signUp.windowMs))) {
     return { error: "Too many attempts. Please wait a few minutes and try again.", email };
   }
@@ -45,10 +67,17 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), email };
 
   const supabase = await createClient();
+  if (!SIGNUPS_OPEN) {
+    const { data: valid } = await supabase.rpc("check_access_code", { p_code: accessCode });
+    if (valid !== true) return { error: INVALID_CODE, email };
+  }
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { emailRedirectTo: `${getSiteUrl()}/auth/callback?next=/onboarding` },
+    options: {
+      emailRedirectTo: `${getSiteUrl()}/auth/callback?next=/onboarding`,
+      data: SIGNUPS_OPEN ? undefined : { access_code: accessCode },
+    },
   });
   const outcome = classifySignUp(data, error?.code);
   if (outcome === "exists") {
@@ -58,7 +87,11 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
     };
   }
   if (error) {
-    return { error: error.code === "weak_password" ? error.message : "We couldn't create your account. Please try again.", email };
+    if (error.code === "weak_password") return { error: error.message, email };
+    // The database refused the account: the code was used up in the meantime.
+    if (!SIGNUPS_OPEN && error.code === "unexpected_failure") return { error: INVALID_CODE, email };
+    console.error("signUp failed", error.code, error.message);
+    return { error: "We couldn't create your account. Please try again.", email };
   }
 
   // With email confirmation enabled (the default), no session is returned yet.

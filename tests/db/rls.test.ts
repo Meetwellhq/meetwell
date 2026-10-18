@@ -51,7 +51,12 @@ beforeAll(async () => {
   for (const file of readdirSync(dir).sort()) {
     await db.exec(readFileSync(join(dir, file), "utf8"));
   }
-  await db.query("insert into auth.users (id, email) values ($1, 'a@test'), ($2, 'b@test')", [ALICE, BOB]);
+  await db.exec("insert into public.access_codes (code, max_uses) values ('SETUP-CODE', 2)");
+  await db.query(
+    `insert into auth.users (id, email, raw_user_meta_data)
+     values ($1, 'a@test', '{"access_code":"setup-code"}'), ($2, 'b@test', '{"access_code":"SETUP-CODE"}')`,
+    [ALICE, BOB],
+  );
   await createProfile(ALICE, "alice");
 }, 60_000);
 
@@ -244,5 +249,32 @@ describe("waitlist", () => {
     await expect(as(null, "insert into public.waitlist (email) values ('x@y.test')")).rejects.toThrow(/permission denied/);
     const rows = (await db.query<{ email: string }>("select email from public.waitlist")).rows;
     expect(rows).toEqual([{ email: "new@person.test" }]);
+  });
+});
+
+describe("access codes", () => {
+  const newUser = (code: string | null) =>
+    db.query("insert into auth.users (id, email, raw_user_meta_data) values (gen_random_uuid(), 'n@test', $1)", [
+      code === null ? {} : { access_code: code },
+    ]);
+
+  it("keeps the code list private but lets anyone check a code", async () => {
+    await db.exec("insert into public.access_codes (code, max_uses) values ('INVITE-ONE', 1), ('OLD-CODE', 5)");
+    await db.exec("update public.access_codes set expires_at = now() - interval '1 day' where code = 'OLD-CODE'");
+    await expect(as(null, "select * from public.access_codes")).rejects.toThrow(/permission denied/);
+    expect(await as(null, "select public.check_access_code(' invite-one ') as ok")).toEqual([{ ok: true }]);
+    expect(await as(null, "select public.check_access_code('nope-nope') as ok")).toEqual([{ ok: false }]);
+    expect(await as(null, "select public.check_access_code('old-code') as ok")).toEqual([{ ok: false }]);
+  });
+
+  it("blocks sign-ups without a valid code and uses codes up", async () => {
+    await expect(newUser(null)).rejects.toThrow(/access code is required/);
+    await expect(newUser("NOPE-NOPE")).rejects.toThrow(/access code is required/);
+    await expect(newUser("OLD-CODE")).rejects.toThrow(/access code is required/);
+    await newUser("invite-one");
+    await expect(newUser("INVITE-ONE")).rejects.toThrow(/access code is required/); // single use
+    const users = (await db.query<{ m: unknown }>("select raw_user_meta_data as m from auth.users where email = 'n@test'")).rows;
+    expect(users).toEqual([{ m: {} }]); // code not stored on the user
+    expect(await as(null, "select public.check_access_code('INVITE-ONE') as ok")).toEqual([{ ok: false }]);
   });
 });
