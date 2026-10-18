@@ -18,7 +18,7 @@ export default async function OnboardingPage() {
     <>
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Logo href="/dashboard" />
+          <Logo />
           <span className="text-sm text-ink-3">Drafts save as you go</span>
         </div>
       </header>

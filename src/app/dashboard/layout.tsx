@@ -14,7 +14,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
       <header className="sticky top-0 z-30 border-b border-border bg-bg/95 backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex h-14 items-center justify-between gap-4">
-            <Logo href="/dashboard" />
+            <Logo />
             <div className="flex items-center gap-3">
               <span className="hidden max-w-[16rem] truncate text-sm text-ink-3 sm:inline">{user.email}</span>
               <form action={signOut}>

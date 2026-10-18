@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { toPreview, toFormValues } from "@/components/editor/types";
+import { classifySignUp } from "@/lib/auth/sign-up-result";
 import { contactActions, mailtoWithBody } from "@/lib/profiles/links";
 import { toPublicView, type OwnProfile } from "@/lib/profiles/types";
 import { templateStarters } from "@/lib/starters/templates";
@@ -188,6 +189,22 @@ describe("conversation starters", () => {
         expect(d).not.toMatch(/\bmet\b|meeting you|we spoke|our conversation|last week|at the event/i);
       }
     }
+  });
+});
+
+describe("sign-up result", () => {
+  it("treats Supabase's placeholder user for a taken email as 'exists'", () => {
+    expect(classifySignUp({ user: { identities: [] }, session: null })).toBe("exists");
+  });
+  it("treats 'user already exists' errors as 'exists'", () => {
+    expect(classifySignUp({ user: null, session: null }, "user_already_exists")).toBe("exists");
+    expect(classifySignUp({ user: null, session: null }, "email_exists")).toBe("exists");
+  });
+  it("asks new users to confirm their email", () => {
+    expect(classifySignUp({ user: { identities: [{ id: "x" }] }, session: null })).toBe("confirm-email");
+  });
+  it("signs in directly when no confirmation is required", () => {
+    expect(classifySignUp({ user: { identities: [{ id: "x" }] }, session: {} })).toBe("signed-in");
   });
 });
 

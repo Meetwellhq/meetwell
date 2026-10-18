@@ -138,9 +138,9 @@ export function ProfileView({ profile, preview = false }: Props) {
         ) : (
           <>
             Shared with{" "}
-            <Link href="/" className="font-medium text-ink-2 underline-offset-2 hover:underline">
+            <a href="/home" className="font-medium text-ink-2 underline-offset-2 hover:underline">
               {APP_NAME}
-            </Link>{" "}
+            </a>{" "}
             · <Link href="/sign-up" className="underline-offset-2 hover:underline">Create your own card</Link>
           </>
         )}

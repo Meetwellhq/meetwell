@@ -6,6 +6,7 @@ import { getSiteUrl } from "../config";
 import { limitByClient } from "../rate-limit";
 import { createClient } from "../supabase/server";
 import { emailSchema, fieldErrors, passwordSchema } from "../validation";
+import { classifySignUp } from "./sign-up-result";
 
 // Per-IP limits. Kept generous because attendees at an event often share one
 // Wi-Fi network (one IP); Supabase Auth applies its own limits as well.
@@ -44,14 +45,21 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
     password: parsed.data.password,
     options: { emailRedirectTo: `${getSiteUrl()}/auth/callback?next=/onboarding` },
   });
+  const outcome = classifySignUp(data, error?.code);
+  if (outcome === "exists") {
+    return {
+      error: "An account with this email already exists. Sign in instead, or reset your password if you've forgotten it.",
+      email,
+    };
+  }
   if (error) {
     return { error: error.code === "weak_password" ? error.message : "We couldn't create your account. Please try again.", email };
   }
 
   // With email confirmation enabled (the default), no session is returned yet.
-  if (!data.session) {
+  if (outcome === "confirm-email") {
     return {
-      message: `We sent a confirmation link to ${parsed.data.email}. Open it on this device to finish creating your card.`,
+      message: `We sent a confirmation link to ${parsed.data.email}. Open it to finish creating your card.`,
       email,
     };
   }
