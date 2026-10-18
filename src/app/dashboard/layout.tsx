@@ -3,11 +3,12 @@ import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { Logo } from "@/components/marketing/logo";
 import { signOut } from "@/lib/auth/actions";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in?next=/dashboard");
+  const { data: isAdmin } = await (await createClient()).rpc("is_admin");
 
   return (
     <>
@@ -25,7 +26,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
               </form>
             </div>
           </div>
-          <DashboardNav />
+          <DashboardNav isAdmin={isAdmin === true} />
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>

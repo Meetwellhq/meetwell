@@ -278,3 +278,44 @@ describe("access codes", () => {
     expect(await as(null, "select public.check_access_code('INVITE-ONE') as ok")).toEqual([{ ok: false }]);
   });
 });
+
+describe("invites", () => {
+  it("only admins can see the waiting list or send invites", async () => {
+    await db.query("select public.join_waitlist('invitee@test', 'Ivy Invitee')");
+    await expect(as(BOB, "select * from public.admin_list_waitlist()")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select public.admin_invite('invitee@test')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_invite('invitee@test')")).rejects.toThrow(/permission denied|Not allowed/);
+    await expect(as(BOB, "select * from public.admins")).rejects.toThrow(/permission denied/);
+  });
+
+  it("creates a single-use code, re-sends it, and shows sign-up status", async () => {
+    await db.query("insert into public.admins (user_id) values ($1)", [ALICE]);
+    const [{ code }] = await as<{ code: string }>(ALICE, "select public.admin_invite(' Invitee@Test ') as code");
+    expect(code).toMatch(/^MW-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/);
+    // Inviting again returns the same unused code.
+    expect(await as(ALICE, "select public.admin_invite('invitee@test') as code")).toEqual([{ code }]);
+
+    const before = await as<{ email: string; invited_at: string | null; signed_up: boolean }>(
+      ALICE,
+      "select email, invited_at, signed_up from public.admin_list_waitlist() where email = 'invitee@test'",
+    );
+    expect(before[0].invited_at).not.toBeNull();
+    expect(before[0].signed_up).toBe(false);
+
+    await db.query("insert into auth.users (id, email, raw_user_meta_data) values (gen_random_uuid(), 'invitee@test', $1)", [
+      { access_code: code.toLowerCase() },
+    ]);
+    const after = await as<{ signed_up: boolean }>(
+      ALICE,
+      "select signed_up from public.admin_list_waitlist() where email = 'invitee@test'",
+    );
+    expect(after).toEqual([{ signed_up: true }]);
+    // The code is used up, so a new invite makes a fresh one.
+    const [{ code: next }] = await as<{ code: string }>(ALICE, "select public.admin_invite('invitee@test') as code");
+    expect(next).not.toBe(code);
+  });
+
+  it("refuses emails that are not on the list", async () => {
+    await expect(as(ALICE, "select public.admin_invite('nobody@test')")).rejects.toThrow(/not on the waiting list/);
+  });
+});

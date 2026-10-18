@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { signUp, verifyAccessCode } from "@/lib/auth/actions";
 
-/** Invite sign-up: check the access code first, then create the account with it. */
-export function AccessCodeFlow() {
+/**
+ * Invite sign-up: check the access code first, then create the account with it.
+ * `initialCode` comes from the link in an invite email.
+ */
+export function AccessCodeFlow({ initialCode }: { initialCode?: string }) {
   const [state, formAction, pending] = useActionState(verifyAccessCode, {});
 
   if (state.code) {
@@ -38,7 +41,7 @@ export function AccessCodeFlow() {
           <Input
             id={id}
             name="code"
-            defaultValue={state.input}
+            defaultValue={state.input ?? initialCode}
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}

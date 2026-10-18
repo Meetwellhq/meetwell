@@ -1,31 +1,26 @@
 import "server-only";
 import { APP_NAME, getSiteUrl, SUPPORT_EMAIL } from "./config";
-import { FOUNDER_NAME, waitlistEmail } from "./waitlist-email";
+import { FOUNDER_NAME, inviteEmail, waitlistEmail } from "./founder-emails";
 
-// A personal note from the founder, sent from a no-reply address. The email
-// asks people to write to SUPPORT_EMAIL, and reply-to points there as well.
+// Personal notes from the founder, sent from a no-reply address. The emails
+// ask people to write to SUPPORT_EMAIL, and reply-to points there as well.
 const FROM = `${FOUNDER_NAME} from ${APP_NAME} <noreply@meetwell.me>`;
 
+function common(fullName: string | null) {
+  const site = getSiteUrl();
+  return { fullName, appName: APP_NAME, siteUrl: site, photoUrl: `${site}/founder/rasheed.jpg`, replyEmail: SUPPORT_EMAIL };
+}
+
 /**
- * Sends the "thanks for joining the private beta" email through Resend's API.
- * Needs RESEND_API_KEY (server-only). Without it the email is skipped, so
- * local development works without sending anything.
+ * Sends one email through Resend's API. Needs RESEND_API_KEY (server-only).
+ * Without it the email is skipped, so local development sends nothing.
  */
-export async function sendWaitlistEmail(to: string, fullName: string): Promise<boolean> {
+async function send(to: string, { subject, text, html }: { subject: string; text: string; html: string }) {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
-    console.warn("RESEND_API_KEY is not set; skipping waitlist email");
+    console.warn(`RESEND_API_KEY is not set; skipping email "${subject}"`);
     return false;
   }
-  const site = getSiteUrl();
-  const { subject, text, html } = waitlistEmail({
-    fullName,
-    appName: APP_NAME,
-    siteUrl: site,
-    photoUrl: `${site}/founder/rasheed.jpg`,
-    replyEmail: SUPPORT_EMAIL,
-  });
-
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -33,10 +28,20 @@ export async function sendWaitlistEmail(to: string, fullName: string): Promise<b
       body: JSON.stringify({ from: FROM, to: [to], reply_to: SUPPORT_EMAIL, subject, text, html }),
       signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) console.error("Waitlist email failed", res.status, await res.text());
+    if (!res.ok) console.error("Email failed", subject, res.status, await res.text());
     return res.ok;
   } catch (err) {
-    console.error("Waitlist email failed", err);
+    console.error("Email failed", subject, err);
     return false;
   }
+}
+
+/** "Thanks for joining the private beta." */
+export function sendWaitlistEmail(to: string, fullName: string) {
+  return send(to, waitlistEmail(common(fullName)));
+}
+
+/** "Your invite is ready", with a link that fills in the personal access code. */
+export function sendInviteEmail(to: string, fullName: string | null, code: string) {
+  return send(to, inviteEmail({ ...common(fullName), code }));
 }
