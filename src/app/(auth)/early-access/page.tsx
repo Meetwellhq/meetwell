@@ -10,17 +10,20 @@ export default function EarlyAccessPage() {
   return (
     <>
       <AuthIntro title="Join early access">
-        Meetwell is in private beta. Leave your email and we&apos;ll send you an access code as soon as a spot opens.
+        Meetwell is in private beta. Leave your name and email and we&apos;ll send you an access code as soon as a spot opens.
       </AuthIntro>
       <AuthSection>
         <AuthForm
           action={joinWaitlist}
           submitLabel="Join early access"
           hideOnMessage
-          fields={[{ name: "email", label: "Email", type: "email", autoComplete: "email" }]}
+          fields={[
+            { name: "fullName", label: "Full name", type: "text", autoComplete: "name" },
+            { name: "email", label: "Email", type: "email", autoComplete: "email" },
+          ]}
           footer={
             <p className="text-center text-xs text-ink-3">
-              We&apos;ll only use your email to send your invite. See our{" "}
+              We&apos;ll only use your details to send your invite. See our{" "}
               <Link href="/privacy" className="underline">Privacy notice</Link>.
             </p>
           }

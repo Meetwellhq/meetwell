@@ -24,6 +24,8 @@ export type AuthFormState = {
   message?: string;
   fieldErrors?: Record<string, string>;
   email?: string;
+  /** Other text fields to refill after an error, by field name. */
+  values?: Record<string, string>;
 };
 
 /** Only allow same-site relative redirects after auth. */
@@ -165,20 +167,30 @@ export async function updatePassword(_: AuthFormState, formData: FormData): Prom
 
 export async function joinWaitlist(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "");
+  const fullName = String(formData.get("fullName") ?? "").slice(0, 200);
+  const values = { fullName };
   if (!(await limitByClient("waitlist", LIMITS.waitlist.max, LIMITS.waitlist.windowMs))) {
     return { error: "Too many attempts. Please wait a few minutes and try again.", email };
   }
-  const parsed = z.object({ email: emailSchema }).safeParse({ email });
-  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), email };
+  const parsed = z
+    .object({
+      fullName: z.string().trim().min(1, "Enter your name").max(80, "Keep this under 80 characters"),
+      email: emailSchema,
+    })
+    .safeParse({ fullName, email });
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), email, values };
 
   const supabase = await createClient();
-  const { data: isNew, error } = await supabase.rpc("join_waitlist", { p_email: parsed.data.email });
+  const { data: isNew, error } = await supabase.rpc("join_waitlist", {
+    p_email: parsed.data.email,
+    p_full_name: parsed.data.fullName,
+  });
   if (error) {
     console.error("join_waitlist failed", error.code, error.message);
     return { error: "We couldn't add you right now. Please try again in a moment.", email };
   }
   // Email only on the first join, so the form can't be used to spam an inbox.
-  if (isNew === true) await sendWaitlistEmail(parsed.data.email);
+  if (isNew === true) await sendWaitlistEmail(parsed.data.email, parsed.data.fullName);
   // Same message whether or not the email was already on the list.
   return {
     message: `You've joined the Meetwell waiting list! We'll email ${parsed.data.email} when your invite is ready.`,

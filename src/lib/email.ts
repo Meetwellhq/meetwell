@@ -1,6 +1,11 @@
 import "server-only";
 import { APP_NAME, getSiteUrl, SUPPORT_EMAIL } from "./config";
 
+/** The name comes from a public form, so escape it before putting it in HTML. */
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
 const FROM = `${APP_NAME} <noreply@meetwell.me>`;
 
 /**
@@ -8,15 +13,16 @@ const FROM = `${APP_NAME} <noreply@meetwell.me>`;
  * Needs RESEND_API_KEY (server-only). Without it the email is skipped, so
  * local development works without sending anything.
  */
-export async function sendWaitlistEmail(to: string): Promise<boolean> {
+export async function sendWaitlistEmail(to: string, fullName: string): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn("RESEND_API_KEY is not set; skipping waitlist email");
     return false;
   }
   const site = getSiteUrl();
+  const firstName = fullName.trim().split(/\s+/)[0] || "there";
   const text = [
-    "Hi there,",
+    `Hi ${firstName},`,
     "",
     `Thanks for joining the ${APP_NAME} waiting list! ${APP_NAME} is in private beta, and we're letting people in gradually.`,
     "",
@@ -30,6 +36,7 @@ export async function sendWaitlistEmail(to: string): Promise<boolean> {
   const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;color:#1c1c1a;line-height:1.6">
   <p style="font-size:20px;font-weight:600;color:#1f4d3f;margin:0 0 24px">${APP_NAME}</p>
   <h1 style="font-size:22px;margin:0 0 16px">You're on the waiting list 🎉</h1>
+  <p>Hi ${escapeHtml(firstName)},</p>
   <p>Thanks for joining the ${APP_NAME} waiting list! ${APP_NAME} is in private beta, and we're letting people in gradually.</p>
   <p>We'll email you as soon as your invite is ready, so you can create your networking card and QR code.</p>
   <p style="color:#5c5c57;font-size:14px;margin-top:32px">Questions? Just reply or write to <a href="mailto:${SUPPORT_EMAIL}" style="color:#1f4d3f">${SUPPORT_EMAIL}</a>.</p>
