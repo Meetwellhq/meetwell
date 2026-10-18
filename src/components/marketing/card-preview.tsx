@@ -49,7 +49,7 @@ export function CardPreview({ qrSvg }: { qrSvg: string }) {
 export function StarterPreview() {
   const chips = ["Collaborate", "Learn from them", "Offer my services", "Follow up after meeting"];
   return (
-    <div className="rounded-[1.75rem] border border-border bg-surface p-5" role="img" aria-label="Example conversation starter">
+    <div className="rounded-[1.25rem] border border-border bg-surface p-5" role="img" aria-label="Example conversation starter">
       <p className="text-sm font-semibold text-ink">Start a conversation</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {chips.map((c, i) => (
