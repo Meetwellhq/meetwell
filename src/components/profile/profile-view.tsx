@@ -154,16 +154,16 @@ export function ProfileView({ profile, preview = false }: Props) {
 // During the private beta, the log-in page offers access codes and early access.
 const CREATE_HREF = SIGNUPS_OPEN ? "/sign-up" : "/sign-in";
 const CREATE_BAR =
-  "flex h-14 items-center justify-between rounded-[6px] bg-accent px-5 text-white shadow-[0_4px_12px_-6px_rgb(0_0_0/0.25)]";
+  "flex h-12 items-center justify-between rounded-[6px] bg-accent px-4 text-white shadow-[0_4px_12px_-6px_rgb(0_0_0/0.25)]";
 
 function CreateBarContent() {
   return (
     <>
-      <span className="flex items-center gap-2.5 text-[17px] font-semibold">
-        <LogoMark inverted className="size-6" />
+      <span className="flex items-center gap-2 text-[15px] font-semibold">
+        <LogoMark inverted className="size-5" />
         {APP_NAME}
       </span>
-      <span className="text-sm font-medium">Create card</span>
+      <span className="text-[13px] font-medium">Create card</span>
     </>
   );
 }
