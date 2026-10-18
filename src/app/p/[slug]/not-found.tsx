@@ -2,6 +2,7 @@ import { UserRoundX } from "lucide-react";
 import { Logo } from "@/components/marketing/logo";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/misc";
+import { JOIN_CTA, SIGNUPS_OPEN } from "@/lib/config";
 
 export default function ProfileNotFound() {
   return (
@@ -11,7 +12,7 @@ export default function ProfileNotFound() {
           icon={<UserRoundX className="size-6" />}
           title="This card isn't available"
           description="The person may have unpublished or deleted their profile, or the link may be mistyped."
-          action={<ButtonLink href="/sign-up">Create your own card</ButtonLink>}
+          action={<ButtonLink href={JOIN_CTA.href}>{SIGNUPS_OPEN ? "Create your own card" : JOIN_CTA.label}</ButtonLink>}
         />
       </div>
       <div className="mt-8">

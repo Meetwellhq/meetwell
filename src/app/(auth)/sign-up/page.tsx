@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth/auth-form";
+import { redirect } from "next/navigation";
 import { signUp } from "@/lib/auth/actions";
+import { SIGNUPS_OPEN } from "@/lib/config";
 
 export const metadata: Metadata = { title: "Create your card" };
 
 export default function SignUpPage() {
+  // Private beta: send visitors to the early-access list instead.
+  if (!SIGNUPS_OPEN) redirect("/early-access");
+
   return (
     <>
       <h1 className="text-2xl font-semibold tracking-tight">Create your card</h1>

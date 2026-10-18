@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv } from "../config";
 
 const PROTECTED_PREFIXES = ["/dashboard", "/onboarding"];
-const AUTH_PAGES = ["/sign-in", "/sign-up"];
+const AUTH_PAGES = ["/sign-in", "/sign-up", "/early-access"];
 
 /**
  * Refreshes the Supabase session cookie on every matched request and performs

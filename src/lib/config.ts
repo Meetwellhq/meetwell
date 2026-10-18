@@ -2,6 +2,18 @@ export const APP_NAME = "Meetwell";
 export const APP_TAGLINE = "Meet someone. Make it a connection.";
 export const SUPPORT_EMAIL = "hello@meetwell.me";
 
+/**
+ * Private beta: new sign-ups are closed and visitors join the early-access
+ * list instead. Existing users can still sign in. Set to true to reopen
+ * sign-up everywhere (buttons, /sign-up page and the server action).
+ */
+export const SIGNUPS_OPEN = false;
+
+/** The main call to action for signed-out visitors. */
+export const JOIN_CTA = SIGNUPS_OPEN
+  ? { href: "/sign-up", label: "Create your free card", short: "Sign up" }
+  : { href: "/early-access", label: "Join early access", short: "Join" };
+
 export function getSupabaseEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key =

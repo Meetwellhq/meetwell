@@ -3,7 +3,7 @@ import { ArrowUpRight, Globe, Mail, Phone, UserRoundPlus } from "lucide-react";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonClass } from "@/components/ui/button";
-import { APP_NAME } from "@/lib/config";
+import { APP_NAME, JOIN_CTA, SIGNUPS_OPEN } from "@/lib/config";
 import { goalLabel, isOfferedGoal, socialLabel } from "@/lib/profiles/constants";
 import { contactActions, displayUrl, type ContactAction } from "@/lib/profiles/links";
 import type { PublicProfile } from "@/lib/profiles/types";
@@ -141,7 +141,9 @@ export function ProfileView({ profile, preview = false }: Props) {
             <a href="/home" className="font-medium text-ink-2 underline-offset-2 hover:underline">
               {APP_NAME}
             </a>{" "}
-            · <Link href="/sign-up" className="underline-offset-2 hover:underline">Create your own card</Link>
+            · <Link href={JOIN_CTA.href} className="underline-offset-2 hover:underline">
+              {SIGNUPS_OPEN ? "Create your own card" : "Get your own card"}
+            </Link>
           </>
         )}
       </p>

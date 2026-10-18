@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AuthForm } from "@/components/auth/auth-form";
 import { Alert } from "@/components/ui/misc";
 import { signIn } from "@/lib/auth/actions";
+import { JOIN_CTA, SIGNUPS_OPEN, SUPPORT_EMAIL } from "@/lib/config";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -22,7 +23,11 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
       {(error === "expired" || error === "link") && (
         <Alert tone="danger" className="mb-4">
           That link has expired or was already used. If you&apos;ve confirmed your email, just sign in. Otherwise,{" "}
-          <Link href="/sign-up" className="underline">sign up again</Link> with the same email to get a new link.
+          {SIGNUPS_OPEN ? (
+            <><Link href="/sign-up" className="underline">sign up again</Link> with the same email to get a new link.</>
+          ) : (
+            <>email <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">{SUPPORT_EMAIL}</a> and we&apos;ll send a new one.</>
+          )}
         </Alert>
       )}
       {error === "reset" && (
@@ -47,8 +52,8 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
       />
       <p className="mt-8 text-center text-sm text-ink-2">
         New here?{" "}
-        <Link href="/sign-up" className="font-medium text-accent hover:underline">
-          Create your card
+        <Link href={JOIN_CTA.href} className="font-medium text-accent hover:underline">
+          {SIGNUPS_OPEN ? "Create your card" : JOIN_CTA.label}
         </Link>
       </p>
     </>

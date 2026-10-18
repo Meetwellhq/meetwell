@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   Briefcase,
   Camera,
   Gift,
@@ -12,6 +11,7 @@ import {
   Ticket,
   UserRoundPlus,
 } from "lucide-react";
+import { BetaBanner } from "@/components/marketing/beta-banner";
 import { StarterPreview } from "@/components/marketing/card-preview";
 import { HeroPhoto } from "@/components/marketing/hero-photo";
 import { Feature, HighlightsStrip, Panel, ScanVisual } from "@/components/marketing/landing";
@@ -19,7 +19,7 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert } from "@/components/ui/misc";
-import { getSiteUrl, isSupabaseConfigured } from "@/lib/config";
+import { getSiteUrl, isSupabaseConfigured, JOIN_CTA, SIGNUPS_OPEN } from "@/lib/config";
 import { qrSvg } from "@/lib/qr";
 import { getCurrentUser } from "@/lib/supabase/server";
 
@@ -56,11 +56,12 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
     qrSvg(getSiteUrl(), { margin: 1 }),
     searchParams,
   ]);
-  const cta = signedIn ? "/dashboard" : "/sign-up";
-  const ctaLabel = signedIn ? "Go to your dashboard" : "Create your free card";
+  const cta = signedIn ? "/dashboard" : JOIN_CTA.href;
+  const ctaLabel = signedIn ? "Go to your dashboard" : JOIN_CTA.label;
 
   return (
     <div className="flex min-h-full flex-col bg-white">
+      {!SIGNUPS_OPEN && !signedIn && <BetaBanner />}
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
         {deleted && <Alert tone="success">Your account and card have been deleted.</Alert>}
@@ -80,13 +81,6 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               <ButtonLink href={cta} size="lg">
                 {ctaLabel}
               </ButtonLink>
-              <a
-                href="#how-it-works"
-                className="inline-flex h-12 items-center justify-center gap-1.5 px-2 text-base font-medium text-accent underline-offset-4 hover:underline"
-              >
-                See how it works
-                <ArrowRight className="size-4" aria-hidden />
-              </a>
             </div>
           </div>
 
@@ -164,7 +158,9 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           <h2 className="mx-auto max-w-3xl font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl">
             Your next connection is one scan away.
           </h2>
-          <p className="mx-auto mt-5 max-w-md text-lg text-white/75">Create a free card in a few minutes.</p>
+          <p className="mx-auto mt-5 max-w-md text-lg text-white/75">
+            {SIGNUPS_OPEN ? "Create a free card in a few minutes." : "We're letting people in gradually. Get on the list."}
+          </p>
           <div className="mt-9">
             <ButtonLink href={cta} size="lg" variant="secondary" className="border-transparent">
               {ctaLabel}

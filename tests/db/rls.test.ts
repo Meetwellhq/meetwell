@@ -233,3 +233,16 @@ describe("deletion", () => {
     expect(n).toBe(0);
   });
 });
+
+describe("waitlist", () => {
+  it("lets anyone join once but nobody read the list", async () => {
+    expect(await as(null, "select public.join_waitlist('  New@Person.test ') as ok")).toEqual([{ ok: true }]);
+    // A duplicate is ignored and reports false, so no second email is sent.
+    expect(await as(BOB, "select public.join_waitlist('new@person.test') as ok")).toEqual([{ ok: false }]);
+    await expect(as(null, "select * from public.waitlist")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.waitlist")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "insert into public.waitlist (email) values ('x@y.test')")).rejects.toThrow(/permission denied/);
+    const rows = (await db.query<{ email: string }>("select email from public.waitlist")).rows;
+    expect(rows).toEqual([{ email: "new@person.test" }]);
+  });
+});
