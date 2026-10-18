@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth/auth-form";
 import { AuthIntro, AuthSection, AUTH_BUTTON } from "@/components/auth/auth-section";
@@ -37,6 +38,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
           </p>
           <ButtonLink href="/early-access" variant="secondary" className={`mt-5 ${AUTH_BUTTON}`}>
             Request early access
+            <ArrowRight className="size-4" aria-hidden />
           </ButtonLink>
         </AuthSection>
       </>

@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { JOIN_CTA } from "@/lib/config";
 import { Logo } from "./logo";
@@ -20,6 +21,7 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
               <ButtonLink href={JOIN_CTA.href} size="sm">
                 <span className="sm:hidden">{JOIN_CTA.short}</span>
                 <span className="hidden sm:inline">{JOIN_CTA.label}</span>
+                <ArrowRight className="size-4" aria-hidden />
               </ButtonLink>
             </>
           )}

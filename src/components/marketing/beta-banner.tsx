@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { APP_NAME, JOIN_CTA } from "@/lib/config";
 
@@ -6,8 +7,12 @@ export function BetaBanner() {
   return (
     <div role="status" className="bg-accent px-4 py-2.5 text-center text-sm text-white">
       {APP_NAME} is in private Beta.{" "}
-      <Link href={JOIN_CTA.href} className="font-medium underline underline-offset-4 hover:no-underline">
+      <Link
+        href={JOIN_CTA.href}
+        className="inline-flex items-center gap-1 font-medium underline underline-offset-4 hover:no-underline"
+      >
         {JOIN_CTA.label}
+        <ArrowRight className="size-3.5" aria-hidden />
       </Link>
     </div>
   );

@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   Briefcase,
   Camera,
   Gift,
@@ -80,6 +81,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <ButtonLink href={cta} size="lg">
                 {ctaLabel}
+                <ArrowRight className="size-4" aria-hidden />
               </ButtonLink>
             </div>
           </div>
@@ -105,7 +107,10 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
                 form. Your code points to your profile link, so it never needs reprinting.
               </p>
             }
-            action={<ButtonLink href={cta}>{ctaLabel}</ButtonLink>}
+            action={<ButtonLink href={cta}>
+                {ctaLabel}
+                <ArrowRight className="size-4" aria-hidden />
+              </ButtonLink>}
             visual={<ScanVisual qrSvg={qr} />}
             visualClassName="bg-sage"
           />
@@ -123,7 +128,10 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
                 shared history.
               </p>
             }
-            action={<ButtonLink href={cta}>{ctaLabel}</ButtonLink>}
+            action={<ButtonLink href={cta}>
+                {ctaLabel}
+                <ArrowRight className="size-4" aria-hidden />
+              </ButtonLink>}
             visual={
               <div className="w-full max-w-md">
                 <StarterPreview />
@@ -164,6 +172,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           <div className="mt-9">
             <ButtonLink href={cta} size="lg" variant="secondary" className="border-transparent">
               {ctaLabel}
+              <ArrowRight className="size-4" aria-hidden />
             </ButtonLink>
           </div>
         </section>
