@@ -163,7 +163,7 @@ function CreateBarContent() {
         <LogoMark inverted className="size-5" />
         {APP_NAME}
       </span>
-      <span className="text-[13px] font-medium">Create card</span>
+      <span className="text-[13px] font-medium">Try it for free</span>
     </>
   );
 }
