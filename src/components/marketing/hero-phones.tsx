@@ -14,9 +14,9 @@ export function HeroPhones({ qrSvg }: { qrSvg: string }) {
     <div
       role="img"
       aria-label="A phone showing a Meetwell card with a QR code, and a second phone that has scanned it and offers to save the contact"
-      className="relative mx-auto h-[20.8rem] w-[16.9rem] sm:h-[32rem] sm:w-[26rem] lg:h-[24.64rem] lg:w-[20.02rem] xl:h-[32rem] xl:w-[26rem]"
+      className="relative mx-auto h-[20.8rem] w-[16.9rem] sm:h-[32rem] sm:w-[26rem]"
     >
-      <div className="absolute left-0 top-0 h-[32rem] w-[26rem] origin-top-left scale-[0.65] sm:scale-100 lg:scale-[0.77] xl:scale-100">
+      <div className="absolute left-0 top-0 h-[32rem] w-[26rem] origin-top-left scale-[0.65] sm:scale-100">
         {/* Owner's phone */}
         <PhoneFrame className="absolute left-0 top-0 w-[12.5rem]" rotate={-6}>
           <OwnerScreen qrSvg={qrSvg} />
