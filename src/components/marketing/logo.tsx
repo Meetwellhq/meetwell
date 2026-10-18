@@ -1,14 +1,16 @@
 import { APP_NAME } from "@/lib/config";
 import { cn } from "@/lib/cn";
 
-export function LogoMark({ className }: { className?: string }) {
+/** `inverted` draws a white tile with green squares, for use on green backgrounds. */
+export function LogoMark({ className, inverted = false }: { className?: string; inverted?: boolean }) {
+  const [tile, mark] = inverted ? ["#fff", "var(--accent)"] : ["var(--accent)", "#fff"];
   return (
     <svg viewBox="0 0 24 24" className={cn("size-6", className)} aria-hidden>
-      <rect x="1" y="1" width="22" height="22" rx="7" fill="var(--accent)" />
-      <rect x="6" y="6" width="5" height="5" rx="1.5" fill="#fff" />
-      <rect x="13" y="13" width="5" height="5" rx="1.5" fill="#fff" />
-      <rect x="13" y="6" width="5" height="5" rx="2.5" fill="#fff" fillOpacity="0.55" />
-      <rect x="6" y="13" width="5" height="5" rx="2.5" fill="#fff" fillOpacity="0.55" />
+      <rect x="1" y="1" width="22" height="22" rx="7" fill={tile} />
+      <rect x="6" y="6" width="5" height="5" rx="1.5" fill={mark} />
+      <rect x="13" y="13" width="5" height="5" rx="1.5" fill={mark} />
+      <rect x="13" y="6" width="5" height="5" rx="2.5" fill={mark} fillOpacity="0.55" />
+      <rect x="6" y="13" width="5" height="5" rx="2.5" fill={mark} fillOpacity="0.55" />
     </svg>
   );
 }

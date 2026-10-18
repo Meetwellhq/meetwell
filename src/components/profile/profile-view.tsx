@@ -143,7 +143,7 @@ export function ProfileView({ profile, preview = false }: Props) {
         </>
       ) : (
         // Floats at the bottom of the screen while visitors scroll the card.
-        <Link href={CREATE_HREF} className={cn(CREATE_BAR, "sticky bottom-4 mb-4 transition-colors hover:bg-[#e3e2de]")}>
+        <Link href={CREATE_HREF} className={cn(CREATE_BAR, "sticky bottom-4 mb-4 transition-colors hover:bg-accent-hover")}>
           <CreateBarContent />
         </Link>
       )}
@@ -154,16 +154,16 @@ export function ProfileView({ profile, preview = false }: Props) {
 // During the private beta, the log-in page offers access codes and early access.
 const CREATE_HREF = SIGNUPS_OPEN ? "/sign-up" : "/sign-in";
 const CREATE_BAR =
-  "flex h-14 items-center justify-between rounded-2xl bg-[#ecebe8] px-5 text-[17px] font-semibold text-ink shadow-[0_10px_30px_-12px_rgb(0_0_0/0.35)]";
+  "flex h-14 items-center justify-between rounded-2xl bg-accent px-5 text-white shadow-[0_4px_12px_-6px_rgb(0_0_0/0.25)]";
 
 function CreateBarContent() {
   return (
     <>
-      <span className="flex items-center gap-2.5">
-        <LogoMark className="size-6" />
+      <span className="flex items-center gap-2.5 text-[17px] font-semibold">
+        <LogoMark inverted className="size-6" />
         {APP_NAME}
       </span>
-      <span>Create card</span>
+      <span className="text-sm font-medium">Create card</span>
     </>
   );
 }
