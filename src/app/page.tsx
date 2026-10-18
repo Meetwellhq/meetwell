@@ -1,5 +1,6 @@
 import { ArrowRight, Briefcase, GraduationCap, Lightbulb, Rocket, Ticket } from "lucide-react";
-import { CardPreview, StarterPreview } from "@/components/marketing/card-preview";
+import { StarterPreview } from "@/components/marketing/card-preview";
+import { HeroPhones } from "@/components/marketing/hero-phones";
 import { Feature, HighlightsStrip, Panel, ScanVisual } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
@@ -52,17 +53,18 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         {deleted && <Alert tone="success">Your account and card have been deleted.</Alert>}
 
         {/* Hero */}
-        <Panel className="overflow-hidden border-0! px-0 pb-0 text-center sm:px-0 lg:px-0">
-          <div className="px-5 sm:px-10">
-            <h1 className="mx-auto max-w-4xl font-display text-[3.25rem] leading-[0.98] tracking-tight text-ink sm:text-7xl lg:text-[5.5rem]">
+        <Panel className="overflow-hidden border-0! px-0 pb-0 sm:px-0 lg:px-0">
+          <div className="grid items-center gap-12 px-5 sm:px-10 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:px-16">
+          <div className="text-center lg:text-left">
+            <h1 className="mx-auto max-w-2xl font-display text-[3.25rem] leading-[0.98] tracking-tight text-ink sm:text-7xl lg:mx-0 lg:text-[5.25rem]">
               Meet someone. {/* Instrument Serif has one weight; a hairline stroke gives a medium look. */}
               <span className="font-medium italic text-accent [-webkit-text-stroke:0.008em_currentColor]">Make it a connection.</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-ink-2">
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-ink-2 lg:mx-0">
               Your networking card, contact details and a ready-to-send first message — all in one scan. So the people
               you meet actually follow up.
             </p>
-            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
               <ButtonLink href={cta} size="lg">
                 {ctaLabel}
               </ButtonLink>
@@ -76,14 +78,14 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             </div>
           </div>
 
-          <div className="mt-12">
-            <HighlightsStrip items={highlights} />
+          <div className="hidden items-center justify-center overflow-hidden rounded-[1.25rem] bg-accent px-4 py-12 sm:flex sm:py-14">
+            <HeroPhones qrSvg={qr} />
+          </div>
           </div>
 
-          <div className="mx-3 mt-12 flex min-h-[26rem] items-center justify-center rounded-[1.25rem] bg-accent px-6 pb-20 pt-14 sm:mx-10 sm:min-h-[32rem] lg:mx-16">
-            <CardPreview qrSvg={qr} />
+          <div className="mt-14 pb-2">
+            <HighlightsStrip items={highlights} />
           </div>
-          <div className="h-3 sm:h-10 lg:h-16" />
         </Panel>
 
         {/* Scan */}
