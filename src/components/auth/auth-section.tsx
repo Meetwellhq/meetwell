@@ -16,5 +16,5 @@ export function AuthIntro({ title, children }: { title: ReactNode; children?: Re
   );
 }
 
-/** Pill-shaped full-width buttons, used for every action in the auth card. */
-export const PILL = "h-12 w-full rounded-full! text-base";
+/** Full-width buttons used for every action in the auth card (standard 8px corners). */
+export const AUTH_BUTTON = "h-12 w-full text-base";

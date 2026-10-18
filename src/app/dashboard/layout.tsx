@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
               <form action={signOut}>
                 <button type="submit" className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink">
                   <LogOut className="size-4" aria-hidden />
-                  Sign out
+                  Log out
                 </button>
               </form>
             </div>

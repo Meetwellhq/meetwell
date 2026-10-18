@@ -35,7 +35,7 @@ export default function SignUpPage() {
       <AuthSection className="text-center text-sm text-ink-2">
         Already have an account?{" "}
         <Link href="/sign-in" className="font-medium text-accent hover:underline">
-          Sign in
+          Log in
         </Link>
       </AuthSection>
     </>

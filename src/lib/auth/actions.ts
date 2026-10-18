@@ -82,7 +82,7 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   const outcome = classifySignUp(data, error?.code);
   if (outcome === "exists") {
     return {
-      error: "An account with this email already exists. Sign in instead, or reset your password if you've forgotten it.",
+      error: "An account with this email already exists. Log in instead, or reset your password if you've forgotten it.",
       email,
     };
   }

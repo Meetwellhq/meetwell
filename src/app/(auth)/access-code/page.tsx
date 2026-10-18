@@ -25,7 +25,7 @@ export default function AccessCodePage() {
         </Link>{" "}
         · Have an account?{" "}
         <Link href="/sign-in?method=email" className="font-medium text-accent hover:underline">
-          Sign in
+          Log in
         </Link>
       </AuthSection>
     </>

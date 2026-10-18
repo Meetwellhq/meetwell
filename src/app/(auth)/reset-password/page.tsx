@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Choose a new password" };
 export default function ResetPasswordPage() {
   return (
     <>
-      <AuthIntro title="Choose a new password">You&apos;ll stay signed in on this device.</AuthIntro>
+      <AuthIntro title="Choose a new password">You&apos;ll stay logged in on this device.</AuthIntro>
       <AuthSection>
         <AuthForm
           action={updatePassword}

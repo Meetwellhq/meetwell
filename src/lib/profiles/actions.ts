@@ -23,7 +23,7 @@ export async function saveProfile(
   options: { publish?: boolean } = {},
 ): Promise<SaveProfileResult> {
   const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "Your session has expired. Please sign in again." };
+  if (!user) return { ok: false, error: "Your session has expired. Please log in again." };
   if (!rateLimit(`save-profile:${user.id}`, 30, 60_000)) {
     return { ok: false, error: "You're saving very quickly. Please wait a moment and try again." };
   }
@@ -96,7 +96,7 @@ export async function saveProfile(
 
 export async function setProfilePublished(publish: boolean): Promise<{ ok: boolean; error?: string }> {
   const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "Please sign in again." };
+  if (!user) return { ok: false, error: "Please log in again." };
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
@@ -113,7 +113,7 @@ export async function setProfilePublished(publish: boolean): Promise<{ ok: boole
 /** Is this slug free (or already the caller's own)? */
 export async function checkSlugAvailability(slug: string): Promise<{ available: boolean; error?: string }> {
   const user = await getCurrentUser();
-  if (!user) return { available: false, error: "Please sign in again." };
+  if (!user) return { available: false, error: "Please log in again." };
   const parsed = slugSchema.safeParse(slug);
   if (!parsed.success) return { available: false, error: parsed.error.issues[0]?.message };
   if (!rateLimit(`slug-check:${user.id}`, 60, 60_000)) return { available: false, error: "Slow down a little." };
@@ -135,7 +135,7 @@ async function removeAvatarFiles(userId: string, keep: (string | null)[] = []) {
 /** Delete the profile and its contact data. The account stays. */
 export async function deleteProfile(): Promise<{ ok: boolean; error?: string }> {
   const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "Please sign in again." };
+  if (!user) return { ok: false, error: "Please log in again." };
   const supabase = await createClient();
   const existing = await getOwnProfile();
   await removeAvatarFiles(user.id);
@@ -149,7 +149,7 @@ export async function deleteProfile(): Promise<{ ok: boolean; error?: string }> 
 /** Permanently delete the account, profile, events and photo. */
 export async function deleteAccount(): Promise<{ ok: boolean; error?: string }> {
   const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "Please sign in again." };
+  if (!user) return { ok: false, error: "Please log in again." };
   const supabase = await createClient();
   const existing = await getOwnProfile();
   await removeAvatarFiles(user.id);

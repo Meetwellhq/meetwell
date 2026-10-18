@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, type ReactNode } from "react";
-import { PILL } from "@/components/auth/auth-section";
+import { AUTH_BUTTON } from "@/components/auth/auth-section";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { Alert } from "@/components/ui/misc";
@@ -55,7 +55,7 @@ export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, f
           )}
         </Field>
       ))}
-      <Button type="submit" size="lg" loading={pending} className={`mt-2 ${PILL}`}>
+      <Button type="submit" size="lg" loading={pending} className={`mt-2 ${AUTH_BUTTON}`}>
         {submitLabel}
       </Button>
       {footer}

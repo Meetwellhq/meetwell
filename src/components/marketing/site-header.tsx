@@ -15,7 +15,7 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
           ) : (
             <>
               <ButtonLink href="/sign-in" variant="secondary" size="sm" className="max-sm:px-2.5!">
-                Sign in
+                Log in
               </ButtonLink>
               <ButtonLink href={JOIN_CTA.href} size="sm">
                 <span className="sm:hidden">{JOIN_CTA.short}</span>

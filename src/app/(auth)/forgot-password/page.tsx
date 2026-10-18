@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
       </AuthSection>
       <AuthSection className="text-center text-sm">
         <Link href="/sign-in?method=email" className="font-medium text-accent hover:underline">
-          Back to sign in
+          Back to log in
         </Link>
       </AuthSection>
     </>

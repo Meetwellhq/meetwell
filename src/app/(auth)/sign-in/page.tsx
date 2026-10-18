@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth/auth-form";
-import { AuthIntro, AuthSection, PILL } from "@/components/auth/auth-section";
+import { AuthIntro, AuthSection, AUTH_BUTTON } from "@/components/auth/auth-section";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert } from "@/components/ui/misc";
 import { signIn } from "@/lib/auth/actions";
 import { APP_NAME, SIGNUPS_OPEN, SUPPORT_EMAIL } from "@/lib/config";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Log in" };
 
 export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
   const { next, error, method } = await searchParams;
@@ -19,14 +19,14 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
     return (
       <>
         <AuthIntro title={`${APP_NAME} is in private beta`}>
-          We&apos;re letting people in a few at a time. Sign in to your account, or use the access code from your
+          We&apos;re letting people in a few at a time. Log in to your account, or use the access code from your
           invite.
         </AuthIntro>
         <AuthSection className="flex flex-col gap-3">
-          <ButtonLink href={emailHref} className={PILL}>
-            Sign in
+          <ButtonLink href={emailHref} className={AUTH_BUTTON}>
+            Log in
           </ButtonLink>
-          <ButtonLink href="/access-code" variant="secondary" className={PILL}>
+          <ButtonLink href="/access-code" variant="secondary" className={AUTH_BUTTON}>
             I have an access code
           </ButtonLink>
         </AuthSection>
@@ -35,7 +35,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
           <p className="mt-1 text-sm leading-relaxed text-ink-2">
             Leave your email and we&apos;ll send you an access code when there&apos;s room.
           </p>
-          <ButtonLink href="/early-access" variant="secondary" className={`mt-5 ${PILL}`}>
+          <ButtonLink href="/early-access" variant="secondary" className={`mt-5 ${AUTH_BUTTON}`}>
             Request early access
           </ButtonLink>
         </AuthSection>
@@ -45,16 +45,16 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
 
   return (
     <>
-      <AuthIntro title="Welcome back">Sign in to manage your card.</AuthIntro>
+      <AuthIntro title="Welcome back">Log in to manage your card.</AuthIntro>
       <AuthSection>
         {error === "confirmed" && (
           <Alert tone="success" className="mb-4">
-            Your email is confirmed. Sign in below to finish setting up your card.
+            Your email is confirmed. Log in below to finish setting up your card.
           </Alert>
         )}
         {(error === "expired" || error === "link") && (
           <Alert tone="danger" className="mb-4">
-            That link has expired or was already used. If you&apos;ve confirmed your email, just sign in. Otherwise,{" "}
+            That link has expired or was already used. If you&apos;ve confirmed your email, just log in. Otherwise,{" "}
             {SIGNUPS_OPEN ? (
               <><Link href="/sign-up" className="underline">sign up again</Link> with the same email to get a new link.</>
             ) : (
@@ -70,7 +70,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
         )}
         <AuthForm
           action={signIn}
-          submitLabel="Sign in"
+          submitLabel="Log in"
           hidden={{ next: nextPath }}
           fields={[
             { name: "email", label: "Email", type: "email", autoComplete: "email" },

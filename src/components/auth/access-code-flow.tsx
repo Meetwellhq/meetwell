@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { AuthForm } from "@/components/auth/auth-form";
-import { PILL } from "@/components/auth/auth-section";
+import { AUTH_BUTTON } from "@/components/auth/auth-section";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { signUp, verifyAccessCode } from "@/lib/auth/actions";
@@ -50,7 +50,7 @@ export function AccessCodeFlow() {
           />
         )}
       </Field>
-      <Button type="submit" loading={pending} className={`mt-2 ${PILL}`}>
+      <Button type="submit" loading={pending} className={`mt-2 ${AUTH_BUTTON}`}>
         Continue
       </Button>
     </form>
