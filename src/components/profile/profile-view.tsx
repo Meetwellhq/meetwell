@@ -154,7 +154,7 @@ export function ProfileView({ profile, preview = false }: Props) {
 // During the private beta, the log-in page offers access codes and early access.
 const CREATE_HREF = SIGNUPS_OPEN ? "/sign-up" : "/sign-in";
 const CREATE_BAR =
-  "flex h-14 items-center justify-between rounded-2xl bg-accent px-5 text-white shadow-[0_4px_12px_-6px_rgb(0_0_0/0.25)]";
+  "flex h-14 items-center justify-between rounded-[6px] bg-accent px-5 text-white shadow-[0_4px_12px_-6px_rgb(0_0_0/0.25)]";
 
 function CreateBarContent() {
   return (
