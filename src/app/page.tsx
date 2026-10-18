@@ -66,7 +66,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         {deleted && <Alert tone="success">Your account and card have been deleted.</Alert>}
 
         {/* Hero */}
-        <Panel className="overflow-hidden border-0! px-0 pb-0 sm:px-0 lg:px-0">
+        <Panel className="overflow-hidden px-0 pb-0 sm:px-0 lg:px-0">
           <div className="px-5 text-center sm:px-10">
             <h1 className="mx-auto max-w-4xl font-display text-[3.25rem] leading-[0.98] tracking-tight text-ink sm:text-7xl lg:text-[5.5rem]">
               Meet someone. {/* Instrument Serif has one weight; a hairline stroke gives a medium look. */}
