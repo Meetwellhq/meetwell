@@ -96,7 +96,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
 
           {/* Phone illustration below the text; hidden on mobile. */}
           <div className="mx-3 mt-12 hidden sm:mx-10 sm:block lg:mx-16">
-            <HeroPhoto qrSvg={qr} />
+            <HeroPhoto />
           </div>
           <div className="h-3 sm:h-10 lg:h-16" />
         </Panel>
