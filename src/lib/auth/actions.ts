@@ -189,9 +189,15 @@ export async function joinWaitlist(_: AuthFormState, formData: FormData): Promis
     console.error("join_waitlist failed", error.code, error.message);
     return { error: "We couldn't add you right now. Please try again in a moment.", email };
   }
-  // Email only on the first join, so the form can't be used to spam an inbox.
-  if (isNew === true) await sendWaitlistEmail(parsed.data.email, parsed.data.fullName);
-  // Same message whether or not the email was already on the list.
+  if (isNew !== true) {
+    return {
+      fieldErrors: { email: "This email is already on the waiting list. We'll be in touch when your invite is ready." },
+      email,
+      values,
+    };
+  }
+  // Only new emails get the confirmation, so the form can't be used to spam an inbox.
+  await sendWaitlistEmail(parsed.data.email, parsed.data.fullName);
   return {
     message: `You've joined the Meetwell waiting list! We'll email ${parsed.data.email} when your invite is ready.`,
   };
