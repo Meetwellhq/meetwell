@@ -328,3 +328,46 @@ describe("internal functions", () => {
     await expect(as(null, "select * from public.admin_list_waitlist()")).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("admin members view", () => {
+  it("shows each account's card status and usage to admins only", async () => {
+    await expect(as(BOB, "select * from public.admin_list_members()")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_list_members()")).rejects.toThrow(/permission denied/);
+
+    const CAROL = "33333333-3333-3333-3333-333333333333";
+    await db.exec("insert into public.access_codes (code, max_uses) values ('CAROL-CODE', 1)");
+    await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'carol@test', $2)", [
+      CAROL,
+      { access_code: "CAROL-CODE" },
+    ]);
+    const id = await createProfile(CAROL, "carol");
+    await db.query(
+      `insert into public.profile_events (profile_id, event_type, source)
+       values ($1, 'view', 'qr'), ($1, 'view', 'link'), ($1, 'save_contact', null)`,
+      [id],
+    );
+    const [expected] = (
+      await db.query<{ views: number; qr: number; saved: number }>(
+        `select count(*) filter (where event_type = 'view')::int as views,
+                count(*) filter (where event_type = 'view' and source = 'qr')::int as qr,
+                count(*) filter (where event_type = 'save_contact')::int as saved
+         from public.profile_events where profile_id = $1`,
+        [id],
+      )
+    ).rows;
+
+    const rows = await as<{ email: string; slug: string | null; card_status: string | null; has_photo: boolean; views: string; qr_scans: string; contacts_saved: string }>(
+      ALICE,
+      "select * from public.admin_list_members()",
+    );
+    const carol = rows.find((r) => r.slug === "carol")!;
+    expect(carol.email).toBe("carol@test");
+    expect(carol.card_status).toBe("published");
+    expect(carol.has_photo).toBe(false);
+    expect(Number(carol.views)).toBe(expected.views);
+    expect(Number(carol.qr_scans)).toBe(expected.qr);
+    expect(Number(carol.contacts_saved)).toBe(expected.saved);
+    // Accounts without a card still appear.
+    expect(rows.some((r) => r.email === "invitee@test" && r.card_status === null)).toBe(true);
+  });
+});

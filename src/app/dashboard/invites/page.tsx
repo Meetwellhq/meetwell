@@ -1,12 +1,14 @@
+import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { InviteButton } from "@/components/admin/invite-button";
 import { Badge, EmptyState } from "@/components/ui/misc";
+import { publicProfilePath } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Invites" };
 
-type Row = {
+type WaitlistRow = {
   email: string;
   full_name: string | null;
   joined_at: string;
@@ -14,68 +16,183 @@ type Row = {
   signed_up: boolean;
 };
 
+type MemberRow = {
+  email: string;
+  joined_at: string;
+  confirmed: boolean;
+  last_sign_in_at: string | null;
+  full_name: string | null;
+  slug: string | null;
+  card_status: "draft" | "published" | "unpublished" | null;
+  has_photo: boolean;
+  views: number;
+  qr_scans: number;
+  contacts_saved: number;
+};
+
 const date = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Lagos" });
 
+const CARD_BADGE = {
+  published: { tone: "success", label: "Published" },
+  draft: { tone: "neutral", label: "Draft" },
+  unpublished: { tone: "warning", label: "Unpublished" },
+} as const;
+
+function Stats({ items }: { items: { label: string; value: number }[] }) {
+  return (
+    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {items.map((s) => (
+        <div key={s.label} className="rounded-xl border border-border bg-surface p-4">
+          <dt className="text-sm text-ink-2">{s.label}</dt>
+          <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{s.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 export default async function InvitesPage() {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("admin_list_waitlist");
+  const [waitlist, members] = await Promise.all([
+    supabase.rpc("admin_list_waitlist"),
+    supabase.rpc("admin_list_members"),
+  ]);
   // Non-admins get a plain 404; the database refuses them anyway.
-  if (error) notFound();
-  const rows = (data ?? []) as Row[];
+  if (waitlist.error) notFound();
+  const rows = (waitlist.data ?? []) as WaitlistRow[];
+  const people = ((members.data ?? []) as MemberRow[]).map((m) => ({
+    ...m,
+    views: Number(m.views),
+    qr_scans: Number(m.qr_scans),
+    contacts_saved: Number(m.contacts_saved),
+  }));
 
   const invited = rows.filter((r) => r.invited_at).length;
-  const signedUp = rows.filter((r) => r.signed_up).length;
-  const stats = [
-    { label: "On the waiting list", value: rows.length },
-    { label: "Invited", value: invited },
-    { label: "Signed up", value: signedUp },
-    { label: "Waiting for an invite", value: rows.length - invited },
-  ];
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">Invites</h1>
-        <p className="mt-1 text-ink-2">
-          Invite people from the waiting list. Each person gets a personal, single-use code by email, from you.
-        </p>
-      </div>
-
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-surface p-4">
-            <dt className="text-sm text-ink-2">{s.label}</dt>
-            <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{s.value}</dd>
-          </div>
-        ))}
-      </dl>
-
-      {rows.length === 0 ? (
-        <div className="rounded-xl border border-border bg-surface">
-          <EmptyState title="No one on the waiting list yet" description="People who join early access will show up here." />
+    <div className="flex flex-col gap-12">
+      <section className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">Invites</h1>
+          <p className="mt-1 text-ink-2">
+            Invite people from the waiting list. Each person gets a personal, single-use code by email, from you.
+          </p>
         </div>
-      ) : (
-        <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
-          {rows.map((r) => (
-            <li key={r.email} className="flex items-center justify-between gap-4 px-4 py-3.5">
-              <div className="min-w-0">
-                <p className="truncate font-medium text-ink">{r.full_name || "No name"}</p>
-                <p className="truncate text-sm text-ink-2">{r.email}</p>
-                <p className="mt-1 text-xs text-ink-3">
-                  Joined {date(r.joined_at)}
-                  {r.invited_at && <> · Invited {date(r.invited_at)}</>}
-                </p>
+
+        <Stats
+          items={[
+            { label: "On the waiting list", value: rows.length },
+            { label: "Invited", value: invited },
+            { label: "Signed up", value: rows.filter((r) => r.signed_up).length },
+            { label: "Waiting for an invite", value: rows.length - invited },
+          ]}
+        />
+
+        {rows.length === 0 ? (
+          <div className="rounded-xl border border-border bg-surface">
+            <EmptyState title="No one on the waiting list yet" description="People who join early access will show up here." />
+          </div>
+        ) : (
+          <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+            {rows.map((r) => (
+              <li key={r.email} className="flex items-center justify-between gap-4 px-4 py-3.5">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-ink">{r.full_name || "No name"}</p>
+                  <p className="truncate text-sm text-ink-2">{r.email}</p>
+                  <p className="mt-1 text-xs text-ink-3">
+                    Joined {date(r.joined_at)}
+                    {r.invited_at && <> · Invited {date(r.invited_at)}</>}
+                  </p>
+                </div>
+                {r.signed_up ? (
+                  <Badge tone="success">Signed up</Badge>
+                ) : (
+                  <InviteButton email={r.email} fullName={r.full_name} invited={!!r.invited_at} />
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-6">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-ink">Members</h2>
+          <p className="mt-1 text-ink-2">Everyone with an account: is their card set up, and is it being used?</p>
+        </div>
+
+        {members.error ? (
+          <p className="rounded-xl border border-border bg-surface px-4 py-3.5 text-sm text-ink-2">
+            Members can&apos;t be loaded yet. Run the members SQL in Supabase first.
+          </p>
+        ) : (
+          <>
+            <Stats
+              items={[
+                { label: "Accounts", value: people.length },
+                { label: "Published cards", value: people.filter((m) => m.card_status === "published").length },
+                { label: "Cards with a photo", value: people.filter((m) => m.has_photo).length },
+                { label: "QR scans (all cards)", value: people.reduce((n, m) => n + m.qr_scans, 0) },
+              ]}
+            />
+
+            {people.length === 0 ? (
+              <div className="rounded-xl border border-border bg-surface">
+                <EmptyState title="No accounts yet" description="People appear here once they create an account." />
               </div>
-              {r.signed_up ? (
-                <Badge tone="success">Signed up</Badge>
-              ) : (
-                <InviteButton email={r.email} fullName={r.full_name} invited={!!r.invited_at} />
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+            ) : (
+              <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+                {people.map((m) => {
+                  const badge = m.card_status ? CARD_BADGE[m.card_status] : null;
+                  return (
+                    <li key={m.email} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-ink">{m.full_name || "No card yet"}</p>
+                        <p className="truncate text-sm text-ink-2">{m.email}</p>
+                        <p className="mt-1 text-xs text-ink-3">
+                          Joined {date(m.joined_at)}
+                          {m.last_sign_in_at && <> · Last seen {date(m.last_sign_in_at)}</>}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {badge ? <Badge tone={badge.tone}>{badge.label}</Badge> : <Badge>No card</Badge>}
+                          {m.card_status && <Badge>{m.has_photo ? "Has photo" : "No photo"}</Badge>}
+                          {!m.confirmed && <Badge tone="warning">Email not confirmed</Badge>}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-5 sm:gap-6">
+                        <dl className="flex gap-5 text-center">
+                          {[
+                            { label: "Views", value: m.views },
+                            { label: "QR scans", value: m.qr_scans },
+                            { label: "Saves", value: m.contacts_saved },
+                          ].map((s) => (
+                            <div key={s.label}>
+                              <dd className="text-lg font-semibold tabular-nums text-ink">{s.value}</dd>
+                              <dt className="text-xs text-ink-3">{s.label}</dt>
+                            </div>
+                          ))}
+                        </dl>
+                        {m.card_status === "published" && m.slug && (
+                          <a
+                            href={publicProfilePath(m.slug)}
+                            target="_blank"
+                            rel="noopener"
+                            className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
+                          >
+                            View card
+                            <ArrowUpRight className="size-3.5" aria-hidden />
+                          </a>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
+        )}
+      </section>
     </div>
   );
 }
