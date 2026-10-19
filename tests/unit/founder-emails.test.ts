@@ -36,3 +36,20 @@ describe("invite email", () => {
     expect(inviteEmail({ ...base, fullName: null, code: "MW-1A2B-3C4D-5E6F" }).text.startsWith("Hi there,")).toBe(true);
   });
 });
+
+describe("reminder emails", () => {
+  it("invite reminder links back to the code and promises one reminder only", async () => {
+    const { inviteReminderEmail } = await import("@/lib/founder-emails");
+    const { subject, text, html } = inviteReminderEmail({ ...base, fullName: "Sam Slow", code: "MW-1111-2222-3333" });
+    expect(subject).toBe("Your Meetwell invite is still waiting");
+    expect(text.startsWith("Hi Sam,")).toBe(true);
+    expect(html).toContain('href="https://meetwell.me/access-code?code=MW-1111-2222-3333"');
+    expect(text).toContain("This is the only reminder I'll send about this.");
+  });
+
+  it("draft and no-scan reminders point to the right dashboard pages", async () => {
+    const { draftReminderEmail, noScansEmail } = await import("@/lib/founder-emails");
+    expect(draftReminderEmail({ ...base, fullName: null }).html).toContain('href="https://meetwell.me/dashboard/profile"');
+    expect(noScansEmail({ ...base, fullName: "Quinn" }).html).toContain('href="https://meetwell.me/dashboard/qr"');
+  });
+});

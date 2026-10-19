@@ -371,3 +371,59 @@ describe("admin members view", () => {
     expect(rows.some((r) => r.email === "invitee@test" && r.card_status === null)).toBe(true);
   });
 });
+
+describe("reminders", () => {
+  const SECRET = "test-secret-that-is-long-enough-1234567890";
+
+  it("refuses callers without the secret", async () => {
+    await db.query("insert into public.internal_settings (key, value) values ('cron_secret', $1)", [SECRET]);
+    await expect(as(null, "select * from public.claim_reminders('wrong', 40)")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.claim_reminders(null, 40)")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.reminders_sent")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select * from public.internal_settings")).rejects.toThrow(/permission denied/);
+  });
+
+  it("finds each kind of reminder once, then never again", async () => {
+    // Invite sent 4 days ago, still unused.
+    await db.query("select public.join_waitlist('slow@test', 'Sam Slow')");
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    const [{ code }] = await as<{ code: string }>(ALICE, "select public.admin_invite('slow@test') as code");
+    await db.query("update public.waitlist set invited_at = now() - interval '4 days' where email = 'slow@test'");
+
+    // Unconfirmed account, 2 days old.
+    await db.exec("insert into public.access_codes (code, max_uses) values ('REMIND-CODE', 3)");
+    await db.query(
+      `insert into auth.users (id, email, raw_user_meta_data, created_at, email_confirmed_at)
+       values (gen_random_uuid(), 'unconfirmed@test', '{"access_code":"REMIND-CODE"}', now() - interval '2 days', null),
+              (gen_random_uuid(), 'drafty@test', '{"access_code":"REMIND-CODE"}', now() - interval '3 days', now() - interval '3 days')`,
+    );
+
+    // Published 8 days ago, no QR scans.
+    const DAN = "44444444-4444-4444-4444-444444444444";
+    await db.query(
+      `insert into auth.users (id, email, raw_user_meta_data, created_at, email_confirmed_at)
+       values ($1, 'quiet@test', '{"access_code":"REMIND-CODE"}', now() - interval '10 days', now() - interval '10 days')`,
+      [DAN],
+    );
+    await createProfile(DAN, "quiet");
+    // The publish date is normally locked; backdate it for the test only.
+    await db.exec("alter table public.profiles disable trigger profiles_before_write");
+    await db.query("update public.profiles set published_at = now() - interval '8 days' where slug = 'quiet'");
+    await db.exec("alter table public.profiles enable trigger profiles_before_write");
+
+    const first = await as<{ kind: string; email: string; full_name: string | null; access_code: string | null }>(
+      null,
+      `select * from public.claim_reminders('${SECRET}', 40)`,
+    );
+    const pick = (kind: string, email: string) => first.find((r) => r.kind === kind && r.email === email);
+    expect(pick("invite_unused", "slow@test")).toMatchObject({ full_name: "Sam Slow", access_code: code });
+    expect(pick("email_unconfirmed", "unconfirmed@test")).toBeTruthy();
+    expect(pick("card_draft", "drafty@test")).toBeTruthy();
+    expect(pick("no_scans", "quiet@test")).toBeTruthy();
+    // Fresh accounts and recent invites are left alone.
+    expect(first.some((r) => r.email === "invitee@test" && r.kind === "invite_unused")).toBe(false);
+
+    const second = await as(null, `select * from public.claim_reminders('${SECRET}', 40)`);
+    expect(second).toEqual([]);
+  });
+});

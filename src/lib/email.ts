@@ -1,6 +1,13 @@
 import "server-only";
 import { APP_NAME, getSiteUrl, SUPPORT_EMAIL } from "./config";
-import { FOUNDER_NAME, inviteEmail, waitlistEmail } from "./founder-emails";
+import {
+  draftReminderEmail,
+  FOUNDER_NAME,
+  inviteEmail,
+  inviteReminderEmail,
+  noScansEmail,
+  waitlistEmail,
+} from "./founder-emails";
 
 // Personal notes from the founder, sent from a no-reply address. The emails
 // ask people to write to SUPPORT_EMAIL, and reply-to points there as well.
@@ -44,4 +51,15 @@ export function sendWaitlistEmail(to: string, fullName: string) {
 /** "Your invite is ready", with a link that fills in the personal access code. */
 export function sendInviteEmail(to: string, fullName: string | null, code: string) {
   return send(to, inviteEmail({ ...common(fullName), code }));
+}
+
+/** One-time reminders, sent by the daily job. */
+export function sendInviteReminderEmail(to: string, fullName: string | null, code: string) {
+  return send(to, inviteReminderEmail({ ...common(fullName), code }));
+}
+export function sendDraftReminderEmail(to: string, fullName: string | null) {
+  return send(to, draftReminderEmail(common(fullName)));
+}
+export function sendNoScansEmail(to: string, fullName: string | null) {
+  return send(to, noScansEmail(common(fullName)));
 }

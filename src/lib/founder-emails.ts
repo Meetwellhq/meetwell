@@ -122,3 +122,83 @@ export function inviteEmail({ fullName, appName, siteUrl, photoUrl, replyEmail, 
   });
   return { subject, text, html };
 }
+
+/** A green call-to-action button. */
+const button = (href: string, label: string) =>
+  `<p style="margin:24px 0">
+    <a href="${href}" style="display:inline-block;background:#1f4d3f;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:8px">${label}</a>
+  </p>`;
+
+const ONLY_ONCE = "This is the only reminder I'll send about this.";
+
+/** Generic one-off reminder: paragraphs, a button, more paragraphs, then the reply line. */
+function reminder({
+  fullName, appName, siteUrl, photoUrl, replyEmail,
+  subject, before, cta, after,
+}: Common & { subject: string; before: string[]; cta: { href: string; label: string }; after: string[] }) {
+  const firstName = firstNameOf(fullName);
+  const ask = "If anything got in the way, tell me at";
+  const text = [
+    `Hi ${firstName},`,
+    ...before,
+    `${cta.label}: ${cta.href}`,
+    ...after,
+    `${ask} ${replyEmail}.`,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+  ].join("\n\n");
+  const html = founderLayout({
+    firstName,
+    appName,
+    siteUrl,
+    photoUrl,
+    bodyHtml: [
+      ...before.map(p),
+      button(cta.href, cta.label),
+      ...after.map(p),
+      `<p>${escapeHtml(ask)} <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
+    ].join("\n  "),
+  });
+  return { subject, text, html };
+}
+
+/** Invite sent a few days ago, code still unused. */
+export function inviteReminderEmail(args: Common & { code: string }) {
+  return reminder({
+    ...args,
+    subject: `Your ${args.appName} invite is still waiting`,
+    before: [
+      `A few days ago I sent you an invite to the ${args.appName} private beta, and your spot is still saved for you.`,
+      "Tap below to create your account. Your access code is already filled in.",
+    ],
+    cta: { href: `${args.siteUrl}/access-code?code=${encodeURIComponent(args.code)}`, label: "Create your account" },
+    after: [`Your access code: ${args.code}`, ONLY_ONCE],
+  });
+}
+
+/** Signed up, but the card isn't published yet. */
+export function draftReminderEmail(args: Common) {
+  return reminder({
+    ...args,
+    subject: `Need a hand finishing your ${args.appName} card?`,
+    before: [
+      "You've created your account, but your card isn't published yet.",
+      "It only takes a minute: add your name, a photo and one way to reach you, then tap Publish. Your QR code is ready as soon as you do.",
+    ],
+    cta: { href: `${args.siteUrl}/dashboard/profile`, label: "Finish my card" },
+    after: [ONLY_ONCE],
+  });
+}
+
+/** Card published a week ago but never opened from a QR scan. */
+export function noScansEmail(args: Common) {
+  return reminder({
+    ...args,
+    subject: `Have you tried your ${args.appName} QR code yet?`,
+    before: [
+      "Your card is live. The best way to use it is in person, the next time you meet someone.",
+      "A simple trick: save your QR code to your phone's photos, or set it as your lock screen. When someone asks for your number, just show it. They scan it with their camera and save your details in one tap.",
+    ],
+    cta: { href: `${args.siteUrl}/dashboard/qr`, label: "Open my QR code" },
+    after: [ONLY_ONCE],
+  });
+}
