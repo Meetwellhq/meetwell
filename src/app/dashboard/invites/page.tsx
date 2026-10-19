@@ -8,12 +8,15 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Invites" };
 
+type Reminder = { kind: keyof typeof REMINDER_LABEL; sent_at: string };
+
 type WaitlistRow = {
   email: string;
   full_name: string | null;
   joined_at: string;
   invited_at: string | null;
   signed_up: boolean;
+  reminders?: Reminder[];
 };
 
 type MemberRow = {
@@ -28,10 +31,27 @@ type MemberRow = {
   views: number;
   qr_scans: number;
   contacts_saved: number;
+  reminders?: Reminder[];
 };
 
 const date = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Lagos" });
+
+/** Automatic one-time reminders (see the daily job in /api/cron/reminders). */
+const REMINDER_LABEL = {
+  invite_unused: "Invite reminder sent",
+  email_unconfirmed: "Confirmation re-sent",
+  card_draft: "Finish-card reminder sent",
+  no_scans: "QR tip sent",
+} as const;
+
+function ReminderBadges({ reminders }: { reminders?: Reminder[] }) {
+  return (reminders ?? []).map((r) => (
+    <Badge key={r.kind} tone="accent">
+      {REMINDER_LABEL[r.kind] ?? "Reminder sent"} {date(r.sent_at)}
+    </Badge>
+  ));
+}
 
 const CARD_BADGE = {
   published: { tone: "success", label: "Published" },
@@ -110,6 +130,11 @@ export default async function InvitesPage() {
                     Joined {date(r.joined_at)}
                     {r.invited_at && <> · Invited {date(r.invited_at)}</>}
                   </p>
+                  {!!r.reminders?.length && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <ReminderBadges reminders={r.reminders} />
+                    </div>
+                  )}
                 </div>
                 {r.signed_up ? (
                   <Badge tone="success">Signed up</Badge>
@@ -167,6 +192,7 @@ export default async function InvitesPage() {
                           {badge ? <Badge tone={badge.tone}>{badge.label}</Badge> : <Badge>No card</Badge>}
                           {m.card_status && <Badge>{m.has_photo ? "Has photo" : "No photo"}</Badge>}
                           {!m.confirmed && <Badge tone="warning">Email not confirmed</Badge>}
+                          <ReminderBadges reminders={m.reminders} />
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-5 sm:gap-6">

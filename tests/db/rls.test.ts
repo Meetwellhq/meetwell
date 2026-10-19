@@ -427,3 +427,28 @@ describe("reminders", () => {
     expect(second).toEqual([]);
   });
 });
+
+describe("reminder status on the admin page", () => {
+  it("lists the reminders each person was sent", async () => {
+    // The reminders test above sent one of each kind.
+    const waitlist = await as<{ email: string; reminders: { kind: string; sent_at: string }[] }>(
+      ALICE,
+      "select email, reminders from public.admin_list_waitlist() where email = 'slow@test'",
+    );
+    expect(waitlist[0].reminders.map((r) => r.kind)).toEqual(["invite_unused"]);
+
+    const members = await as<{ email: string; reminders: { kind: string }[] }>(
+      ALICE,
+      "select email, reminders from public.admin_list_members() where email in ('drafty@test', 'quiet@test', 'unconfirmed@test') order by email",
+    );
+    expect(members.map((m) => [m.email, m.reminders.map((r) => r.kind)])).toEqual([
+      ["drafty@test", ["card_draft"]],
+      ["quiet@test", ["no_scans"]],
+      ["unconfirmed@test", ["email_unconfirmed"]],
+    ]);
+    // People with no reminders get an empty list, not null.
+    const none = await as<{ reminders: unknown[] }>(ALICE, "select reminders from public.admin_list_members() where email = 'carol@test'");
+    expect(none[0].reminders).toEqual([]);
+    await expect(as(null, "select * from public.admin_list_members()")).rejects.toThrow(/permission denied/);
+  });
+});
