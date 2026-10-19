@@ -39,9 +39,15 @@ const CARD_BADGE = {
   unpublished: { tone: "warning", label: "Unpublished" },
 } as const;
 
-function Stats({ items }: { items: { label: string; value: number }[] }) {
+/** "Active" = logged in during the last 30 days. */
+const ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+function isActive(lastSignIn: string | null) {
+  return !!lastSignIn && Date.now() - new Date(lastSignIn).getTime() < ACTIVE_WINDOW_MS;
+}
+
+function Stats({ items, columns = 4 }: { items: { label: string; value: number }[]; columns?: 3 | 4 }) {
   return (
-    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <dl className={`grid grid-cols-2 gap-3 ${columns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-4"}`}>
       {items.map((s) => (
         <div key={s.label} className="rounded-xl border border-border bg-surface p-4">
           <dt className="text-sm text-ink-2">{s.label}</dt>
@@ -129,11 +135,14 @@ export default async function InvitesPage() {
         ) : (
           <>
             <Stats
+              columns={3}
               items={[
-                { label: "Accounts", value: people.length },
+                { label: "Total users", value: people.length },
+                { label: "Active users (last 30 days)", value: people.filter((m) => isActive(m.last_sign_in_at)).length },
                 { label: "Published cards", value: people.filter((m) => m.card_status === "published").length },
                 { label: "Cards with a photo", value: people.filter((m) => m.has_photo).length },
                 { label: "QR scans (all cards)", value: people.reduce((n, m) => n + m.qr_scans, 0) },
+                { label: "Contacts saved (all cards)", value: people.reduce((n, m) => n + m.contacts_saved, 0) },
               ]}
             />
 
