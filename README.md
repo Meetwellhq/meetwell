@@ -158,3 +158,9 @@ Verified with automated tests (`npm test`: 39 tests, including 21 that run the r
 
 **Phase 3: networking features**
 Two-way contact exchange, saved connections with notes, follow-up reminders, event-specific cards, AI-assisted introductions (behind the `StarterGenerator` interface), team profiles.
+
+---
+
+## License
+
+Copyright (c) 2026 Abdur-rasheed Idris, trading as Meetwell. **All rights reserved.** This repository is public for viewing only; it is not open source. See [LICENSE](LICENSE).
