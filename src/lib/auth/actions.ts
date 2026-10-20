@@ -181,7 +181,8 @@ export async function joinWaitlist(_: AuthFormState, formData: FormData): Promis
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), email, values };
 
   const supabase = await createClient();
-  const { data: isNew, error } = await supabase.rpc("join_waitlist", {
+  // Returns the person's unsubscribe token, or null if the email was already on the list.
+  const { data: unsubscribeToken, error } = await supabase.rpc("join_waitlist_with_token", {
     p_email: parsed.data.email,
     p_full_name: parsed.data.fullName,
   });
@@ -189,7 +190,7 @@ export async function joinWaitlist(_: AuthFormState, formData: FormData): Promis
     console.error("join_waitlist failed", error.code, error.message);
     return { error: "We couldn't add you right now. Please try again in a moment.", email };
   }
-  if (isNew !== true) {
+  if (typeof unsubscribeToken !== "string") {
     return {
       fieldErrors: { email: "This email is already on the waiting list. We'll be in touch when your invite is ready." },
       email,
@@ -197,8 +198,26 @@ export async function joinWaitlist(_: AuthFormState, formData: FormData): Promis
     };
   }
   // Only new emails get the confirmation, so the form can't be used to spam an inbox.
-  await sendWaitlistEmail(parsed.data.email, parsed.data.fullName);
+  await sendWaitlistEmail(parsed.data.email, parsed.data.fullName, unsubscribeToken);
   return {
     message: `You've joined the Meetwell waiting list! We'll email ${parsed.data.email} when your invite is ready.`,
   };
+}
+
+export type UnsubscribeState = { done?: boolean; error?: string };
+
+/** One-click opt-out from occasional waiting-list updates (invites still go out). */
+export async function unsubscribeFromUpdates(_: UnsubscribeState, formData: FormData): Promise<UnsubscribeState> {
+  const token = z.uuid().safeParse(formData.get("token"));
+  if (!token.success) return { error: "This unsubscribe link isn't valid. Email us and we'll sort it out." };
+  if (!(await limitByClient("unsubscribe", LIMITS.waitlist.max, LIMITS.waitlist.windowMs))) {
+    return { error: "Too many attempts. Please wait a few minutes and try again." };
+  }
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("unsubscribe_waitlist", { p_token: token.data });
+  if (error) {
+    console.error("unsubscribe_waitlist failed", error.code, error.message);
+    return { error: "We couldn't update your preference right now. Please try again in a moment." };
+  }
+  return data === true ? { done: true } : { error: "This unsubscribe link isn't valid. Email us and we'll sort it out." };
 }

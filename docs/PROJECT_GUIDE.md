@@ -66,6 +66,9 @@ every migration.
   enforces invite-only sign-up (see access codes).
 - **Waiting list**: `/early-access`, `joinWaitlist` in `src/lib/auth/actions.ts`. Duplicate
   emails show an error. New joiners get a founder welcome email.
+- **Waiting-list updates**: people are told on sign-up they'll get occasional updates. Each
+  waitlist row has a private `unsubscribe_token`; `/unsubscribe?t=…` sets `unsubscribed_at`
+  (invites still go out). Any update email must include that link and skip unsubscribed people.
 - **Access codes**: `/access-code` (prefilled from `?code=`). A trigger on `auth.users`
   refuses new accounts without a valid code and uses it up. Codes live in
   `public.access_codes`. To reopen public sign-up later: make `public.invite_only()` return

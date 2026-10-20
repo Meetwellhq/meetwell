@@ -23,8 +23,8 @@ export default function EarlyAccessPage() {
           ]}
           footer={
             <p className="text-center text-xs text-ink-3">
-              We&apos;ll only use your details to send your invite. See our{" "}
-              <Link href="/privacy" className="underline">Privacy notice</Link>.
+              We&apos;ll email your invite and occasional Meetwell updates, like new members you might want to meet.
+              Unsubscribe anytime. See our <Link href="/privacy" className="underline">Privacy notice</Link>.
             </p>
           }
         />

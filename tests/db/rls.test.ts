@@ -452,3 +452,35 @@ describe("reminder status on the admin page", () => {
     await expect(as(null, "select * from public.admin_list_members()")).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("waitlist updates and unsubscribe", () => {
+  it("returns a private unsubscribe token on first join only", async () => {
+    const [{ t }] = await as<{ t: string | null }>(null, "select public.join_waitlist_with_token('updates@test', 'Uma Updates') as t");
+    expect(t).toMatch(/^[0-9a-f-]{36}$/);
+    const [{ t: again }] = await as<{ t: string | null }>(null, "select public.join_waitlist_with_token('UPDATES@test', 'Someone') as t");
+    expect(again).toBeNull();
+    // Older rows got their own tokens too.
+    const rows = (await db.query<{ n: number; distinct_n: number }>(
+      "select count(*)::int as n, count(distinct unsubscribe_token)::int as distinct_n from public.waitlist",
+    )).rows;
+    expect(rows[0].n).toBe(rows[0].distinct_n);
+  });
+
+  it("unsubscribes with the right token and nothing else", async () => {
+    const [{ token }] = (await db.query<{ token: string }>(
+      "select unsubscribe_token::text as token from public.waitlist where email = 'updates@test'",
+    )).rows;
+    expect(await as(null, "select public.unsubscribe_waitlist(gen_random_uuid()) as ok")).toEqual([{ ok: false }]);
+    expect(await as(null, `select public.unsubscribe_waitlist('${token}') as ok`)).toEqual([{ ok: true }]);
+    // Clicking again is fine and keeps the first date.
+    expect(await as(null, `select public.unsubscribe_waitlist('${token}') as ok`)).toEqual([{ ok: true }]);
+    const [{ unsub, others }] = (await db.query<{ unsub: boolean; others: number }>(
+      `select (select unsubscribed_at is not null from public.waitlist where email = 'updates@test') as unsub,
+              (select count(*)::int from public.waitlist where unsubscribed_at is not null and email <> 'updates@test') as others`,
+    )).rows;
+    expect(unsub).toBe(true);
+    expect(others).toBe(0);
+    // Visitors still can't read the list or tokens.
+    await expect(as(null, "select unsubscribe_token from public.waitlist")).rejects.toThrow(/permission denied/);
+  });
+});

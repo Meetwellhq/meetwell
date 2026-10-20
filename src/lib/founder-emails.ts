@@ -25,12 +25,14 @@ function firstNameOf(fullName: string | null) {
 }
 
 /** Shared layout: greeting, body (already HTML), founder sign-off with photo. */
-function founderLayout({ firstName, bodyHtml, appName, siteUrl, photoUrl }: {
+function founderLayout({ firstName, bodyHtml, appName, siteUrl, photoUrl, footerHtml }: {
   firstName: string;
   bodyHtml: string;
   appName: string;
   siteUrl: string;
   photoUrl: string;
+  /** Small print under the sign-off, e.g. an unsubscribe line (already HTML). */
+  footerHtml?: string;
 }) {
   const siteLabel = siteUrl.replace(/^https?:\/\//, "");
   return `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1c1c1a;font-size:16px;line-height:1.65">
@@ -47,13 +49,24 @@ function founderLayout({ firstName, bodyHtml, appName, siteUrl, photoUrl }: {
         <a href="${siteUrl}" style="color:#1f4d3f">${siteLabel}</a>
       </td>
     </tr>
-  </table>
+  </table>${footerHtml ? `
+  <p style="margin-top:28px;color:#5c5c57;font-size:13px;line-height:1.5">${footerHtml}</p>` : ""}
 </div>`;
 }
 
 const p = (text: string) => `<p>${escapeHtml(text)}</p>`;
 
-export function waitlistEmail({ fullName, appName, siteUrl, photoUrl, replyEmail }: Common) {
+/** Link to turn off occasional waiting-list updates (invites still go out). */
+export const unsubscribeUrl = (siteUrl: string, token: string) => `${siteUrl}/unsubscribe?t=${encodeURIComponent(token)}`;
+
+export function waitlistEmail({
+  fullName,
+  appName,
+  siteUrl,
+  photoUrl,
+  replyEmail,
+  unsubscribeToken,
+}: Common & { unsubscribeToken: string }) {
   const firstName = firstNameOf(fullName);
   const paragraphs = [
     `I'm so happy to have you here, and thank you for joining the ${appName} private beta.`,
@@ -64,8 +77,17 @@ export function waitlistEmail({ fullName, appName, siteUrl, photoUrl, replyEmail
   const ask =
     "In the meantime, I'd love to know where you usually meet new people: events, work, church, campus? Drop me a line at";
 
+  const updates = "Now and then I'll also send you short updates, like new members you might want to meet.";
+  const unsubscribe = unsubscribeUrl(siteUrl, unsubscribeToken);
+
   const subject = `Thanks for joining the ${appName} private beta`;
-  const text = [`Hi ${firstName},`, ...paragraphs, `${ask} ${replyEmail}.`, `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`].join("\n\n");
+  const text = [
+    `Hi ${firstName},`,
+    ...paragraphs,
+    `${ask} ${replyEmail}.`,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+    `${updates} Don't want them? Unsubscribe: ${unsubscribe}`,
+  ].join("\n\n");
   const html = founderLayout({
     firstName,
     appName,
@@ -75,6 +97,7 @@ export function waitlistEmail({ fullName, appName, siteUrl, photoUrl, replyEmail
       ...paragraphs.map(p),
       `<p>${escapeHtml(ask)} <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
     ].join("\n  "),
+    footerHtml: `${escapeHtml(updates)} Don't want them? <a href="${unsubscribe}" style="color:#5c5c57">Unsubscribe</a>.`,
   });
   return { subject, text, html };
 }

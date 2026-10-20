@@ -44,8 +44,8 @@ async function send(to: string, { subject, text, html }: { subject: string; text
 }
 
 /** "Thanks for joining the private beta." */
-export function sendWaitlistEmail(to: string, fullName: string) {
-  return send(to, waitlistEmail(common(fullName)));
+export function sendWaitlistEmail(to: string, fullName: string, unsubscribeToken: string) {
+  return send(to, waitlistEmail({ ...common(fullName), unsubscribeToken }));
 }
 
 /** "Your invite is ready", with a link that fills in the personal access code. */

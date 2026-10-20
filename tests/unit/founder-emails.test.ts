@@ -5,7 +5,7 @@ const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "h
 
 describe("waitlist email", () => {
   it("greets by first name and signs off from the founder with a photo", () => {
-    const { subject, text, html } = waitlistEmail({ ...base, fullName: "  Ada Obi " });
+    const { subject, text, html } = waitlistEmail({ ...base, fullName: "  Ada Obi ", unsubscribeToken: "11111111-2222-3333-4444-555555555555" });
     expect(subject).toBe("Thanks for joining the Meetwell private beta");
     expect(text.startsWith("Hi Ada,")).toBe(true);
     expect(text).toContain("I'm so happy to have you here");
@@ -16,7 +16,7 @@ describe("waitlist email", () => {
   });
 
   it("escapes names typed into the public form", () => {
-    const { html } = waitlistEmail({ ...base, fullName: '<img src=x onerror="alert(1)">' });
+    const { html } = waitlistEmail({ ...base, fullName: '<img src=x onerror="alert(1)">', unsubscribeToken: "11111111-2222-3333-4444-555555555555" });
     expect(html).not.toContain("<img src=x");
     expect(html).toContain("&lt;img");
   });
@@ -51,5 +51,14 @@ describe("reminder emails", () => {
     const { draftReminderEmail, noScansEmail } = await import("@/lib/founder-emails");
     expect(draftReminderEmail({ ...base, fullName: null }).html).toContain('href="https://meetwell.me/dashboard/profile"');
     expect(noScansEmail({ ...base, fullName: "Quinn" }).html).toContain('href="https://meetwell.me/dashboard/qr"');
+  });
+});
+
+describe("waitlist updates", () => {
+  it("welcome email mentions occasional updates and links to unsubscribe", () => {
+    const { text, html } = waitlistEmail({ ...base, fullName: "Ada", unsubscribeToken: "11111111-2222-3333-4444-555555555555" });
+    expect(text).toContain("short updates");
+    expect(text).toContain("https://meetwell.me/unsubscribe?t=11111111-2222-3333-4444-555555555555");
+    expect(html).toContain('href="https://meetwell.me/unsubscribe?t=11111111-2222-3333-4444-555555555555"');
   });
 });

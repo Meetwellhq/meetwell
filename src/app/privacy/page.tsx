@@ -13,7 +13,7 @@ const mail = (
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy notice" updated="October 18, 2026">
+    <LegalPage title="Privacy notice" updated="October 20, 2026">
       <section>
         <p>
           This notice explains what personal data {APP_NAME} collects, why, and the rights you have. We follow the
@@ -78,6 +78,11 @@ export default function PrivacyPage() {
             <strong>To send your waiting-list confirmation and invite</strong>, because you asked us to by joining.
           </li>
           <li>
+            <strong>To send occasional Meetwell updates to the waiting list</strong>, such as new members you might
+            want to meet, as we tell you when you join. Every update has an <strong>Unsubscribe</strong> link, and
+            unsubscribing won&apos;t affect your invite.
+          </li>
+          <li>
             <strong>To send account emails</strong>, such as confirming your email or resetting your password, as part
             of providing the service.
           </li>
@@ -87,7 +92,9 @@ export default function PrivacyPage() {
           </li>
           <li><strong>To meet legal obligations</strong>, where Nigerian law requires it.</li>
         </ul>
-        <p className="mt-3">We don&apos;t sell your data, and we don&apos;t use it for advertising.</p>
+        <p className="mt-3">
+          We don&apos;t sell your data, and we don&apos;t share it with other companies for their advertising.
+        </p>
       </section>
 
       <section>
@@ -134,7 +141,7 @@ export default function PrivacyPage() {
           <li>ask us to delete your data;</li>
           <li>object to, or ask us to limit, how we use it;</li>
           <li>ask for your data in a format you can take elsewhere;</li>
-          <li>withdraw consent at any time, for example to leave the waiting list;</li>
+          <li>withdraw consent at any time, for example to unsubscribe from updates or leave the waiting list;</li>
           <li>complain to the Nigeria Data Protection Commission (NDPC).</li>
         </ul>
         <p className="mt-3">
