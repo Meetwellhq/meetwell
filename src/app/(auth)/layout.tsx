@@ -37,6 +37,9 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           <Link href="/terms" className="underline underline-offset-2 hover:text-ink">
             Terms of service
           </Link>
+          <p className="mt-2 text-xs">
+            © {new Date().getFullYear()} {APP_NAME}. All rights reserved.
+          </p>
         </footer>
       </main>
     </div>
