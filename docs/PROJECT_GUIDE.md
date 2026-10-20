@@ -28,7 +28,7 @@ invites them from an admin page; they sign up with a personal access code.
 
 | Piece | What it is | Notes |
 | --- | --- | --- |
-| Code | Next.js 16 (App Router, Server Actions, `proxy.ts`), React 19, TypeScript, Tailwind 4 | GitHub: `Abdur-rasheedidris19/meetwell` |
+| Code | Next.js 16 (App Router, Server Actions, `proxy.ts`), React 19, TypeScript, Tailwind 4 | GitHub: `Meetwellhq/meetwell` |
 | Hosting | Vercel, project `meetwell` | Auto-deploys on push to `main`. Domain `meetwell.me` (DNS on Vercel) |
 | Database, auth, storage | Supabase | RLS everywhere; public reads only through security-definer RPCs |
 | App emails | Resend (`noreply@meetwell.me`) | Via Supabase SMTP (auth emails) and the Resend API (founder emails) |
