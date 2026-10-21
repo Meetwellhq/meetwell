@@ -83,8 +83,9 @@ every migration.
   Waiting list with Invite/Resend, Members with card status, photo, views, QR scans, saves and
   reminder tags. Database functions refuse non-admins.
 - **AI Network Matching**: `/dashboard/matches` (opt-in + private fields: field, experience,
-  looking for, city; list of matches). Recommends only MORE experienced people in the same or a
-  related field. No monthly cap; at most one match per member per day. Daily job
+  looking for, city; list of matches). Recommends only people with 4+ years, a profile
+  photo and more experience than the member, in the same or a related field
+  (`20261031000000_matching_min_experience.sql`). No monthly cap; at most one match per member per day. Daily job
   `src/app/api/cron/matches/route.ts` (09:00 UTC): `matching_due_users()` → `matching_candidates()`
   (scores: field, extra years, mentoring, city, photo; small penalty per recent recommendation; no
   repeats) → `chooseMatch()` in `src/lib/matching/engine.ts` (Claude `claude-opus-5-5`, low effort,
@@ -92,7 +93,8 @@ every migration.
   experienced member is told. Up to ~60 members per run on the current Vercel plan.
   Only members with a confirmed account and a profile at least 80% complete are matched or
   recommended (`profile_completeness()` in SQL, `src/lib/matching/completeness.ts` for the page;
-  keep them in step). Members under 80% get a one-time `profile_incomplete` reminder.
+  keep them in step). Members under 80% get a one-time `profile_incomplete` reminder; without a
+  photo, 4+ years get "people want to learn from you" copy, others "a photo gets you matches".
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `hello@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).

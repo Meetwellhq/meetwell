@@ -28,8 +28,8 @@ export function MatchingPrefsForm({ initial }: { initial: MatchingPrefs }) {
         <div>
           <p className="font-medium text-ink">Find me matches</p>
           <p className="mt-0.5 text-sm text-ink-2">
-            Get recommendations of more experienced people to meet, and be recommended to people earlier in their
-            careers.
+            Get recommendations of experienced people to meet. With 4+ years of experience and a profile photo,
+            you&apos;ll also be recommended to people earlier in their careers.
           </p>
         </div>
         <Switch checked={optIn} onChange={setOptIn} label="Find me matches" showState={false} />

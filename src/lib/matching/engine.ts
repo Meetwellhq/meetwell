@@ -30,7 +30,7 @@ const ChoiceSchema = z.object({
 
 const SYSTEM = `You recommend one person for a member of Meetwell, a networking app, to meet.
 
-You get the member's profile and a numbered shortlist of other members who all have more experience than them, in the same or a related field, already ranked by simple rules (best first). Pick the one person the member would learn the most from and most benefit from knowing, given their field, experience and what they say they're looking for. Prefer the top of the list unless someone lower is clearly a better fit.
+You get the member's profile and a numbered shortlist of other members who all have at least 4 years of experience and more than them, in the same or a related field, already ranked by simple rules (best first). Pick the one person the member would learn the most from and most benefit from knowing, given their field, experience and what they say they're looking for. Prefer the top of the list unless someone lower is clearly a better fit.
 
 Then write the reason the member will read, in 1 or 2 short sentences (under 280 characters):
 - Speak to the member as "you" and use the other person's first name.

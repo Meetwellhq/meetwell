@@ -1,5 +1,6 @@
 import "server-only";
 import { APP_NAME, getSiteUrl, SUPPORT_EMAIL } from "./config";
+import { fieldLabel } from "./matching/constants";
 import {
   draftReminderEmail,
   incompleteProfileEmail,
@@ -73,6 +74,13 @@ export function sendMatchEmail(to: string, fullName: string | null, match: Match
 }
 
 /** Profile under 80%: finish it (and add a photo) to get matches. Sent once. */
-export function sendIncompleteProfileEmail(to: string, fullName: string | null, completeness: number, hasPhoto: boolean) {
-  return send(to, incompleteProfileEmail({ ...common(fullName), completeness, hasPhoto }));
+export function sendIncompleteProfileEmail(
+  to: string,
+  fullName: string | null,
+  details: { completeness: number; hasPhoto: boolean; experienceYears: number | null; field: string | null },
+) {
+  return send(
+    to,
+    incompleteProfileEmail({ ...common(fullName), ...details, fieldName: fieldLabel(details.field) }),
+  );
 }

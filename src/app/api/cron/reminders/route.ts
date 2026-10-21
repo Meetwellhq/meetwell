@@ -17,6 +17,8 @@ type Reminder = {
   access_code: string | null;
   completeness?: number | null;
   has_photo?: boolean | null;
+  experience_years?: number | null;
+  field?: string | null;
 };
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -46,7 +48,12 @@ export async function GET(request: Request) {
     } else if (r.kind === "card_draft") {
       ok = await sendDraftReminderEmail(r.email, r.full_name);
     } else if (r.kind === "profile_incomplete" && typeof r.completeness === "number") {
-      ok = await sendIncompleteProfileEmail(r.email, r.full_name, r.completeness, r.has_photo === true);
+      ok = await sendIncompleteProfileEmail(r.email, r.full_name, {
+        completeness: r.completeness,
+        hasPhoto: r.has_photo === true,
+        experienceYears: r.experience_years ?? null,
+        field: r.field ?? null,
+      });
     } else if (r.kind === "no_scans") {
       ok = await sendNoScansEmail(r.email, r.full_name);
     } else if (r.kind === "email_unconfirmed") {

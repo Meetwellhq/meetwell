@@ -296,24 +296,57 @@ export function matchEmail({
   return { subject, text, html };
 }
 
-/** Published card under 80% complete: finish it (and add a photo) to get matches. */
-export function incompleteProfileEmail(args: Common & { completeness: number; hasPhoto: boolean }) {
-  const photoLine = args.hasPhoto
-    ? "A few more details will get you there, and you can see exactly what's missing on your Matches page."
-    : "The quickest win is a clear photo of you. People are far more likely to save and message someone they can recognise. Then add the last few details listed on your Matches page.";
+/** Members with this many years can be recommended to others (see the matching SQL). */
+export const RECOMMENDABLE_MIN_YEARS = 4;
+
+/**
+ * Published card under 80% complete. Without a photo, the copy depends on
+ * experience: 4+ years hear why people will want to learn from them; everyone
+ * else hears that a photo is the first step to getting matches.
+ */
+export function incompleteProfileEmail(
+  args: Common & { completeness: number; hasPhoto: boolean; experienceYears: number | null; fieldName: string | null },
+) {
+  const { appName, siteUrl, completeness, hasPhoto, experienceYears, fieldName } = args;
+  const progress = `Your ${appName} profile is ${completeness}% complete.`;
+  const finish = "Then add the last few details listed on your Matches page.";
+
+  // Photos are uploaded in the card editor; the Matches page lists everything else.
+  if (hasPhoto) {
+    return reminder({
+      ...args,
+      subject: `Your ${appName} profile is ${completeness}% done`,
+      before: [
+        `${progress} Once it reaches 80%, you'll start getting AI matches: more experienced people in your field worth meeting, up to one a day.`,
+        "A few more details will get you there, and you can see exactly what's missing on your Matches page.",
+      ],
+      cta: { href: `${siteUrl}/dashboard/matches`, label: "Complete my profile" },
+      after: [ONLY_ONCE],
+    });
+  }
+
+  if (experienceYears !== null && experienceYears >= RECOMMENDABLE_MIN_YEARS) {
+    const inField = fieldName ? ` in ${fieldName.toLowerCase()}` : "";
+    return reminder({
+      ...args,
+      subject: "People want to learn from you. Add your photo",
+      before: [
+        `With ${experienceYears} years${inField}, you're exactly the kind of person people earlier in their careers want to meet and learn from. ${appName} recommends experienced members like you to them, every day.`,
+        `A clear photo makes all the difference: people are far more likely to save your contact and reach out when they can see who they're meeting. ${progress} Add your photo and finish your profile to start being recommended.`,
+      ],
+      cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },
+      after: [finish, ONLY_ONCE],
+    });
+  }
+
   return reminder({
     ...args,
-    subject: args.hasPhoto
-      ? `Your ${args.appName} profile is ${args.completeness}% done`
-      : `Add a photo to your ${args.appName} profile`,
+    subject: `Add a photo to get your ${appName} matches`,
     before: [
-      `Your ${args.appName} profile is ${args.completeness}% complete. Once it reaches 80%, you'll start getting AI matches: more experienced people in your field worth meeting, up to one a day.`,
-      photoLine,
+      `${progress} Once it reaches 80%, ${appName} will start recommending experienced people in your field for you to meet and learn from, up to one a day.`,
+      "The best first step is a clear photo of you. Experienced members are far more likely to reply when they can see who's reaching out.",
     ],
-    // Photos are uploaded in the card editor; the Matches page lists everything else.
-    cta: args.hasPhoto
-      ? { href: `${args.siteUrl}/dashboard/matches`, label: "Complete my profile" }
-      : { href: `${args.siteUrl}/dashboard/profile`, label: "Add my photo" },
-    after: [ONLY_ONCE],
+    cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },
+    after: [finish, ONLY_ONCE],
   });
 }

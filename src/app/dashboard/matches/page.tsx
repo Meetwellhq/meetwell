@@ -65,8 +65,8 @@ export default async function MatchesPage() {
           <Sparkles className="size-5 text-accent" aria-hidden /> AI Network Matching
         </h1>
         <p className="mt-1 text-ink-2">
-          We recommend more experienced people in your field you can learn from and network with, based on your
-          field, experience and what you&apos;re looking for. Up to one new match a day, by email and here.
+          We recommend experienced people in your field (4+ years) you can learn from and network with, based on
+          your field, experience and what you&apos;re looking for. Up to one new match a day, by email and here.
         </p>
       </div>
 
@@ -84,6 +84,13 @@ export default async function MatchesPage() {
             <Alert>
               Your card isn&apos;t published yet, so you won&apos;t get matches.{" "}
               <Link href="/dashboard/profile" className="underline">Publish your card</Link> to start.
+            </Alert>
+          )}
+          {(profile.experience_years ?? 0) >= 4 && !profile.avatar_url && (
+            <Alert>
+              With {profile.experience_years} years of experience, people earlier in their careers will want to learn
+              from you. <Link href="/dashboard/profile" className="underline">Add a profile photo</Link> to be
+              recommended to them.
             </Alert>
           )}
           {completeness && (

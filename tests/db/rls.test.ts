@@ -512,7 +512,7 @@ describe("AI network matching", () => {
     await db.exec("update public.profiles set organization = 'Studio', bio = 'I like meeting people.'");
     const set = (id: string, sql: string) => db.query(`update public.profiles set ${sql} where user_id = $1`, [id]);
     await set(JUNIOR, "field = 'product_design', experience_years = 1, looking_for = '{mentor}', city = 'Lagos', matching_opt_in = true");
-    await set(SENIOR, "field = 'product_design', experience_years = 4, looking_for = '{mentee}', city = 'Lagos', matching_opt_in = true");
+    await set(SENIOR, "field = 'product_design', experience_years = 4, looking_for = '{mentee}', city = 'Lagos', matching_opt_in = true, avatar_url = 'https://example.test/senior.jpg'");
     await set(ENGINEER, "field = 'software_engineering', experience_years = 3, looking_for = '{collaborators}', matching_opt_in = true");
     await set(MARKETER, "field = 'marketing_growth', experience_years = 6, looking_for = '{mentee}', matching_opt_in = true");
     await set(OPTED_OUT, "field = 'product_design', experience_years = 8, looking_for = '{mentee}', matching_opt_in = false");
@@ -528,7 +528,7 @@ describe("AI network matching", () => {
     await expect(as(null, "select * from public.my_matches()")).rejects.toThrow(/permission denied/);
   });
 
-  it("recommends only more experienced people, the 4-year designer first", async () => {
+  it("recommends only people with 4+ years and more experience, the 4-year designer first", async () => {
     const cands = await as<{ slug: string; score: number }>(
       null,
       `select slug, score from public.matching_candidates('${SECRET}', '${JUNIOR}', 8)`,
@@ -538,8 +538,13 @@ describe("AI network matching", () => {
     expect(slugs).not.toContain("optout"); // not opted in
     expect(slugs).not.toContain("marketer"); // unrelated field
     expect(slugs).not.toContain("junior"); // not themselves
-    expect(slugs).toContain("engineer"); // related field, 2 years ahead, lower score
-    expect(cands.find((c) => c.slug === "engineer")!.score).toBeLessThan(cands[0].score);
+    expect(slugs).not.toContain("engineer"); // related field and ahead, but only 3 years: under the 4-year minimum
+
+    // No photo, no recommendation, however experienced.
+    await db.exec("update public.profiles set avatar_url = null where slug = 'senior'");
+    const noPhoto = await as<{ slug: string }>(null, `select slug from public.matching_candidates('${SECRET}', '${JUNIOR}', 8)`);
+    expect(noPhoto.map((c) => c.slug)).not.toContain("senior");
+    await db.exec("update public.profiles set avatar_url = 'https://example.test/senior.jpg' where slug = 'senior'");
 
     // Never the other way round: the senior is never shown people with less experience.
     const forSenior = await as<{ slug: string }>(

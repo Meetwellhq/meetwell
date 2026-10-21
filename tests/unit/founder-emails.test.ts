@@ -104,16 +104,30 @@ describe("match email photo", () => {
 });
 
 describe("complete your profile email", () => {
-  it("asks for a photo when there isn't one, and links to the Matches page", async () => {
+  const args = { ...base, fullName: "Kemi Ade", completeness: 60, fieldName: "Product design" };
+
+  it("tells experienced members without a photo why people will want to learn from them", async () => {
     const { incompleteProfileEmail } = await import("@/lib/founder-emails");
-    const noPhoto = incompleteProfileEmail({ ...base, fullName: "Kemi Ade", completeness: 50, hasPhoto: false });
-    expect(noPhoto.subject).toBe("Add a photo to your Meetwell profile");
-    expect(noPhoto.text).toContain("50% complete");
-    expect(noPhoto.html).toContain('href="https://meetwell.me/dashboard/profile"');
-    expect(noPhoto.html).toContain("Add my photo");
-    const withPhoto = incompleteProfileEmail({ ...base, fullName: "Kemi Ade", completeness: 70, hasPhoto: true });
-    expect(withPhoto.subject).toBe("Your Meetwell profile is 70% done");
-    expect(withPhoto.html).toContain("Complete my profile");
-    expect(withPhoto.html).toContain('href="https://meetwell.me/dashboard/matches"');
+    const e = incompleteProfileEmail({ ...args, hasPhoto: false, experienceYears: 6 });
+    expect(e.subject).toBe("People want to learn from you. Add your photo");
+    expect(e.text).toContain("With 6 years in product design");
+    expect(e.html).toContain('href="https://meetwell.me/dashboard/profile"');
+  });
+
+  it("tells members under 4 years that a photo gets them matches", async () => {
+    const { incompleteProfileEmail } = await import("@/lib/founder-emails");
+    for (const experienceYears of [1, null]) {
+      const e = incompleteProfileEmail({ ...args, hasPhoto: false, experienceYears });
+      expect(e.subject).toBe("Add a photo to get your Meetwell matches");
+      expect(e.text).toContain("60% complete");
+      expect(e.html).toContain("Add my photo");
+    }
+  });
+
+  it("members with a photo get the progress version", async () => {
+    const { incompleteProfileEmail } = await import("@/lib/founder-emails");
+    const e = incompleteProfileEmail({ ...args, completeness: 70, hasPhoto: true, experienceYears: 6 });
+    expect(e.subject).toBe("Your Meetwell profile is 70% done");
+    expect(e.html).toContain('href="https://meetwell.me/dashboard/matches"');
   });
 });
