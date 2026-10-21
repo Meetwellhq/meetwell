@@ -47,6 +47,11 @@ export default function PrivacyPage() {
           on your card.
         </p>
         <p className="mt-3">
+          <strong>If you buy Spark credits:</strong> what you bought, the price, the date, the payment reference and
+          whether the payment went through. Paystack handles the payment itself, so we never receive your card or
+          bank details.
+        </p>
+        <p className="mt-3">
           <strong>Access codes:</strong> we check your code when you sign up and count how many times it has been used.
           We don&apos;t keep a record of which code you used on your account.
         </p>
@@ -101,6 +106,10 @@ export default function PrivacyPage() {
             choose a match and explain why. When you&apos;re recommended to someone, they see your public card and the
             reason, never your private matching details. You can turn Spark off anytime on your Spark page.
           </li>
+          <li>
+            <strong>To take payments and keep records of them</strong>, because it is needed for our agreement with
+            you, and to meet tax and accounting law.
+          </li>
           <li><strong>To meet legal obligations</strong>, where Nigerian law requires it.</li>
         </ul>
         <p className="mt-3">
@@ -115,6 +124,10 @@ export default function PrivacyPage() {
           <li><strong>Supabase</strong>: database, file storage and login;</li>
           <li><strong>Vercel</strong>: website hosting;</li>
           <li><strong>Resend</strong>: sending emails;</li>
+          <li>
+            <strong>Paystack</strong>: taking payments for Spark credits. Paystack receives your email address and the
+            amount, and you enter your payment details on Paystack&apos;s own page;
+          </li>
           <li>
             <strong>Anthropic</strong> (Claude): choosing matches and writing the reason, for members who turn on
             Spark. Only the profile details needed for matching are sent.
@@ -139,6 +152,10 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Account and card:</strong> until you delete them.</li>
           <li><strong>Engagement events:</strong> up to 13 months, then deleted.</li>
+          <li>
+            <strong>Payment records:</strong> as long as Nigerian tax and accounting law requires, currently up to 6
+            years, even if you delete your account.
+          </li>
           <li>
             <strong>Waiting-list name and email:</strong> until you have been invited and created an account, or until you ask us
             to remove it.

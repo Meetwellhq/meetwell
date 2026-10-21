@@ -5,12 +5,14 @@ import { ExperienceForm } from "@/components/matching/experience-form";
 import { MatchingPrefsForm } from "@/components/matching/matching-prefs-form";
 import { MentorStatus } from "@/components/matching/mentor-status";
 import { SparkAllowance } from "@/components/matching/spark-allowance";
+import { type CreditPack, SparkCredits } from "@/components/matching/spark-credits";
 import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert, EmptyState } from "@/components/ui/misc";
 import { publicProfilePath } from "@/lib/config";
 import { MATCHING_MIN_COMPLETENESS, profileCompleteness } from "@/lib/matching/completeness";
 import { fieldLabel, isMentor, MENTOR_MIN_YEARS, SPARK_FREE_PER_MONTH } from "@/lib/matching/constants";
+import { paymentsEnabled } from "@/lib/payments/paystack";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Spark" };
@@ -29,10 +31,18 @@ type MatchRow = {
 const date = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Africa/Lagos" });
 
-export default async function MatchesPage() {
+const PAYMENT_NOTICE = {
+  added: { tone: "success", text: "Payment received. Your credits are ready." },
+  pending: { tone: "neutral", text: "We're confirming your payment with Paystack. Your credits will show here in a minute." },
+  failed: { tone: "danger", text: "The payment didn't go through, so you weren't charged. You can try again." },
+} as const;
+
+export default async function MatchesPage({ searchParams }: PageProps<"/dashboard/matches">) {
+  const { credits: paid } = await searchParams;
+  const notice = typeof paid === "string" && paid in PAYMENT_NOTICE ? PAYMENT_NOTICE[paid as keyof typeof PAYMENT_NOTICE] : null;
   const user = await getCurrentUser();
   const supabase = await createClient();
-  const [{ data: profile }, matches, used, mentorStats] = await Promise.all([
+  const [{ data: profile }, matches, used, mentorStats, creditBalance, creditPacks] = await Promise.all([
     supabase
       .from("profiles")
       .select(
@@ -43,7 +53,11 @@ export default async function MatchesPage() {
     supabase.rpc("my_matches"),
     supabase.rpc("my_matches_this_month"),
     supabase.rpc("my_spark_mentor_stats"),
+    supabase.rpc("my_spark_credits"),
+    supabase.rpc("list_credit_packs"),
   ]);
+  const credits = Number(creditBalance.data ?? 0);
+  const packs = (creditPacks.data ?? []) as CreditPack[];
   // Years decide the side of Spark: under ${MENTOR_MIN_YEARS} get introductions, ${MENTOR_MIN_YEARS}+ are recommended.
   const needsExperience = !!profile && profile.experience_years === null;
   const mentor = !!profile && isMentor(profile.experience_years);
@@ -87,7 +101,11 @@ export default async function MatchesPage() {
         )}
       </div>
 
-      {profile && !needsExperience && !mentor && <SparkAllowance used={usedThisMonth} />}
+      {notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
+      {profile && !needsExperience && !mentor && <SparkAllowance used={usedThisMonth} credits={credits} />}
+      {profile && !needsExperience && !mentor && paymentsEnabled() && packs.length > 0 && (
+        <SparkCredits balance={credits} packs={packs} freeLeft={Math.max(SPARK_FREE_PER_MONTH - usedThisMonth, 0)} />
+      )}
 
       {!profile ? (
         <div className="rounded-xl border border-border bg-surface">

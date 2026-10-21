@@ -60,6 +60,7 @@ every migration.
 | `NEXT_PUBLIC_SITE_URL` | Vercel (production) = `https://meetwell.me` | Absolute links, QR codes, email links |
 | `RESEND_API_KEY` | Vercel (production, sensitive) | Founder emails. Without it, emails are skipped (fine locally) |
 | `CRON_SECRET` | Vercel (production, sensitive) | Protects the daily reminders and matching jobs. Must equal `internal_settings.cron_secret` in Supabase |
+| `PAYSTACK_SECRET_KEY` | Vercel (production, sensitive) + `.env.local` for testing | Spark credits. Test key (`sk_test_…`) first; live key only with Rasheed's OK. Without it the credit packs are hidden. The webhook and return page also need `CRON_SECRET` |
 | `ANTHROPIC_API_KEY` | Vercel (production, sensitive) | Claude for AI Network Matching. Without it, matching falls back to rule-based picks and template reasons |
 
 ## Key features and where they live
@@ -111,6 +112,16 @@ every migration.
   recommended (`profile_completeness()` in SQL, `src/lib/matching/completeness.ts` for the page;
   keep them in step). Members under 80% get a one-time `profile_incomplete` reminder; without a
   photo, 4+ years get "people want to learn from you" copy, others "a photo gets you matches".
+- **Spark credits (Paystack)**: members under 4 years buy packs on the Spark page (`SparkCredits`,
+  `buyCredits` in `src/lib/payments/actions.ts`). Prices live in `public.credit_packs`
+  (`20261104000000_spark_credits.sql`), never in the browser. `start_credit_purchase()` makes a pending
+  payment with a `mw_…` reference; Paystack's page takes the money; credits are added only by
+  `confirm_payment()` (CRON_SECRET-protected, checks amount and currency, adds once) after
+  `confirmWithPaystack()` re-checks the payment by API. Two ways in: the return page
+  `/api/paystack/callback` and the webhook `/api/paystack/webhook` (HMAC-SHA512 signature checked;
+  set `https://meetwell.me/api/paystack/webhook` in Paystack → Settings → API Keys & Webhooks).
+  `public.credit_ledger` has one row per credit added or used; `record_match()` uses a credit only
+  after the free 5 in a month. Payments list on the Invites tab. Refunds by hand in Paystack.
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `support@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).

@@ -1,7 +1,7 @@
 import { SPARK_FREE_PER_MONTH, sparkResetDate } from "@/lib/matching/constants";
 
 /** Free Spark introductions left this month, with a small progress row. */
-export function SparkAllowance({ used }: { used: number }) {
+export function SparkAllowance({ used, credits = 0 }: { used: number; credits?: number }) {
   const usedThisMonth = Math.min(Math.max(used, 0), SPARK_FREE_PER_MONTH);
   const left = SPARK_FREE_PER_MONTH - usedThisMonth;
   const reset = sparkResetDate();
@@ -20,7 +20,11 @@ export function SparkAllowance({ used }: { used: number }) {
         ))}
       </div>
       {left === 0 && (
-        <p className="mt-3 text-sm text-ink-2">That&apos;s all for this month. More from {reset}.</p>
+        <p className="mt-3 text-sm text-ink-2">
+          {credits > 0
+            ? `Your free ones are used, so Spark is using your credits (${credits} left).`
+            : `That's all for this month. More from ${reset}.`}
+        </p>
       )}
     </section>
   );

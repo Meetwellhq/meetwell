@@ -38,6 +38,25 @@ type MemberRow = {
   reminders?: Reminder[];
 };
 
+type PaymentRow = {
+  email: string;
+  reference: string;
+  credits: number;
+  amount_kobo: number;
+  status: "pending" | "success" | "failed";
+  created_at: string;
+  paid_at: string | null;
+};
+
+const naira = (kobo: number) =>
+  new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(kobo / 100);
+
+const PAYMENT_BADGE = {
+  success: { tone: "success", label: "Paid" },
+  pending: { tone: "neutral", label: "Not finished" },
+  failed: { tone: "warning", label: "Failed" },
+} as const;
+
 const date = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Lagos" });
 
@@ -85,11 +104,14 @@ function Stats({ items, columns = 4 }: { items: { label: string; value: number }
 
 export default async function InvitesPage() {
   const supabase = await createClient();
-  const [waitlist, members, announcement] = await Promise.all([
+  const [waitlist, members, announcement, paymentRows] = await Promise.all([
     supabase.rpc("admin_list_waitlist"),
     supabase.rpc("admin_list_members"),
     supabase.rpc("admin_announcement_status", { p_kind: "spark_beta" }),
+    supabase.rpc("admin_list_payments"),
   ]);
+  const payments = (paymentRows.data ?? []) as PaymentRow[];
+  const paidTotal = payments.filter((p) => p.status === "success").reduce((n, p) => n + p.amount_kobo, 0);
   const spark = ((announcement.data ?? []) as { sent: number; remaining: number }[])[0] ?? { sent: 0, remaining: 0 };
   // Non-admins get a plain 404; the database refuses them anyway.
   if (waitlist.error) notFound();
@@ -175,6 +197,42 @@ export default async function InvitesPage() {
             </div>
             <AnnounceButton remaining={spark.remaining} />
           </div>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-ink">Payments</h2>
+          <p className="mt-1 text-ink-2">Spark credit purchases through Paystack. Refunds are done in the Paystack dashboard.</p>
+        </div>
+        {paymentRows.error ? (
+          <p className="rounded-xl border border-border bg-surface px-4 py-3.5 text-sm text-ink-2">
+            Payments can&apos;t be loaded yet. Run the credits SQL in Supabase first.
+          </p>
+        ) : payments.length === 0 ? (
+          <div className="rounded-xl border border-border bg-surface">
+            <EmptyState title="No payments yet" description="Credit purchases will show up here." />
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-ink-2">
+              {payments.filter((p) => p.status === "success").length} paid · {naira(paidTotal)} in total
+            </p>
+            <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+              {payments.map((p) => (
+                <li key={p.reference} className="flex items-center justify-between gap-4 px-4 py-3.5">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-ink">{p.email}</p>
+                    <p className="truncate text-sm text-ink-2">
+                      {p.credits} credits · {naira(p.amount_kobo)} · {date(p.paid_at ?? p.created_at)}
+                    </p>
+                    <p className="truncate text-xs text-ink-3">{p.reference}</p>
+                  </div>
+                  <Badge tone={PAYMENT_BADGE[p.status].tone}>{PAYMENT_BADGE[p.status].label}</Badge>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </section>
 

@@ -713,3 +713,96 @@ describe("announcements", () => {
     await expect(as(ALICE, "select public.admin_mark_announced('other', 'x@test')")).rejects.toThrow(/check constraint/);
   });
 });
+
+describe("Spark credits", () => {
+  const SECRET = "test-secret-that-is-long-enough-1234567890";
+  const JUNIOR = "55555555-5555-5555-5555-555555555555";
+  const SENIOR = "66666666-6666-6666-6666-666666666666";
+  const start = (user: string, pack: string) =>
+    as<{ reference: string; amount_kobo: number; credits: number; email: string }>(
+      user,
+      `select * from public.start_credit_purchase('${pack}')`,
+    );
+  const confirm = (ref: string, amount: number, currency = "NGN", token = SECRET) =>
+    as<{ added: boolean; credits: number }>(
+      null,
+      `select added, credits from public.confirm_payment('${token}', '${ref}', ${amount}, '${currency}', 123)`,
+    );
+  const balance = async (user: string) => (await as<{ n: number }>(user, "select public.my_spark_credits() as n"))[0].n;
+
+  it("keeps payments and credits private, and prices on the server", async () => {
+    await expect(as(JUNIOR, "select * from public.payments")).rejects.toThrow(/permission denied/);
+    await expect(as(JUNIOR, "select * from public.credit_ledger")).rejects.toThrow(/permission denied/);
+    await expect(as(JUNIOR, "insert into public.credit_ledger (user_id, delta, reason) values (auth.uid(), 100, 'admin')")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select * from public.start_credit_purchase('spark_5')")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select public.my_spark_credits()")).rejects.toThrow(/permission denied/);
+    await expect(as(JUNIOR, `select public.spark_credit_balance('${JUNIOR}')`)).rejects.toThrow(/permission denied/);
+    expect(await as(JUNIOR, "select * from public.list_credit_packs()")).toEqual([
+      { id: "spark_5", credits: 5, amount_kobo: 250000 },
+      { id: "spark_15", credits: 15, amount_kobo: 600000 },
+    ]);
+    await expect(start(JUNIOR, "free_credits")).rejects.toThrow(/Unknown pack/);
+    await expect(start(SENIOR, "spark_5")).rejects.toThrow(/under 4 years/);
+  });
+
+  it("adds credits once, only for the right amount, only with the secret", async () => {
+    expect(await balance(JUNIOR)).toBe(0);
+    const [p] = await start(JUNIOR, "spark_5");
+    expect(p).toMatchObject({ amount_kobo: 250000, credits: 5, email: "junior@test" });
+    expect(p.reference).toMatch(/^mw_[0-9a-f]{32}$/);
+
+    await expect(confirm(p.reference, 250000, "NGN", "wrong")).rejects.toThrow(/Not allowed/);
+    await expect(confirm(p.reference, 100)).rejects.toThrow(/does not match/); // underpaid
+    await expect(confirm(p.reference, 250000, "USD")).rejects.toThrow(/does not match/);
+    await expect(confirm("mw_unknown", 250000)).rejects.toThrow(/Unknown payment/);
+    expect(await balance(JUNIOR)).toBe(0);
+
+    expect(await confirm(p.reference, 250000)).toEqual([{ added: true, credits: 5 }]);
+    expect(await confirm(p.reference, 250000)).toEqual([{ added: false, credits: 5 }]); // webhook twice
+    expect(await balance(JUNIOR)).toBe(5);
+
+    const [failed] = await start(JUNIOR, "spark_15");
+    await as(null, `select public.mark_payment_failed('${SECRET}', '${failed.reference}')`);
+    const rows = await as<{ reference: string; status: string }>(JUNIOR, "select reference, status from public.admin_list_payments()").catch((e) => e);
+    expect(rows).toBeInstanceOf(Error); // not an admin
+    const admin = await as<{ reference: string; status: string }>(
+      "11111111-1111-1111-1111-111111111111",
+      "select reference, status from public.admin_list_payments()",
+    );
+    expect(admin).toEqual(expect.arrayContaining([
+      { reference: p.reference, status: "success" },
+      { reference: failed.reference, status: "failed" },
+    ]));
+  });
+
+  it("uses a credit only after the free 5 in a month", async () => {
+    const ids = (await db.query<{ id: string }>(
+      "select id from public.profiles where slug not in ('junior', 'senior') order by slug limit 5",
+    )).rows.map((r) => r.id);
+    const [{ id: seniorId }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'senior'")).rows;
+    const due = async () =>
+      (await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`)).map((d) => d.email);
+    await db.query("delete from public.matches where user_id = $1", [JUNIOR]);
+
+    // Five free this month, a day ago: with credits the member is still due.
+    await db.query(
+      `insert into public.matches (user_id, matched_profile_id, reason, created_at)
+       select $1, id, 'free', greatest(public.spark_month_start(), now() - interval '1 day') from unnest($2::uuid[]) as id`,
+      [JUNIOR, ids],
+    );
+    await db.query("update public.matches set created_at = now() - interval '1 day' where user_id = $1 and created_at > now() - interval '20 hours'", [JUNIOR]);
+    const freeUsed = (await db.query<{ n: number }>(`select public.spark_matches_this_month('${JUNIOR}') as n`)).rows[0].n;
+    if (freeUsed < 5) return; // first day of the month: the backdated matches fell into last month
+    expect(await due()).toContain("junior@test");
+
+    const [{ m }] = await as<{ m: string | null }>(null, `select public.record_match('${SECRET}', '${JUNIOR}', '${seniorId}', 'paid one') as m`);
+    expect(m).not.toBeNull();
+    expect(await balance(JUNIOR)).toBe(4); // one credit used
+
+    // Out of credits: no more until next month.
+    await db.query("delete from public.credit_ledger where user_id = $1", [JUNIOR]);
+    await db.query("update public.matches set created_at = now() - interval '1 day' where user_id = $1", [JUNIOR]);
+    expect(await due()).not.toContain("junior@test");
+    await db.query("delete from public.matches where user_id = $1", [JUNIOR]);
+  });
+});

@@ -103,12 +103,26 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>7. Price and changes to the service</h2>
+        <h2>7. Price, payments and refunds</h2>
         <ul>
-          <li>{APP_NAME} is free during the beta.</li>
           <li>
-            If we introduce paid features, we will tell you the price first. You will never be charged without
-            agreeing to it.
+            {APP_NAME} is free to use. Some extras cost money, such as Spark credits. We show the price in naira
+            before you pay, and you will never be charged without agreeing to it.
+          </li>
+          <li>
+            <strong>Spark credits:</strong> each credit gives you one extra Spark introduction after your free ones
+            for the month. Credits don&apos;t expire, can&apos;t be exchanged for cash and can&apos;t be moved to
+            another account. Spark chooses who to introduce, so a credit buys an introduction, not a particular person
+            or a reply.
+          </li>
+          <li>
+            <strong>Payments</strong> are handled by Paystack. We never see or store your card or bank details.
+          </li>
+          <li>
+            <strong>Refunds:</strong> if you change your mind, we will refund unused credits bought in the last 14
+            days. Just email {mail}. Credits already used can&apos;t be refunded, unless the introduction failed
+            because of a fault on our side. This doesn&apos;t affect your rights under the Federal Competition and
+            Consumer Protection Act 2018.
           </li>
           <li>
             We may add, change or remove features. If a change takes away something important, we will try to give
