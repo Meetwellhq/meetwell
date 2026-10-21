@@ -1,0 +1,267 @@
+-- AI Network Matching.
+--
+-- Members who opt in get one-way recommendations of people worth meeting, based
+-- on their field, experience and what they're looking for. A daily job (Vercel
+-- Cron → /api/cron/matches) picks who is due, asks these functions for scored
+-- candidates, lets Claude choose and explain the best one, then records it.
+--
+-- Free plan: up to 5 matches per calendar month, at least 5 days apart.
+-- The matching fields are private: they are not part of the public card.
+
+-- ---------------------------------------------------------------------------
+-- Profile fields used for matching
+-- ---------------------------------------------------------------------------
+
+alter table public.profiles
+  add column if not exists field text check (
+    field is null or field in (
+      'product_design', 'software_engineering', 'data_ai', 'product_management',
+      'marketing_growth', 'sales_bizdev', 'finance_fintech', 'founder',
+      'content_media', 'operations', 'people_hr', 'legal', 'healthcare',
+      'education', 'other'
+    )
+  ),
+  add column if not exists experience_years smallint check (experience_years is null or experience_years between 0 and 60),
+  add column if not exists looking_for text[] not null default '{}' check (
+    looking_for <@ array['mentor', 'mentee', 'peers', 'collaborators', 'opportunities']::text[]
+  ),
+  add column if not exists city text check (city is null or char_length(btrim(city)) between 1 and 60),
+  add column if not exists matching_opt_in boolean not null default false;
+
+-- Related fields, so a small community still finds sensible matches.
+create or replace function public.field_group(p_field text)
+returns text
+language sql
+immutable
+set search_path = ''
+as $$
+  select case
+    when p_field in ('product_design', 'software_engineering', 'data_ai', 'product_management') then 'product_tech'
+    when p_field in ('marketing_growth', 'sales_bizdev', 'content_media') then 'growth'
+    when p_field in ('finance_fintech', 'operations', 'people_hr', 'legal', 'founder') then 'business'
+    else p_field
+  end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Matches
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.matches (
+  id bigint generated always as identity primary key,
+  -- The person who receives the recommendation.
+  user_id uuid not null references auth.users (id) on delete cascade,
+  -- The card being recommended.
+  matched_profile_id uuid not null references public.profiles (id) on delete cascade,
+  reason text not null check (char_length(reason) between 1 and 600),
+  created_at timestamptz not null default now(),
+  emailed_at timestamptz,
+  unique (user_id, matched_profile_id)
+);
+create index if not exists matches_user_created_idx on public.matches (user_id, created_at desc);
+create index if not exists matches_profile_created_idx on public.matches (matched_profile_id, created_at desc);
+
+alter table public.matches enable row level security;
+revoke all on public.matches from anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Job-only functions (protected by the same secret as the reminders job)
+-- ---------------------------------------------------------------------------
+
+create or replace function public.check_cron_token(p_token text)
+returns void
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_secret text;
+begin
+  select s.value into v_secret from public.internal_settings s where s.key = 'cron_secret';
+  if v_secret is null or char_length(v_secret) < 32 or p_token is distinct from v_secret then
+    raise exception 'Not allowed' using errcode = '42501';
+  end if;
+end;
+$$;
+revoke all on function public.check_cron_token(text) from public, anon, authenticated;
+
+-- Members due a match today: opted in, confirmed, published card with a field,
+-- under the monthly limit, and no match in the last 5 days. Random order.
+create or replace function public.matching_due_users(p_token text, p_limit integer default 30, p_monthly_limit integer default 5)
+returns table (
+  user_id uuid, email text, profile_id uuid, full_name text, title text, organization text, bio text,
+  field text, experience_years smallint, looking_for text[], city text
+)
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+begin
+  perform public.check_cron_token(p_token);
+  return query
+    select u.id, u.email::text, p.id, p.full_name, p.professional_title, p.organization, p.bio,
+      p.field, p.experience_years, p.looking_for, p.city
+    from public.profiles p
+    join auth.users u on u.id = p.user_id
+    where p.matching_opt_in
+      and p.status = 'published'
+      and p.field is not null
+      and u.email_confirmed_at is not null
+      and (select count(*) from public.matches m
+           where m.user_id = u.id and m.created_at >= date_trunc('month', now())) < p_monthly_limit
+      and not exists (select 1 from public.matches m
+           where m.user_id = u.id and m.created_at > now() - interval '5 days')
+    order by random()
+    limit greatest(least(coalesce(p_limit, 30), 100), 0);
+end;
+$$;
+revoke all on function public.matching_due_users(text, integer, integer) from public;
+grant execute on function public.matching_due_users(text, integer, integer) to anon;
+
+-- Scored candidates for one member. Rules (highest first):
+--   same field +50, related field +20;
+--   wants a mentor and the other person mentors, 2+ years ahead: +40;
+--   same field, 2 to 8 years ahead (even without asking): +30;
+--   both want peers and within 2 years: +25; both want collaborators: +20;
+--   same city +10; has a photo +5.
+-- Never: themselves, someone already recommended to them, or anyone recommended
+-- 3+ times in the last week (so experienced people aren't flooded).
+create or replace function public.matching_candidates(p_token text, p_user_id uuid, p_limit integer default 8)
+returns table (
+  profile_id uuid, slug text, full_name text, title text, organization text, bio text,
+  field text, experience_years smallint, looking_for text[], city text, has_photo boolean, score integer
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+declare
+  s public.profiles%rowtype;
+begin
+  perform public.check_cron_token(p_token);
+  select * into s from public.profiles where user_id = p_user_id;
+  if not found or s.field is null then
+    return;
+  end if;
+
+  return query
+  with scored as (
+    select c.*,
+      (case when c.field = s.field then 50 when public.field_group(c.field) = public.field_group(s.field) then 20 else 0 end)
+      + (case when 'mentor' = any(s.looking_for) and 'mentee' = any(c.looking_for)
+               and coalesce(c.experience_years, 0) >= coalesce(s.experience_years, 0) + 2 then 40 else 0 end)
+      + (case when c.field = s.field
+               and coalesce(c.experience_years, 0) - coalesce(s.experience_years, 0) between 2 and 8 then 30 else 0 end)
+      + (case when 'peers' = any(s.looking_for) and 'peers' = any(c.looking_for)
+               and abs(coalesce(c.experience_years, 0) - coalesce(s.experience_years, 0)) <= 2 then 25 else 0 end)
+      + (case when 'collaborators' = any(s.looking_for) and 'collaborators' = any(c.looking_for) then 20 else 0 end)
+      + (case when c.city is not null and s.city is not null and lower(c.city) = lower(s.city) then 10 else 0 end)
+      + (case when c.avatar_url is not null then 5 else 0 end) as score
+    from public.profiles c
+    where c.matching_opt_in
+      and c.status = 'published'
+      and c.field is not null
+      and c.user_id <> p_user_id
+      and public.field_group(c.field) = public.field_group(s.field)
+      and not exists (select 1 from public.matches m where m.user_id = p_user_id and m.matched_profile_id = c.id)
+      and (select count(*) from public.matches m
+           where m.matched_profile_id = c.id and m.created_at > now() - interval '7 days') < 3
+  )
+  select sc.id, sc.slug, sc.full_name, sc.professional_title, sc.organization, sc.bio,
+    sc.field, sc.experience_years, sc.looking_for, sc.city, sc.avatar_url is not null, sc.score
+  from scored sc
+  where sc.score > 0
+  order by sc.score desc, random()
+  limit greatest(least(coalesce(p_limit, 8), 20), 0);
+end;
+$$;
+revoke all on function public.matching_candidates(text, uuid, integer) from public;
+grant execute on function public.matching_candidates(text, uuid, integer) to anon;
+
+-- Records a match. Returns its id, or null if it was already recorded or the
+-- member reached their limit in the meantime.
+create or replace function public.record_match(
+  p_token text, p_user_id uuid, p_profile_id uuid, p_reason text, p_monthly_limit integer default 5
+)
+returns bigint
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_id bigint;
+begin
+  perform public.check_cron_token(p_token);
+  if (select count(*) from public.matches m
+      where m.user_id = p_user_id and m.created_at >= date_trunc('month', now())) >= p_monthly_limit then
+    return null;
+  end if;
+  insert into public.matches (user_id, matched_profile_id, reason)
+  values (p_user_id, p_profile_id, left(btrim(p_reason), 600))
+  on conflict (user_id, matched_profile_id) do nothing
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+revoke all on function public.record_match(text, uuid, uuid, text, integer) from public;
+grant execute on function public.record_match(text, uuid, uuid, text, integer) to anon;
+
+create or replace function public.mark_match_emailed(p_token text, p_match_id bigint)
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.check_cron_token(p_token);
+  update public.matches set emailed_at = now() where id = p_match_id;
+end;
+$$;
+revoke all on function public.mark_match_emailed(text, bigint) from public;
+grant execute on function public.mark_match_emailed(text, bigint) to anon;
+
+-- ---------------------------------------------------------------------------
+-- For members: their own matches (only cards that are still published)
+-- ---------------------------------------------------------------------------
+
+create or replace function public.my_matches()
+returns table (
+  id bigint, created_at timestamptz, reason text,
+  slug text, full_name text, title text, organization text, avatar_url text
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select m.id, m.created_at, m.reason, p.slug, p.full_name, p.professional_title, p.organization, p.avatar_url
+  from public.matches m
+  join public.profiles p on p.id = m.matched_profile_id
+  where m.user_id = auth.uid() and p.status = 'published'
+  order by m.created_at desc;
+$$;
+revoke all on function public.my_matches() from public;
+revoke execute on function public.my_matches() from anon;
+grant execute on function public.my_matches() to authenticated;
+
+-- How many matches the member has had this month (includes cards since unpublished).
+create or replace function public.my_matches_this_month()
+returns integer
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select count(*)::integer from public.matches m
+  where m.user_id = auth.uid() and m.created_at >= date_trunc('month', now());
+$$;
+revoke all on function public.my_matches_this_month() from public;
+revoke execute on function public.my_matches_this_month() from anon;
+grant execute on function public.my_matches_this_month() to authenticated;

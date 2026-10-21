@@ -484,3 +484,94 @@ describe("waitlist updates and unsubscribe", () => {
     await expect(as(null, "select unsubscribe_token from public.waitlist")).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("AI network matching", () => {
+  const SECRET = "test-secret-that-is-long-enough-1234567890"; // stored by the reminders tests
+  const JUNIOR = "55555555-5555-5555-5555-555555555555";
+  const SENIOR = "66666666-6666-6666-6666-666666666666";
+  const ENGINEER = "77777777-7777-7777-7777-777777777777";
+  const MARKETER = "88888888-8888-8888-8888-888888888888";
+  const OPTED_OUT = "99999999-9999-9999-9999-999999999999";
+
+  beforeAll(async () => {
+    await db.exec("insert into public.access_codes (code, max_uses) values ('MATCH-CODE', 10)");
+    for (const [id, email] of [
+      [JUNIOR, "junior@test"], [SENIOR, "senior@test"], [ENGINEER, "engineer@test"],
+      [MARKETER, "marketer@test"], [OPTED_OUT, "optout@test"],
+    ]) {
+      await db.query(
+        `insert into auth.users (id, email, raw_user_meta_data, email_confirmed_at)
+         values ($1, $2, '{"access_code":"MATCH-CODE"}', now())`,
+        [id, email],
+      );
+      await createProfile(id, email.split("@")[0]);
+    }
+    const set = (id: string, sql: string) => db.query(`update public.profiles set ${sql} where user_id = $1`, [id]);
+    await set(JUNIOR, "field = 'product_design', experience_years = 1, looking_for = '{mentor}', city = 'Lagos', matching_opt_in = true");
+    await set(SENIOR, "field = 'product_design', experience_years = 4, looking_for = '{mentee}', city = 'Lagos', matching_opt_in = true");
+    await set(ENGINEER, "field = 'software_engineering', experience_years = 3, looking_for = '{collaborators}', matching_opt_in = true");
+    await set(MARKETER, "field = 'marketing_growth', experience_years = 6, looking_for = '{mentee}', matching_opt_in = true");
+    await set(OPTED_OUT, "field = 'product_design', experience_years = 8, looking_for = '{mentee}', matching_opt_in = false");
+  });
+
+  it("refuses callers without the job secret, and keeps matches private", async () => {
+    await expect(as(null, "select * from public.matching_due_users('wrong', 30, 5)")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, `select * from public.matching_candidates('wrong', '${JUNIOR}', 8)`)).rejects.toThrow(/Not allowed/);
+    await expect(as(null, `select public.record_match('wrong', '${JUNIOR}', gen_random_uuid(), 'x', 5)`)).rejects.toThrow(/Not allowed/);
+    await expect(as(JUNIOR, "select * from public.matches")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select * from public.my_matches()")).rejects.toThrow(/permission denied/);
+  });
+
+  it("recommends the 4-year designer to the 1-year designer first, never opted-out people", async () => {
+    const cands = await as<{ slug: string; score: number }>(
+      null,
+      `select slug, score from public.matching_candidates('${SECRET}', '${JUNIOR}', 8)`,
+    );
+    expect(cands[0].slug).toBe("senior");
+    expect(cands.map((c) => c.slug)).not.toContain("optout"); // not opted in
+    expect(cands.map((c) => c.slug)).not.toContain("marketer"); // unrelated field
+    expect(cands.map((c) => c.slug)).not.toContain("junior"); // not themselves
+    // The engineer is in a related field, so can appear lower down.
+    const engineer = cands.find((c) => c.slug === "engineer");
+    if (engineer) expect(engineer.score).toBeLessThan(cands[0].score);
+  });
+
+  it("only lists members who are due, records matches once, and shows them to the member", async () => {
+    const due = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50, 5)`);
+    const dueEmails = due.map((d) => d.email);
+    expect(dueEmails).toEqual(expect.arrayContaining(["junior@test", "senior@test", "engineer@test", "marketer@test"]));
+    expect(dueEmails).not.toContain("optout@test");
+
+    const [{ id: seniorId }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'senior'")).rows;
+    const [{ m }] = await as<{ m: string | null }>(
+      null,
+      `select public.record_match('${SECRET}', '${JUNIOR}', '${seniorId}', 'Ada is 3 years ahead of you in product design and mentors.', 5) as m`,
+    );
+    expect(m).not.toBeNull();
+    const [{ again }] = await as<{ again: string | null }>(
+      null,
+      `select public.record_match('${SECRET}', '${JUNIOR}', '${seniorId}', 'again', 5) as again`,
+    );
+    expect(again).toBeNull(); // no repeat recommendations
+
+    // Recently matched, so not due again for 5 days; and the senior isn't suggested twice.
+    const dueAfter = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50, 5)`);
+    expect(dueAfter.map((d) => d.email)).not.toContain("junior@test");
+    const cands = await as<{ slug: string }>(null, `select slug from public.matching_candidates('${SECRET}', '${JUNIOR}', 8)`);
+    expect(cands.map((c) => c.slug)).not.toContain("senior");
+
+    const mine = await as<{ slug: string; reason: string }>(JUNIOR, "select slug, reason from public.my_matches()");
+    expect(mine).toEqual([{ slug: "senior", reason: "Ada is 3 years ahead of you in product design and mentors." }]);
+    expect(await as(JUNIOR, "select public.my_matches_this_month() as n")).toEqual([{ n: 1 }]);
+    expect(await as(SENIOR, "select * from public.my_matches()")).toEqual([]); // one-way
+  });
+
+  it("stops at the monthly limit", async () => {
+    const [{ id: engId }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'engineer'")).rows;
+    const [{ m }] = await as<{ m: string | null }>(
+      null,
+      `select public.record_match('${SECRET}', '${JUNIOR}', '${engId}', 'x', 1) as m`,
+    );
+    expect(m).toBeNull(); // limit of 1 already used this month
+  });
+});

@@ -225,3 +225,67 @@ export function noScansEmail(args: Common) {
     after: [ONLY_ONCE],
   });
 }
+
+export type MatchedMember = {
+  fullName: string;
+  title: string | null;
+  organization: string | null;
+  avatarUrl: string | null;
+  /** The member's public card. */
+  cardUrl: string;
+  /** Public QR image for the card (absolute URL). */
+  qrImageUrl: string;
+};
+
+/** AI Network Matching: one recommendation, with the reason, their card and QR. */
+export function matchEmail({
+  fullName, appName, siteUrl, photoUrl, replyEmail, match, reason,
+}: Common & { match: MatchedMember; reason: string }) {
+  const firstName = firstNameOf(fullName);
+  const matchFirst = firstNameOf(match.fullName);
+  const subtitle = [match.title, match.organization].filter(Boolean).join(" · ");
+  const matchesUrl = `${siteUrl}/dashboard/matches`;
+  const intro = `Here's someone I think you should meet on ${appName}.`;
+  const nudge = `If it feels right, save ${matchFirst}'s contact and send a short hello. Their card has a ready-made first message to get you started.`;
+  const why = `You're getting this because matching is on. You can turn it off anytime on your Matches page.`;
+
+  const subject = `Your ${appName} match: meet ${match.fullName}`;
+  const text = [
+    `Hi ${firstName},`,
+    intro,
+    [match.fullName, subtitle].filter(Boolean).join("\n"),
+    reason,
+    `See ${matchFirst}'s card: ${match.cardUrl}`,
+    nudge,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+    `${why} ${matchesUrl}`,
+  ].join("\n\n");
+
+  const avatar = match.avatarUrl
+    ? `<img src="${escapeHtml(match.avatarUrl)}" width="72" height="72" alt="" style="display:block;margin:0 auto 12px;width:72px;height:72px;border-radius:50%;object-fit:cover">`
+    : "";
+  const card = `<div style="margin:24px 0;padding:24px;border:1px solid #e4e2dc;border-radius:12px;text-align:center">
+    ${avatar}
+    <p style="margin:0;font-size:18px;font-weight:600;color:#1c1c1a">${escapeHtml(match.fullName)}</p>
+    ${subtitle ? `<p style="margin:4px 0 0;color:#5c5c57;font-size:15px">${escapeHtml(subtitle)}</p>` : ""}
+    <p style="margin:16px 0 0;padding:12px 14px;background:#eef4f1;border-radius:8px;color:#1f4d3f;font-size:15px;line-height:1.5;text-align:left">${escapeHtml(reason)}</p>
+    <img src="${escapeHtml(match.qrImageUrl)}" width="160" height="160" alt="QR code for ${escapeHtml(match.fullName)}'s Meetwell card" style="display:block;margin:20px auto 8px;width:160px;height:160px">
+    <p style="margin:0 0 16px;color:#5c5c57;font-size:13px">Scan with your phone camera, or tap below</p>
+    <a href="${escapeHtml(match.cardUrl)}" style="display:inline-block;background:#1f4d3f;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:8px">View ${escapeHtml(matchFirst)}'s card</a>
+  </div>`;
+
+  const html = founderLayout({
+    firstName,
+    appName,
+    siteUrl,
+    photoUrl,
+    bodyHtml: [
+      p(intro),
+      card,
+      p(nudge),
+      `<p>Questions or feedback on your matches? Write to me at <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
+    ].join("\n  "),
+    footerHtml: `${escapeHtml(why)} <a href="${matchesUrl}" style="color:#5c5c57">Matches page</a>.`,
+  });
+  return { subject, text, html };
+}

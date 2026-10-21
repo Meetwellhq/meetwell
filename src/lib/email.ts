@@ -5,6 +5,8 @@ import {
   FOUNDER_NAME,
   inviteEmail,
   inviteReminderEmail,
+  matchEmail,
+  type MatchedMember,
   noScansEmail,
   waitlistEmail,
 } from "./founder-emails";
@@ -62,4 +64,9 @@ export function sendDraftReminderEmail(to: string, fullName: string | null) {
 }
 export function sendNoScansEmail(to: string, fullName: string | null) {
   return send(to, noScansEmail(common(fullName)));
+}
+
+/** AI Network Matching: one recommendation email. */
+export function sendMatchEmail(to: string, fullName: string | null, match: MatchedMember, reason: string) {
+  return send(to, matchEmail({ ...common(fullName), match, reason }));
 }

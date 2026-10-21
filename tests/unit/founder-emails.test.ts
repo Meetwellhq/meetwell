@@ -62,3 +62,23 @@ describe("waitlist updates", () => {
     expect(html).toContain('href="https://meetwell.me/unsubscribe?t=11111111-2222-3333-4444-555555555555"');
   });
 });
+
+describe("match email", () => {
+  it("shows the match, the reason, their QR and a link to the matches page", async () => {
+    const { matchEmail } = await import("@/lib/founder-emails");
+    const { subject, text, html } = matchEmail({
+      ...base,
+      fullName: "Tunde Bello",
+      reason: "Ada has 4 years in product design (3 more than you), and is open to mentoring.",
+      match: {
+        fullName: "Ada Obi", title: "Senior Product Designer", organization: "Studio North", avatarUrl: null,
+        cardUrl: "https://meetwell.me/p/ada", qrImageUrl: "https://meetwell.me/p/ada/qr",
+      },
+    });
+    expect(subject).toBe("Your Meetwell match: meet Ada Obi");
+    expect(text.startsWith("Hi Tunde,")).toBe(true);
+    expect(html).toContain("3 more than you");
+    expect(html).toContain('src="https://meetwell.me/p/ada/qr"');
+    expect(html).toContain('href="https://meetwell.me/dashboard/matches"');
+  });
+});

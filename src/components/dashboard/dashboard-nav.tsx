@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/dashboard", label: "Overview" },
   { href: "/dashboard/profile", label: "Edit card" },
   { href: "/dashboard/qr", label: "QR code" },
+  { href: "/dashboard/matches", label: "Matches" },
   { href: "/dashboard/settings", label: "Settings" },
 ];
 

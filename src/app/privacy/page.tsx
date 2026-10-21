@@ -13,7 +13,7 @@ const mail = (
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy notice" updated="October 20, 2026">
+    <LegalPage title="Privacy notice" updated="October 21, 2026">
       <section>
         <p>
           This notice explains what personal data {APP_NAME} collects, why, and the rights you have. We follow the
@@ -41,6 +41,11 @@ export default function PrivacyPage() {
           </li>
           <li>whether each contact detail or link is Public or Private.</li>
         </ul>
+        <p className="mt-3">
+          <strong>If you turn on AI Network Matching:</strong> your field, years of experience, what you&apos;re looking
+          for and your city, plus a record of the matches we send you. These details are private and aren&apos;t shown
+          on your card.
+        </p>
         <p className="mt-3">
           <strong>Access codes:</strong> we check your code when you sign up and count how many times it has been used.
           We don&apos;t keep a record of which code you used on your account.
@@ -90,6 +95,12 @@ export default function PrivacyPage() {
             <strong>To show you engagement totals and keep the service secure</strong>, based on our legitimate
             interest in running a safe, working product.
           </li>
+          <li>
+            <strong>To recommend people for you to meet (AI Network Matching)</strong>, only if you turn it on. We
+            compare your matching details, job title and bio with other members who also turned it on, and use AI to
+            choose a match and explain why. When you&apos;re recommended to someone, they see your public card and the
+            reason, never your private matching details. You can turn matching off anytime on your Matches page.
+          </li>
           <li><strong>To meet legal obligations</strong>, where Nigerian law requires it.</li>
         </ul>
         <p className="mt-3">
@@ -103,7 +114,11 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Supabase</strong>: database, file storage and login;</li>
           <li><strong>Vercel</strong>: website hosting;</li>
-          <li><strong>Resend</strong>: sending emails.</li>
+          <li><strong>Resend</strong>: sending emails;</li>
+          <li>
+            <strong>Anthropic</strong> (Claude): choosing matches and writing the reason, for members who turn on
+            matching. Only the profile details needed for matching are sent.
+          </li>
         </ul>
         <p className="mt-3">
           We may also share data if the law requires it, for example under a valid court order.
