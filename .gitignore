@@ -42,3 +42,6 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# private notes, never pushed (the repo is public)
+/docs/private/
