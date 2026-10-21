@@ -1,6 +1,7 @@
 import { LogOut } from "lucide-react";
 import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { ExperiencePrompt } from "@/components/matching/experience-prompt";
 import { Logo } from "@/components/marketing/logo";
 import { signOut } from "@/lib/auth/actions";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
@@ -8,7 +9,11 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in?next=/dashboard");
-  const { data: isAdmin } = await (await createClient()).rpc("is_admin");
+  const supabase = await createClient();
+  const [{ data: isAdmin }, { data: profile }] = await Promise.all([
+    supabase.rpc("is_admin"),
+    supabase.from("profiles").select("field, experience_years").eq("user_id", user.id).maybeSingle(),
+  ]);
 
   return (
     <>
@@ -30,6 +35,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+      {profile && profile.experience_years === null && <ExperiencePrompt initialField={profile.field} />}
     </>
   );
 }

@@ -12,7 +12,8 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
   free a month.
 - **4 years or more:** Spark recommends you to people earlier in their careers. Your Spark page
   shows a short checklist and how many people were introduced to you this month.
-- Already a member? Spark asks for your experience the first time you open it.
+- Already a member? A quick pop-up in your dashboard asks for your experience, so Meetwell can
+  personalise things for you. Tap "Maybe later" and we'll ask again in a few days.
 
 ---
 
