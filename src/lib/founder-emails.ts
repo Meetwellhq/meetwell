@@ -269,11 +269,11 @@ export function matchEmail({
   const avatar = match.avatarUrl
     ? `<img src="${escapeHtml(match.avatarUrl)}" width="80" height="80" alt="${escapeHtml(match.fullName)}" style="display:block;margin:0 auto 12px;width:80px;height:80px;border-radius:50%;object-fit:cover">`
     : `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 12px;border-collapse:collapse"><tr><td width="80" height="80" align="center" valign="middle" style="width:80px;height:80px;border-radius:50%;background:#e3efe9;color:#1f4d3f;font-size:26px;font-weight:600">${escapeHtml(initials)}</td></tr></table>`;
-  const card = `<div style="margin:24px 0;padding:24px;border:1px solid #e4e2dc;border-radius:12px;text-align:center">
+  const card = `<div style="margin:24px 0;padding:24px;background:#f4f3f0;border-radius:12px;text-align:center">
     ${avatar}
     <p style="margin:0;font-size:18px;font-weight:600;color:#1c1c1a">${escapeHtml(match.fullName)}</p>
     ${subtitle ? `<p style="margin:4px 0 0;color:#5c5c57;font-size:15px">${escapeHtml(subtitle)}</p>` : ""}
-    <p style="margin:16px 0 0;padding:12px 14px;background:#eef4f1;border-radius:8px;color:#1f4d3f;font-size:15px;line-height:1.5;text-align:left">${escapeHtml(reason)}</p>
+    <p style="margin:16px 0 0;padding:12px 14px;background:#ffffff;border-radius:8px;color:#1f4d3f;font-size:15px;line-height:1.5;text-align:left">${escapeHtml(reason)}</p>
     <p style="margin:20px 0 0"><a href="${escapeHtml(match.cardUrl)}" style="display:inline-block;background:#1f4d3f;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:8px">View ${escapeHtml(matchFirst)}'s card</a></p>
   </div>`;
 
