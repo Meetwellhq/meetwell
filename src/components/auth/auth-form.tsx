@@ -5,6 +5,7 @@ import { AUTH_BUTTON } from "@/components/auth/auth-section";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { Alert } from "@/components/ui/misc";
+import { PasswordInput } from "@/components/ui/password-input";
 import type { AuthFormState } from "@/lib/auth/actions";
 
 type FieldDef = {
@@ -41,7 +42,17 @@ export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, f
       ))}
       {fields.map((f) => (
         <Field key={f.name} label={f.label} hint={f.hint} error={state.fieldErrors?.[f.name]}>
-          {({ id, describedBy, invalid }) => (
+          {({ id, describedBy, invalid }) =>
+            f.type === "password" ? (
+              <PasswordInput
+                id={id}
+                name={f.name}
+                autoComplete={f.autoComplete}
+                aria-describedby={describedBy}
+                invalid={invalid}
+                required
+              />
+            ) : (
             <Input
               id={id}
               name={f.name}

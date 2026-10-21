@@ -1,15 +1,9 @@
 import { LogOut } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
+import { AdminNav } from "@/components/admin/admin-nav";
 import { Logo } from "@/components/marketing/logo";
 import { signOut } from "@/lib/auth/actions";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
-
-const SECTIONS = [
-  { href: "#waitlist", label: "Waiting list" },
-  { href: "#announcements", label: "Announcements" },
-  { href: "#payments", label: "Payments" },
-  { href: "#members", label: "Members" },
-];
 
 /**
  * The admin area, for admin accounts only (public.admins). Everyone else gets a
@@ -43,17 +37,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
               </form>
             </div>
           </div>
-          <nav aria-label="Admin" className="-mb-px flex gap-1 overflow-x-auto">
-            {SECTIONS.map((s) => (
-              <a
-                key={s.href}
-                href={s.href}
-                className="whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-sm text-ink-2 transition-colors hover:text-ink"
-              >
-                {s.label}
-              </a>
-            ))}
-          </nav>
+          <AdminNav />
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
