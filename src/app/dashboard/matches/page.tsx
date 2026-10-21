@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert, EmptyState } from "@/components/ui/misc";
 import { publicProfilePath } from "@/lib/config";
+import { MATCHING_MIN_COMPLETENESS, profileCompleteness } from "@/lib/matching/completeness";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Matches" };
@@ -30,7 +31,9 @@ export default async function MatchesPage() {
   const [{ data: profile }, matches, used] = await Promise.all([
     supabase
       .from("profiles")
-      .select("status, field, experience_years, looking_for, city, matching_opt_in")
+      .select(
+        "status, field, experience_years, looking_for, city, matching_opt_in, avatar_url, professional_title, organization, bio, website_url, website_is_public, contact_methods(is_public), social_links(is_public)",
+      )
       .eq("user_id", user!.id)
       .maybeSingle(),
     supabase.rpc("my_matches"),
@@ -38,6 +41,22 @@ export default async function MatchesPage() {
   ]);
   const rows = (matches.data ?? []) as MatchRow[];
   const usedThisMonth = Number(used.data ?? 0);
+  const completeness = profile
+    ? profileCompleteness({
+        avatarUrl: profile.avatar_url,
+        title: profile.professional_title,
+        organization: profile.organization,
+        bio: profile.bio,
+        hasPublicContact: (profile.contact_methods ?? []).some((c: { is_public: boolean }) => c.is_public),
+        hasPublicLink:
+          (profile.social_links ?? []).some((l: { is_public: boolean }) => l.is_public) ||
+          (!!profile.website_url && profile.website_is_public),
+        field: profile.field,
+        experienceYears: profile.experience_years,
+        lookingFor: profile.looking_for ?? [],
+        city: profile.city,
+      })
+    : null;
 
   return (
     <div className="flex max-w-3xl flex-col gap-10">
@@ -66,6 +85,45 @@ export default async function MatchesPage() {
               Your card isn&apos;t published yet, so you won&apos;t get matches.{" "}
               <Link href="/dashboard/profile" className="underline">Publish your card</Link> to start.
             </Alert>
+          )}
+          {completeness && (
+            <section className="rounded-xl border border-border bg-surface p-5">
+              <div className="flex items-baseline justify-between gap-4">
+                <p className="font-medium text-ink">Your profile is {completeness.percent}% complete</p>
+                <p className="text-sm text-ink-3">{MATCHING_MIN_COMPLETENESS}% needed for matches</p>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2" aria-hidden>
+                <div
+                  className={completeness.ready ? "h-full rounded-full bg-accent" : "h-full rounded-full bg-[#c58a2b]"}
+                  style={{ width: `${completeness.percent}%` }}
+                />
+              </div>
+              {completeness.missing.length > 0 ? (
+                <div className="mt-4 text-sm">
+                  <p className="text-ink-2">
+                    {completeness.ready
+                      ? "You're ready for matches. To stand out even more, add:"
+                      : "Add these to start getting matches:"}
+                  </p>
+                  <ul className="mt-2 flex flex-col gap-1.5">
+                    {completeness.missing.map((m) => (
+                      <li key={m.label} className="flex items-center justify-between gap-3">
+                        <span className="text-ink">{m.label}</span>
+                        {m.where === "card" ? (
+                          <Link href="/dashboard/profile" className="shrink-0 font-medium text-accent hover:underline">
+                            Edit card
+                          </Link>
+                        ) : (
+                          <span className="shrink-0 text-ink-3">Below</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-ink-2">Everything&apos;s filled in. Nice work.</p>
+              )}
+            </section>
           )}
           <MatchingPrefsForm
             initial={{

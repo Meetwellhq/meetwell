@@ -43,6 +43,7 @@ const REMINDER_LABEL = {
   email_unconfirmed: "Confirmation re-sent",
   card_draft: "Finish-card reminder sent",
   no_scans: "QR tip sent",
+  profile_incomplete: "Profile reminder sent",
 } as const;
 
 function ReminderBadges({ reminders }: { reminders?: Reminder[] }) {

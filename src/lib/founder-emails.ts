@@ -295,3 +295,25 @@ export function matchEmail({
   });
   return { subject, text, html };
 }
+
+/** Published card under 80% complete: finish it (and add a photo) to get matches. */
+export function incompleteProfileEmail(args: Common & { completeness: number; hasPhoto: boolean }) {
+  const photoLine = args.hasPhoto
+    ? "A few more details will get you there, and you can see exactly what's missing on your Matches page."
+    : "The quickest win is a clear photo of you. People are far more likely to save and message someone they can recognise. Then add the last few details listed on your Matches page.";
+  return reminder({
+    ...args,
+    subject: args.hasPhoto
+      ? `Your ${args.appName} profile is ${args.completeness}% done`
+      : `Add a photo to your ${args.appName} profile`,
+    before: [
+      `Your ${args.appName} profile is ${args.completeness}% complete. Once it reaches 80%, you'll start getting AI matches: more experienced people in your field worth meeting, up to one a day.`,
+      photoLine,
+    ],
+    // Photos are uploaded in the card editor; the Matches page lists everything else.
+    cta: args.hasPhoto
+      ? { href: `${args.siteUrl}/dashboard/matches`, label: "Complete my profile" }
+      : { href: `${args.siteUrl}/dashboard/profile`, label: "Add my photo" },
+    after: [ONLY_ONCE],
+  });
+}

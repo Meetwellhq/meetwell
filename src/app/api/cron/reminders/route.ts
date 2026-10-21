@@ -1,15 +1,22 @@
 import { getSiteUrl } from "@/lib/config";
-import { sendDraftReminderEmail, sendInviteReminderEmail, sendNoScansEmail } from "@/lib/email";
+import {
+  sendDraftReminderEmail,
+  sendIncompleteProfileEmail,
+  sendInviteReminderEmail,
+  sendNoScansEmail,
+} from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 
 // Sending is paced to stay under Resend's rate limit, so allow time for a full batch.
 export const maxDuration = 60;
 
 type Reminder = {
-  kind: "invite_unused" | "email_unconfirmed" | "card_draft" | "no_scans";
+  kind: "invite_unused" | "email_unconfirmed" | "card_draft" | "no_scans" | "profile_incomplete";
   email: string;
   full_name: string | null;
   access_code: string | null;
+  completeness?: number | null;
+  has_photo?: boolean | null;
 };
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -38,6 +45,8 @@ export async function GET(request: Request) {
       ok = await sendInviteReminderEmail(r.email, r.full_name, r.access_code);
     } else if (r.kind === "card_draft") {
       ok = await sendDraftReminderEmail(r.email, r.full_name);
+    } else if (r.kind === "profile_incomplete" && typeof r.completeness === "number") {
+      ok = await sendIncompleteProfileEmail(r.email, r.full_name, r.completeness, r.has_photo === true);
     } else if (r.kind === "no_scans") {
       ok = await sendNoScansEmail(r.email, r.full_name);
     } else if (r.kind === "email_unconfirmed") {

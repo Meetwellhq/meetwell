@@ -102,3 +102,18 @@ describe("match email photo", () => {
     expect(html).toContain(">AO</td>");
   });
 });
+
+describe("complete your profile email", () => {
+  it("asks for a photo when there isn't one, and links to the Matches page", async () => {
+    const { incompleteProfileEmail } = await import("@/lib/founder-emails");
+    const noPhoto = incompleteProfileEmail({ ...base, fullName: "Kemi Ade", completeness: 50, hasPhoto: false });
+    expect(noPhoto.subject).toBe("Add a photo to your Meetwell profile");
+    expect(noPhoto.text).toContain("50% complete");
+    expect(noPhoto.html).toContain('href="https://meetwell.me/dashboard/profile"');
+    expect(noPhoto.html).toContain("Add my photo");
+    const withPhoto = incompleteProfileEmail({ ...base, fullName: "Kemi Ade", completeness: 70, hasPhoto: true });
+    expect(withPhoto.subject).toBe("Your Meetwell profile is 70% done");
+    expect(withPhoto.html).toContain("Complete my profile");
+    expect(withPhoto.html).toContain('href="https://meetwell.me/dashboard/matches"');
+  });
+});

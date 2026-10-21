@@ -34,3 +34,20 @@ describe("matching fallback", () => {
     expect(await chooseMatch(junior, [])).toBeNull();
   });
 });
+
+describe("profile completeness", () => {
+  it("counts ten items at 10% each and needs 80% for matching", async () => {
+    const { profileCompleteness } = await import("@/lib/matching/completeness");
+    const full = {
+      avatarUrl: "https://x/p.jpg", title: "Designer", organization: "Studio", bio: "Hi",
+      hasPublicContact: true, hasPublicLink: true, field: "product_design", experienceYears: 1,
+      lookingFor: ["mentor"], city: "Lagos",
+    };
+    expect(profileCompleteness(full).percent).toBe(100);
+    const thin = profileCompleteness({ ...full, avatarUrl: null, bio: " ", city: null });
+    expect(thin.percent).toBe(70);
+    expect(thin.ready).toBe(false);
+    expect(thin.missing.map((m) => m.label)).toEqual(["Photo", "Bio", "City"]);
+    expect(profileCompleteness({ ...full, avatarUrl: null, city: null }).ready).toBe(true); // 80%
+  });
+});

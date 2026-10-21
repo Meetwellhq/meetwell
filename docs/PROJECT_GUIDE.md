@@ -90,6 +90,9 @@ every migration.
   repeats) → `chooseMatch()` in `src/lib/matching/engine.ts` (Claude `claude-opus-5-5`, low effort,
   structured output; falls back to rules) → `record_match()` → match email. One-way: only the less
   experienced member is told. Up to ~60 members per run on the current Vercel plan.
+  Only members with a confirmed account and a profile at least 80% complete are matched or
+  recommended (`profile_completeness()` in SQL, `src/lib/matching/completeness.ts` for the page;
+  keep them in step). Members under 80% get a one-time `profile_incomplete` reminder.
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `hello@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).
@@ -97,7 +100,7 @@ every migration.
   (08:00 UTC daily). `public.claim_reminders()` picks who is due and records each send in
   `public.reminders_sent`, so every reminder goes out at most once per person:
   unused invite (3 days), unconfirmed email (1 to 14 days, Supabase re-sends), draft card
-  (2 days), published but no QR scans (7 days).
+  (2 days), published but no QR scans (7 days), profile under 80% (1 day after publishing).
 - **Nightly clean-up**: `pg_cron` job `purge-profile-events` (03:00 UTC) deletes engagement
   events older than 13 months, as the Privacy notice promises.
 - **Legal**: `/terms` and `/privacy`, written for Nigerian law (Constitution s.37, NDPA 2023,

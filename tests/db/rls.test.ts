@@ -441,9 +441,10 @@ describe("reminder status on the admin page", () => {
       ALICE,
       "select email, reminders from public.admin_list_members() where email in ('drafty@test', 'quiet@test', 'unconfirmed@test') order by email",
     );
-    expect(members.map((m) => [m.email, m.reminders.map((r) => r.kind)])).toEqual([
+    expect(members.map((m) => [m.email, m.reminders.map((r) => r.kind).sort()])).toEqual([
       ["drafty@test", ["card_draft"]],
-      ["quiet@test", ["no_scans"]],
+      // Published 8 days ago with no scans and a thin profile: both reminders.
+      ["quiet@test", ["no_scans", "profile_incomplete"]],
       ["unconfirmed@test", ["email_unconfirmed"]],
     ]);
     // People with no reminders get an empty list, not null.
@@ -492,12 +493,13 @@ describe("AI network matching", () => {
   const ENGINEER = "77777777-7777-7777-7777-777777777777";
   const MARKETER = "88888888-8888-8888-8888-888888888888";
   const OPTED_OUT = "99999999-9999-9999-9999-999999999999";
+  const SPARSE = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 
   beforeAll(async () => {
     await db.exec("insert into public.access_codes (code, max_uses) values ('MATCH-CODE', 10)");
     for (const [id, email] of [
       [JUNIOR, "junior@test"], [SENIOR, "senior@test"], [ENGINEER, "engineer@test"],
-      [MARKETER, "marketer@test"], [OPTED_OUT, "optout@test"],
+      [MARKETER, "marketer@test"], [OPTED_OUT, "optout@test"], [SPARSE, "sparse@test"],
     ]) {
       await db.query(
         `insert into auth.users (id, email, raw_user_meta_data, email_confirmed_at)
@@ -506,12 +508,16 @@ describe("AI network matching", () => {
       );
       await createProfile(id, email.split("@")[0]);
     }
+    // Fill in organisation and bio so test profiles are at least 80% complete.
+    await db.exec("update public.profiles set organization = 'Studio', bio = 'I like meeting people.'");
     const set = (id: string, sql: string) => db.query(`update public.profiles set ${sql} where user_id = $1`, [id]);
     await set(JUNIOR, "field = 'product_design', experience_years = 1, looking_for = '{mentor}', city = 'Lagos', matching_opt_in = true");
     await set(SENIOR, "field = 'product_design', experience_years = 4, looking_for = '{mentee}', city = 'Lagos', matching_opt_in = true");
     await set(ENGINEER, "field = 'software_engineering', experience_years = 3, looking_for = '{collaborators}', matching_opt_in = true");
     await set(MARKETER, "field = 'marketing_growth', experience_years = 6, looking_for = '{mentee}', matching_opt_in = true");
     await set(OPTED_OUT, "field = 'product_design', experience_years = 8, looking_for = '{mentee}', matching_opt_in = false");
+    // Opted in and very experienced, but a thin profile (no title, organisation or bio): 50%.
+    await set(SPARSE, "field = 'product_design', experience_years = 10, looking_for = '{mentee}', matching_opt_in = true, professional_title = null, organization = null, bio = null");
   });
 
   it("refuses callers without the job secret, and keeps matches private", async () => {
@@ -573,6 +579,37 @@ describe("AI network matching", () => {
     const mine = await as<{ slug: string }>(JUNIOR, "select slug from public.my_matches()");
     expect(mine.map((m) => m.slug).sort()).toEqual(["engineer", "senior"]);
     expect(await as(SENIOR, "select * from public.my_matches()")).toEqual([]); // one-way
+  });
+
+  it("leaves out profiles under 80% complete, both ways", async () => {
+    const [{ junior, sparse }] = (await db.query<{ junior: number; sparse: number }>(
+      `select public.profile_completeness(j) as junior, public.profile_completeness(s) as sparse
+       from public.profiles j, public.profiles s where j.slug = 'junior' and s.slug = 'sparse'`,
+    )).rows;
+    expect(junior).toBeGreaterThanOrEqual(80);
+    expect(sparse).toBe(50);
+    const cands = await as<{ slug: string }>(null, `select slug from public.matching_candidates('${SECRET}', '${JUNIOR}', 20)`);
+    expect(cands.map((c) => c.slug)).not.toContain("sparse"); // not recommended
+    const due = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`);
+    expect(due.map((d) => d.email)).not.toContain("sparse@test"); // doesn't get matches
+    await expect(as(null, "select public.profile_completeness(p) from public.profiles p")).rejects.toThrow(/permission denied/);
+  });
+
+  it("reminds members under 80% to complete their profile, once, with photo info", async () => {
+    // Published a couple of days ago (the publish date is normally locked).
+    await db.exec("alter table public.profiles disable trigger profiles_before_write");
+    await db.exec("update public.profiles set published_at = now() - interval '2 days' where slug in ('sparse', 'junior')");
+    await db.exec("alter table public.profiles enable trigger profiles_before_write");
+
+    const first = await as<{ kind: string; email: string; completeness: number | null; has_photo: boolean | null }>(
+      null,
+      `select kind, email, completeness, has_photo from public.claim_reminders('${SECRET}', 200)`,
+    );
+    const incomplete = first.filter((r) => r.kind === "profile_incomplete");
+    expect(incomplete).toContainEqual({ kind: "profile_incomplete", email: "sparse@test", completeness: 50, has_photo: false });
+    expect(incomplete.map((r) => r.email)).not.toContain("junior@test"); // 80%+ already
+    const again = await as<{ kind: string; email: string }>(null, `select kind, email from public.claim_reminders('${SECRET}', 200)`);
+    expect(again.filter((r) => r.kind === "profile_incomplete" && r.email === "sparse@test")).toEqual([]);
   });
 
   it("recommends nobody when no one in the field has more experience", async () => {

@@ -6,6 +6,8 @@
 -- scored candidates, lets Claude choose and explain the best one, then records it.
 --
 -- No monthly cap: at most one match per member per day (the job runs daily).
+-- Only members with an account, a confirmed email and a profile at least 80%
+-- complete get matches or are recommended (see profile_completeness()).
 -- The matching fields are private: they are not part of the public card.
 
 -- ---------------------------------------------------------------------------
@@ -42,6 +44,32 @@ as $$
     else p_field
   end;
 $$;
+
+-- How complete a profile is, 0 to 100, in steps of 10. Ten items, 10% each
+-- (the name is always present, so it doesn't count). Keep in step with
+-- src/lib/matching/completeness.ts, which shows members what's missing.
+create or replace function public.profile_completeness(p public.profiles)
+returns integer
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select 10 * (
+      (p.avatar_url is not null)::int
+    + (nullif(btrim(coalesce(p.professional_title, '')), '') is not null)::int
+    + (nullif(btrim(coalesce(p.organization, '')), '') is not null)::int
+    + (nullif(btrim(coalesce(p.bio, '')), '') is not null)::int
+    + exists (select 1 from public.contact_methods c where c.profile_id = p.id and c.is_public)::int
+    + (exists (select 1 from public.social_links s where s.profile_id = p.id and s.is_public)
+       or (p.website_url is not null and p.website_is_public))::int
+    + (p.field is not null)::int
+    + (p.experience_years is not null)::int
+    + (cardinality(p.looking_for) > 0)::int
+    + (nullif(btrim(coalesce(p.city, '')), '') is not null)::int
+  );
+$$;
+revoke all on function public.profile_completeness(public.profiles) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Matches
@@ -86,8 +114,8 @@ end;
 $$;
 revoke all on function public.check_cron_token(text) from public, anon, authenticated;
 
--- Members due a match today: opted in, confirmed, published card with a field,
--- and no match in the last 20 hours (so at most one a day). Random order.
+-- Members due a match today: opted in, confirmed email, published card at least
+-- 80% complete, and no match in the last 20 hours (so at most one a day).
 create or replace function public.matching_due_users(p_token text, p_limit integer default 40)
 returns table (
   user_id uuid, email text, profile_id uuid, full_name text, title text, organization text, bio text,
@@ -110,6 +138,7 @@ begin
       and p.status = 'published'
       and p.field is not null
       and u.email_confirmed_at is not null
+      and public.profile_completeness(p) >= 80
       and not exists (select 1 from public.matches m
            where m.user_id = u.id and m.created_at > now() - interval '20 hours')
     order by random()
@@ -127,7 +156,8 @@ grant execute on function public.matching_due_users(text, integer) to anon;
 --   same city +10; has a photo +5;
 --   minus 5 for each time they were recommended in the last week, so
 --   recommendations spread across experienced people instead of one person.
--- Never: themselves, or someone already recommended to this member.
+-- Never: themselves, someone already recommended to this member, or anyone
+-- without a confirmed account or with a profile under 80% complete.
 create or replace function public.matching_candidates(p_token text, p_user_id uuid, p_limit integer default 8)
 returns table (
   profile_id uuid, slug text, full_name text, title text, organization text, bio text,
@@ -165,6 +195,8 @@ begin
       and c.user_id <> p_user_id
       and public.field_group(c.field) = public.field_group(s.field)
       and coalesce(c.experience_years, 0) > coalesce(s.experience_years, 0)
+      and public.profile_completeness(c) >= 80
+      and exists (select 1 from auth.users u where u.id = c.user_id and u.email_confirmed_at is not null)
       and not exists (select 1 from public.matches m where m.user_id = p_user_id and m.matched_profile_id = c.id)
   )
   select sc.id, sc.slug, sc.full_name, sc.professional_title, sc.organization, sc.bio,

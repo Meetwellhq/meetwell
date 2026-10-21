@@ -2,6 +2,7 @@ import "server-only";
 import { APP_NAME, getSiteUrl, SUPPORT_EMAIL } from "./config";
 import {
   draftReminderEmail,
+  incompleteProfileEmail,
   FOUNDER_NAME,
   inviteEmail,
   inviteReminderEmail,
@@ -69,4 +70,9 @@ export function sendNoScansEmail(to: string, fullName: string | null) {
 /** AI Network Matching: one recommendation email. */
 export function sendMatchEmail(to: string, fullName: string | null, match: MatchedMember, reason: string) {
   return send(to, matchEmail({ ...common(fullName), match, reason }));
+}
+
+/** Profile under 80%: finish it (and add a photo) to get matches. Sent once. */
+export function sendIncompleteProfileEmail(to: string, fullName: string | null, completeness: number, hasPhoto: boolean) {
+  return send(to, incompleteProfileEmail({ ...common(fullName), completeness, hasPhoto }));
 }
