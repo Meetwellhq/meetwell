@@ -118,7 +118,7 @@ every migration.
   Invites tab ("Send Spark email", in paced batches; click again for the rest). Each person gets each
   announcement once (`public.announcements_sent`, `20261102000000_announcements.sql`). Template:
   `sparkBetaEmail` in `src/lib/founder-emails.ts`.
-- **Changelog**: `/changelog` is built from `CHANGELOG.md` (`src/lib/changelog.ts` reads the small
+- **Changelog**: written at every deploy (see Deploying). `/changelog` is built from `CHANGELOG.md` (`src/lib/changelog.ts` reads the small
   Markdown subset used there). Linked in the footer. Add a dated `## D Month YYYY: Title` entry per release.
 - **Automatic reminders**: `src/app/api/cron/reminders/route.ts`, scheduled in `vercel.json`
   (08:00 UTC daily). `public.claim_reminders()` picks who is due and records each send in
@@ -133,8 +133,14 @@ every migration.
 
 ## Deploying
 
-1. Get Rasheed's explicit OK. 2. Run `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run build`.
-3. `git push origin main`. 4. Confirm a new Vercel deployment for that commit becomes READY
+1. Get Rasheed's explicit OK.
+2. **Changelog**: look at what changed since the live version (`git log origin/main..HEAD`) and,
+   if members will notice any of it, add a short dated entry at the top of `CHANGELOG.md`
+   (`## D Month YYYY: Title`, a few plain bullets, only what members see). Show it to Rasheed with
+   the deploy summary. `npm run check:changelog` fails if screens, emails or public files changed
+   without a changelog update. The `/changelog` page rebuilds from the file on deploy.
+3. Run `npm run check:changelog`, `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run build`.
+4. `git push origin main`. 5. Confirm a new Vercel deployment for that commit becomes READY
 (Vercel MCP `list_deployments`) and check the live site.
 
 If no deployment appears within a few minutes (GitHub → Vercel occasionally misses a push),

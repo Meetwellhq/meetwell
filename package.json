@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "check:changelog": "node scripts/check-changelog.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.137.0",
