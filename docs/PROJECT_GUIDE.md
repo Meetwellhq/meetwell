@@ -1,7 +1,8 @@
 # Meetwell project guide
 
-Context for anyone (human or AI) picking up this project. Last updated October 2026.
-Read this before changing anything.
+Context for anyone (human or AI) picking up this project. Last updated 21 October 2026.
+Read this before changing anything. For the story of how it was built, the founder's
+preferences and past decisions, read [PROJECT_HISTORY.md](PROJECT_HISTORY.md) too.
 
 ## Ground rules from the founder (Rasheed)
 
@@ -14,6 +15,9 @@ Read this before changing anything.
   needs SQL, give the exact SQL to paste (no placeholders that look like values), and check
   from outside afterwards that it took effect.
 - Keep copy short and human. Avoid long dashes and stacked phrases that read as AI-written.
+- Show, don't just tell: for visual changes, render it (browser or a preview file) and show
+  Rasheed before committing; for emails, render an HTML preview.
+- Never put secrets or personal data in the repo. It is **public** (view-only licence).
 
 ## What Meetwell is
 
@@ -28,8 +32,8 @@ invites them from an admin page; they sign up with a personal access code.
 
 | Piece | What it is | Notes |
 | --- | --- | --- |
-| Code | Next.js 16 (App Router, Server Actions, `proxy.ts`), React 19, TypeScript, Tailwind 4 | GitHub: `Meetwellhq/meetwell` |
-| Hosting | Vercel, project `meetwell` | Auto-deploys on push to `main`. Domain `meetwell.me` (DNS on Vercel) |
+| Code | Next.js 16 (App Router, Server Actions, `proxy.ts`), React 19, TypeScript, Tailwind 4 | GitHub: `Meetwellhq/meetwell` (public repo, "all rights reserved" licence) |
+| Hosting | Vercel, project `meetwell`, team "Meetwell" (Hobby plan) | Auto-deploys on push to `main`. Domain `meetwell.me` (DNS on Vercel) |
 | Database, auth, storage | Supabase | RLS everywhere; public reads only through security-definer RPCs |
 | App emails | Resend (`noreply@meetwell.me`) | Via Supabase SMTP (auth emails) and the Resend API (founder emails) |
 | Mailbox | Zoho Mail: `info@meetwell.me`, alias `hello@meetwell.me` | MX, SPF (`include:zohomail.com`) and DKIM (`zmail._domainkey`) on Vercel DNS |
@@ -87,8 +91,8 @@ every migration.
   photo and more experience than the member, in the same or a related field
   (`20261031000000_matching_min_experience.sql`). No monthly cap; at most one match per member per day. Daily job
   `src/app/api/cron/matches/route.ts` (09:00 UTC): `matching_due_users()` → `matching_candidates()`
-  (scores: field, extra years, mentoring, city, photo; small penalty per recent recommendation; no
-  repeats) → `chooseMatch()` in `src/lib/matching/engine.ts` (Claude `claude-opus-5-5`, low effort,
+  (scores: field, extra years, mentoring, city; small penalty per recent recommendation; no
+  repeats; photo required) → `chooseMatch()` in `src/lib/matching/engine.ts` (Claude `claude-opus-5-5`, low effort,
   structured output; falls back to rules) → `record_match()` → match email. One-way: only the less
   experienced member is told. Up to ~60 members per run on the current Vercel plan.
   Only members with a confirmed account and a profile at least 80% complete are matched or
@@ -108,6 +112,28 @@ every migration.
 - **Legal**: `/terms` and `/privacy`, written for Nigerian law (Constitution s.37, NDPA 2023,
   FCCPA 2018). Not yet reviewed by a lawyer; registered business name and RC number not added.
 
+## Deploying
+
+1. Get Rasheed's explicit OK. 2. Run `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run build`.
+3. `git push origin main`. 4. Confirm a new Vercel deployment for that commit becomes READY
+(Vercel MCP `list_deployments`) and check the live site.
+
+If no deployment appears within a few minutes (GitHub → Vercel occasionally misses a push),
+trigger it from the same commit with Vercel MCP `create_deployment`
+(`gitSource: {type: "github", org: "Meetwellhq", repo: "meetwell", ref: "main", sha: <full sha>}`,
+`target: "production"`). Only do this for a deploy Rasheed already approved.
+
+Vercel limits on the Hobby plan: one person per team; private org repos can't deploy (hence
+the public repo); cron jobs run once a day; functions max ~60s; runtime logs kept 1 hour.
+Vercel's MCP can add DNS records but not edit or delete them (Rasheed does those in the
+dashboard).
+
+## Accounts
+
+All services are under company accounts owned by Rasheed, mostly via `admin@meetwell.me`:
+GitHub org `Meetwellhq`, Vercel team "Meetwell", Supabase org, Resend, Zoho (super admin).
+Rasheed's personal secrets (reminders job secret, keys) live in his password manager, not here.
+
 ## Database migrations
 
 All files in `supabase/migrations/` have been run in production, in order, as of the date
@@ -123,4 +149,6 @@ does not remove that. Revoke from `anon` explicitly for anything visitors must n
 - Lawyer review of Terms and Privacy; add registered business name and RC number.
 - Optional: delete meetwell.me from ImprovMX (no longer used).
 - Ideas waiting on user feedback: printable QR card, simpler onboarding, stats on each
-  user's own dashboard.
+  user's own dashboard, paid plans (e.g. Paystack).
+- Optional: add `ANTHROPIC_API_KEY` in Vercel for Claude-written match reasons.
+- After CAC registration: put the registered company name in the footer, LICENSE and Terms.
