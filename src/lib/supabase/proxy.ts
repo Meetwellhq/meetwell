@@ -44,7 +44,11 @@ export async function updateSession(request: NextRequest) {
     return redirect;
   };
 
-  if (!signedIn && PROTECTED_PREFIXES.some((p) => pathname.startsWith(p))) {
+  // The admin area has its own log-in page.
+  if (!signedIn && pathname.startsWith("/admin") && pathname !== "/admin/sign-in") {
+    return redirectTo("/admin/sign-in");
+  }
+  if (!signedIn && PROTECTED_PREFIXES.some((p) => pathname.startsWith(p)) && !pathname.startsWith("/admin")) {
     return redirectTo("/sign-in");
   }
   if (signedIn && AUTH_PAGES.includes(pathname)) {

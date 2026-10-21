@@ -17,7 +17,7 @@ const SECTIONS = [
  */
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const user = await getCurrentUser();
-  if (!user) redirect("/sign-in?next=/admin");
+  if (!user) redirect("/admin/sign-in");
   const { data: isAdmin } = await (await createClient()).rpc("is_admin");
   if (isAdmin !== true) notFound();
 

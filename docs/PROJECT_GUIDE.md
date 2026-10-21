@@ -90,7 +90,8 @@ every migration.
   has a 16px icon); add a 96px PNG and set `logo` to use one.
 - **QR codes**: `src/lib/qr.ts`. Error correction H with the Meetwell logo in the middle; PNG
   rendered with `sharp`. The QR encodes the profile URL only.
-- **Admin area**: `/admin` (`src/app/admin/`), for the separate admin account admin@meetwell.me
+- **Admin area**: `/admin` (`src/app/admin/`), with its own log-in page `/admin/sign-in` (`adminSignIn`
+  refuses non-admin accounts), for the separate admin account admin@meetwell.me
   (`public.admins`; everyone else gets a 404). Overview, waiting list with Invite/Resend,
   announcements, payments, and Members with card status, photo, views, QR scans, saves and reminder
   tags. Admin accounts have no card: they're sent from /dashboard and /onboarding to /admin, and are

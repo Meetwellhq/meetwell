@@ -127,6 +127,33 @@ export async function signIn(_: AuthFormState, formData: FormData): Promise<Auth
   redirect(safeNext(formData.get("next")));
 }
 
+/** Log-in for the admin area: only admin accounts get in; anyone else is signed straight out. */
+export async function adminSignIn(_: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const email = String(formData.get("email") ?? "");
+  if (!(await limitByClient("admin-sign-in", 10, 10 * 60_000))) {
+    return { error: "Too many attempts. Please wait a few minutes and try again.", email };
+  }
+  const parsed = z
+    .object({ email: emailSchema, password: z.string().min(1, "Enter your password") })
+    .safeParse({ email, password: formData.get("password") });
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), email };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  if (error) {
+    if (error.code === "email_not_confirmed") {
+      return { error: "Please confirm your email first — check your inbox for the link.", email };
+    }
+    return { error: "That email and password don't match.", email };
+  }
+  const { data: isAdmin } = await supabase.rpc("is_admin");
+  if (isAdmin !== true) {
+    await supabase.auth.signOut();
+    return { error: "This account doesn't have admin access.", email };
+  }
+  redirect("/admin");
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
