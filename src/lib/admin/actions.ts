@@ -25,7 +25,7 @@ export async function inviteFromWaitlist(_: InviteState, formData: FormData): Pr
   }
 
   const sent = await sendInviteEmail(email.data, fullName, code);
-  revalidatePath("/dashboard/invites");
+  revalidatePath("/admin");
   return sent ? { ok: true } : { error: `Code created (${code}) but the email didn't send. Try again.` };
 }
 
@@ -64,6 +64,6 @@ export async function sendSparkAnnouncement(): Promise<AnnounceState> {
 
   const { data: status } = await supabase.rpc("admin_announcement_status", { p_kind: "spark_beta" });
   const remaining = (status as { remaining: number }[] | null)?.[0]?.remaining;
-  revalidatePath("/dashboard/invites");
+  revalidatePath("/admin");
   return { sent, failed, remaining };
 }

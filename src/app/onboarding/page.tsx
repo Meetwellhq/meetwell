@@ -11,6 +11,9 @@ export const metadata: Metadata = { title: "Set up your card" };
 export default async function OnboardingPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in?next=/onboarding");
+  // Admin accounts don't have a card.
+  const { data: isAdmin } = await (await createClient()).rpc("is_admin");
+  if (isAdmin === true) redirect("/admin");
   const profile = await getOwnProfile();
   if (profile?.publishedAt) redirect("/dashboard");
   // Spark details live on the profile row but outside the card editor.

@@ -90,9 +90,12 @@ every migration.
   has a 16px icon); add a 96px PNG and set `logo` to use one.
 - **QR codes**: `src/lib/qr.ts`. Error correction H with the Meetwell logo in the middle; PNG
   rendered with `sharp`. The QR encodes the profile URL only.
-- **Admin (Invites tab)**: `/dashboard/invites`, visible only to admins (`public.admins`).
-  Waiting list with Invite/Resend, Members with card status, photo, views, QR scans, saves and
-  reminder tags. Database functions refuse non-admins.
+- **Admin area**: `/admin` (`src/app/admin/`), for the separate admin account admin@meetwell.me
+  (`public.admins`; everyone else gets a 404). Overview, waiting list with Invite/Resend,
+  announcements, payments, and Members with card status, photo, views, QR scans, saves and reminder
+  tags. Admin accounts have no card: they're sent from /dashboard and /onboarding to /admin, and are
+  left out of Members, announcements and reminders (`20261105000000_admin_account.sql`).
+  `/dashboard/invites` redirects to `/admin`. Database functions refuse non-admins.
 - **Spark has two sides**, decided by years of experience (`MENTOR_MIN_YEARS` = 4 in
   `src/lib/matching/constants.ts`, same line in SQL): under 4 get introductions; 4+ are only
   recommended (`20261103000000_spark_roles.sql`). Years and field are asked in onboarding (step
@@ -121,12 +124,12 @@ every migration.
   `/api/paystack/callback` and the webhook `/api/paystack/webhook` (HMAC-SHA512 signature checked;
   set `https://meetwell.me/api/paystack/webhook` in Paystack → Settings → API Keys & Webhooks).
   `public.credit_ledger` has one row per credit added or used; `record_match()` uses a credit only
-  after the free 5 in a month. Payments list on the Invites tab. Refunds by hand in Paystack.
+  after the free 5 in a month. Payments list in /admin. Refunds by hand in Paystack.
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `support@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).
 - **Announcements**: one-off emails from the founder to every confirmed member, sent from the
-  Invites tab ("Send Spark email", in paced batches; click again for the rest). Each person gets each
+  admin area ("Send Spark email", in paced batches; click again for the rest). Each person gets each
   announcement once (`public.announcements_sent`, `20261102000000_announcements.sql`). Template:
   `sparkBetaEmail` in `src/lib/founder-emails.ts`.
 - **Changelog**: written at every deploy (see Deploying). `/changelog` is built from `CHANGELOG.md` (`src/lib/changelog.ts` reads the small
@@ -183,7 +186,7 @@ does not remove that. Revoke from `anon` explicitly for anything visitors must n
 
 ## Open items
 
-- Talk to the first invited users; invite the next batch from the Invites tab.
+- Talk to the first invited users; invite the next batch from /admin.
 - Lawyer review of Terms and Privacy.
 - Optional: delete meetwell.me from ImprovMX (no longer used).
 - Ideas waiting on user feedback: printable QR card, simpler onboarding, stats on each

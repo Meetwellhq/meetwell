@@ -806,3 +806,30 @@ describe("Spark credits", () => {
     await db.query("delete from public.matches where user_id = $1", [JUNIOR]);
   });
 });
+
+describe("admin account", () => {
+  const SECRET = "test-secret-that-is-long-enough-1234567890";
+  const ADMIN = "abababab-abab-abab-abab-abababababab";
+
+  it("keeps the admin account out of members, announcements and reminders", async () => {
+    await db.query(
+      `insert into auth.users (id, email, raw_user_meta_data, email_confirmed_at, created_at)
+       values ($1, 'admin@meetwell.test', '{"access_code":"MATCH-CODE"}', now(), now() - interval '5 days')`,
+      [ADMIN],
+    );
+    await db.query("insert into public.admins (user_id) values ($1)", [ADMIN]);
+
+    const members = await as<{ email: string }>(ADMIN, "select email from public.admin_list_members()");
+    expect(members.length).toBeGreaterThan(0); // the admin can see members
+    expect(members.map((m) => m.email)).not.toContain("admin@meetwell.test");
+
+    const recipients = await as<{ email: string }>(ADMIN, "select email from public.admin_announcement_recipients('spark_beta', 100)");
+    expect(recipients.map((r) => r.email)).not.toContain("admin@meetwell.test");
+
+    // No card for 5 days would normally trigger a "finish your card" reminder.
+    const reminders = await as<{ email: string }>(null, `select email from public.claim_reminders('${SECRET}', 200)`);
+    expect(reminders.map((r) => r.email)).not.toContain("admin@meetwell.test");
+
+    await expect(as(ADMIN, `select public.is_admin_user('${ADMIN}')`)).rejects.toThrow(/permission denied/);
+  });
+});

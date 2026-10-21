@@ -12,14 +12,11 @@ const LINKS = [
   { href: "/dashboard/settings", label: "Settings" },
 ];
 
-/** Only admins see the Invites tab (the page itself also checks in the database). */
-const ADMIN_LINKS = [{ href: "/dashboard/invites", label: "Invites" }];
-
-export function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {
+export function DashboardNav() {
   const pathname = usePathname();
   return (
     <nav aria-label="Dashboard" className="-mb-px flex gap-1 overflow-x-auto">
-      {(isAdmin ? [...LINKS, ...ADMIN_LINKS] : LINKS).map((l) => {
+      {LINKS.map((l) => {
         const active = l.href === "/dashboard" ? pathname === l.href : pathname.startsWith(l.href);
         return (
           <Link

@@ -14,6 +14,8 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
     supabase.rpc("is_admin"),
     supabase.from("profiles").select("field, experience_years").eq("user_id", user.id).maybeSingle(),
   ]);
+  // Admin accounts are only for running Meetwell: they live in /admin, not here.
+  if (isAdmin === true) redirect("/admin");
 
   return (
     <>
@@ -31,7 +33,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
               </form>
             </div>
           </div>
-          <DashboardNav isAdmin={isAdmin === true} />
+          <DashboardNav />
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
