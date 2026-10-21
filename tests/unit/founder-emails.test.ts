@@ -83,3 +83,22 @@ describe("match email", () => {
     expect(html).toContain('href="https://meetwell.me/dashboard/matches"');
   });
 });
+
+describe("match email photo", () => {
+  const match = {
+    fullName: "Ada Obi", title: null, organization: null, cardUrl: "https://meetwell.me/p/ada",
+  };
+  it("shows the profile photo when there is one", async () => {
+    const { matchEmail } = await import("@/lib/founder-emails");
+    const { html } = matchEmail({
+      ...base, fullName: "Tunde", reason: "x",
+      match: { ...match, avatarUrl: "https://example.supabase.co/storage/v1/object/public/avatars/u/p.jpg" },
+    });
+    expect(html).toContain('src="https://example.supabase.co/storage/v1/object/public/avatars/u/p.jpg"');
+  });
+  it("falls back to initials without a photo", async () => {
+    const { matchEmail } = await import("@/lib/founder-emails");
+    const { html } = matchEmail({ ...base, fullName: "Tunde", reason: "x", match: { ...match, avatarUrl: null } });
+    expect(html).toContain(">AO</td>");
+  });
+});
