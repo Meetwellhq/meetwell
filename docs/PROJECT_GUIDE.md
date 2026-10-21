@@ -134,11 +134,13 @@ every migration.
 ## Deploying
 
 1. Get Rasheed's explicit OK.
-2. **Changelog**: look at what changed since the live version (`git log origin/main..HEAD`) and,
-   if members will notice any of it, add a short dated entry at the top of `CHANGELOG.md`
-   (`## D Month YYYY: Title`, a few plain bullets, only what members see). Show it to Rasheed with
-   the deploy summary. `npm run check:changelog` fails if screens, emails or public files changed
-   without a changelog update. The `/changelog` page rebuilds from the file on deploy.
+2. **Changelog, with Rasheed's OK first**: look at what changed since the live version
+   (`git log origin/main..HEAD`). Never add an entry on your own: draft it in chat
+   (`## D Month YYYY: Title`, a few plain bullets, only what members see) and wait for his OK.
+   He decides which changes go in; not every change gets an entry. `npm run check:changelog` fails
+   if screens, emails or public files changed without a changelog update; when Rasheed says no
+   entry is needed, run it as `CHANGELOG_SKIP=1 npm run check:changelog`. The `/changelog` page
+   rebuilds from the file on deploy.
 3. Run `npm run check:changelog`, `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run build`.
 4. `git push origin main`. 5. Confirm a new Vercel deployment for that commit becomes READY
 (Vercel MCP `list_deployments`) and check the live site.

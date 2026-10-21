@@ -1,5 +1,7 @@
 // Deploy check: if anything members can see changed since the live version
 // (origin/main), CHANGELOG.md must have changed too. Run: npm run check:changelog
+// Entries are only added with Rasheed's OK. When he says a change needs no entry,
+// run with CHANGELOG_SKIP=1.
 import { execFileSync } from "node:child_process";
 
 const base = process.argv[2] ?? "origin/main";
@@ -17,13 +19,16 @@ const memberFacing = changed.filter(
     !f.startsWith("src/app/api/"),
 );
 
-if (memberFacing.length === 0) {
+if (process.env.CHANGELOG_SKIP === "1") {
+  console.log("Changelog check skipped: Rasheed said no entry is needed for this deploy.");
+} else if (memberFacing.length === 0) {
   console.log("Changelog check: nothing members can see changed. OK.");
 } else if (changed.includes("CHANGELOG.md")) {
   console.log(`Changelog check: ${memberFacing.length} member-facing file(s) changed and CHANGELOG.md is updated. OK.`);
 } else {
   console.error("Changelog check failed: these files change what members see, but CHANGELOG.md wasn't updated:");
   for (const f of memberFacing) console.error(`  ${f}`);
-  console.error("Add a short dated entry (## D Month YYYY: Title) and show it to Rasheed before deploying.");
+  console.error("Draft a short entry and get Rasheed's OK before adding it, or, if he says no entry is needed,");
+  console.error("run with CHANGELOG_SKIP=1.");
   process.exit(1);
 }
