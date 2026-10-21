@@ -141,7 +141,7 @@ every migration.
   messages with up to 3 either side. Rules page: `/community-rules`. Phase 4 will set `access_until`
   from paid subscriptions.
 - **Mentors and paid messages (phase 4)**: members with 4+ years apply on `/dashboard/mentor`
-  ("Mentoring" tab; checks: 4+ years, photo, 80%+, published, confirmed, 14+ days on Meetwell); Rasheed
+  ("Mentoring" tab; checks: 4+ years, photo, 80%+, published, confirmed); Rasheed
   approves in `/admin/mentors`. Approved mentors set a 30-day price (N2,000–N20,000) and their card shows
   "Message {name} · price" → `/subscribe/[slug]` → Paystack. `confirm_payment()` opens/extends the
   conversation by 30 days and puts 80% in the mentor's wallet (`wallet_ledger`), available after 7 days.

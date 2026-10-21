@@ -8,6 +8,7 @@ import {
   inviteEmail,
   inviteReminderEmail,
   matchEmail,
+  messageFromLine,
   mentorApprovedEmail,
   newMessageEmail,
   type MatchedMember,
@@ -31,7 +32,11 @@ function common(fullName: string | null) {
  * Sends one email through Resend's API. Needs RESEND_API_KEY (server-only).
  * Without it the email is skipped, so local development sends nothing.
  */
-async function send(to: string, { subject, text, html }: { subject: string; text: string; html: string }) {
+async function send(
+  to: string,
+  { subject, text, html }: { subject: string; text: string; html: string },
+  { from = FROM, replyTo = SUPPORT_EMAIL }: { from?: string; replyTo?: string | null } = {},
+) {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn(`RESEND_API_KEY is not set; skipping email "${subject}"`);
@@ -41,7 +46,7 @@ async function send(to: string, { subject, text, html }: { subject: string; text
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: FROM, to: [to], reply_to: SUPPORT_EMAIL, subject, text, html }),
+      body: JSON.stringify({ from, to: [to], ...(replyTo ? { reply_to: replyTo } : {}), subject, text, html }),
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) console.error("Email failed", subject, res.status, await res.text());
@@ -108,9 +113,13 @@ export function sendNewMessageEmail(
     offToken: string;
   },
 ) {
-  // Names go into the subject line, so keep them on one line.
-  const senderName = details.senderName.replace(/s+/g, " ").trim().slice(0, 80) || "A Meetwell member";
-  return send(to, newMessageEmail({ ...common(fullName), ...details, senderName }));
+  // Names go into the subject and the From line, so keep them on one line.
+  const senderName = details.senderName.replace(/\s+/g, " ").trim().slice(0, 80) || "A Meetwell member";
+  // From "Ada Obi via Meetwell", like LinkedIn; replies aren't read, so no reply-to.
+  return send(to, newMessageEmail({ ...common(fullName), ...details, senderName }), {
+    from: messageFromLine(senderName, APP_NAME),
+    replyTo: null,
+  });
 }
 
 /** Approved as a mentor. */

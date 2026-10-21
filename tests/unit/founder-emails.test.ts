@@ -158,7 +158,7 @@ describe("new message email", () => {
     expect(html).toContain("Hi Ada &lt;script&gt;");
     expect(html).toContain("Product Designer · Kuda");
     expect(html).toContain(">T<"); // initials if no photo, symbols ignored
-    expect(text).toContain("only the first one in each conversation");
+    expect(text).toContain("message emails are on");
     expect(html).not.toContain("Tunde <b>"); // escaped in the email body
     expect(html).toContain('href="https://meetwell.me/dashboard/messages/42"');
     expect(text).toContain("https://meetwell.me/unsubscribe/messages?t=11111111-2222-3333-4444-555555555555");
@@ -188,5 +188,25 @@ describe("mentor emails", () => {
     expect(e.subject).toBe("Your messages with Ada end on 24 October");
     expect(e.html).toContain('href="https://meetwell.me/subscribe/ada"');
     expect(e.text).toContain("won't be charged unless you choose to");
+  });
+});
+
+describe("message email sender line", () => {
+  it("keeps every letter of the sender's name", async () => {
+    const { newMessageEmail } = await import("@/lib/founder-emails");
+    const e = newMessageEmail({
+      ...base, fullName: "Ada", senderName: "Abdur-rasheed Idris", senderTitle: null, senderAvatar: null,
+      preview: "Hello", conversationId: 1, offToken: "11111111-2222-3333-4444-555555555555",
+    });
+    expect(e.subject).toBe("Abdur-rasheed Idris sent you a message");
+  });
+});
+
+describe("messageFromLine", () => {
+  it("names the sender via Meetwell and keeps the header safe", async () => {
+    const { messageFromLine } = await import("@/lib/founder-emails");
+    expect(messageFromLine("Abdur-rasheed Idris", "Meetwell")).toBe('"Abdur-rasheed Idris via Meetwell" <messages-noreply@meetwell.me>');
+    expect(messageFromLine('Bad "Name" <x@y>\nNext', "Meetwell")).toBe('"Bad Name x@y Next via Meetwell" <messages-noreply@meetwell.me>');
+    expect(messageFromLine("   ", "Meetwell")).toBe('"A Meetwell member via Meetwell" <messages-noreply@meetwell.me>');
   });
 });

@@ -1006,11 +1006,9 @@ describe("mentor subscriptions and wallet", () => {
   const q = (sql: string, params: unknown[] = []) => db.query(sql, params);
 
   it("lets eligible mentors apply, and only admins approve", async () => {
-    // Account under 14 days old: not yet.
-    expect((await status(SENIOR)).checks.account_age).toBe(false);
-    await expect(as(SENIOR, "select public.apply_as_mentor()")).rejects.toThrow(/Not eligible/);
-    await q("update auth.users set created_at = now() - interval '30 days' where id = $1", [SENIOR]);
+    // A brand-new account can apply; the admin decides.
     const s = await status(SENIOR);
+    expect(Object.keys(s.checks)).not.toContain("account_age");
     expect(Object.values(s.checks).every(Boolean)).toBe(true);
     await as(SENIOR, "select public.apply_as_mentor()");
     expect((await status(SENIOR)).status).toBe("applied");

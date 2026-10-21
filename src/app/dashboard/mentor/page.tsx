@@ -41,7 +41,6 @@ const CHECKS: { key: string; label: string; where: string }[] = [
   { key: "complete", label: "Profile at least 80% complete", where: "/dashboard/matches" },
   { key: "published", label: "Card published", where: "/dashboard/profile" },
   { key: "confirmed", label: "Email confirmed", where: "/dashboard/settings" },
-  { key: "account_age", label: "On Meetwell for at least 14 days", where: "" },
 ];
 
 const WITHDRAWAL = {

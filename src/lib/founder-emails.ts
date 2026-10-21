@@ -422,7 +422,7 @@ export function newMessageEmail({
   const firstName = firstNameOf(fullName);
   const link = `${siteUrl}/dashboard/messages/${conversationId}`;
   const off = messageEmailsOffUrl(siteUrl, offToken);
-  const why = `You're getting this because ${senderName} sent you their first message on ${appName}. We don't email you about every message, only the first one in each conversation.`;
+  const why = "You're receiving this because message emails are on.";
 
   const subject = `${senderName} sent you a message`;
   const text = [
@@ -534,4 +534,13 @@ export function renewalReminderEmail(args: Common & { mentorName: string; mentor
     cta: { href: `${args.siteUrl}/subscribe/${encodeURIComponent(args.mentorSlug)}`, label: `Keep talking to ${first}` },
     after: ["Nothing renews on its own, so you won't be charged unless you choose to."],
   });
+}
+
+/**
+ * The From line for message emails: "Ada Obi via Meetwell" <messages-noreply@meetwell.me>.
+ * One line, and no quotes or angle brackets, which would break the header.
+ */
+export function messageFromLine(senderName: string, appName: string) {
+  const name = senderName.replace(/\s+/g, " ").replace(/["<>\\]/g, "").trim().slice(0, 80) || `A ${appName} member`;
+  return `"${name} via ${appName}" <messages-noreply@meetwell.me>`;
 }
