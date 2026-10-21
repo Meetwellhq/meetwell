@@ -81,10 +81,6 @@ every migration.
 - **Admin (Invites tab)**: `/dashboard/invites`, visible only to admins (`public.admins`).
   Waiting list with Invite/Resend, Members with card status, photo, views, QR scans, saves and
   reminder tags. Database functions refuse non-admins.
-- **Feature a member**: `/dashboard/feature` (admins). Pick a published member, add a note,
-  preview, send to waiting-list people who haven't signed up or unsubscribed. QR image served by
-  `/p/[slug]/qr` (published cards only). `admin_claim_feature_recipients()` records each send in
-  `feature_emails_sent`, so each person gets each feature once; batches of 80.
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `hello@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).
