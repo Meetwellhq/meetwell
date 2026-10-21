@@ -833,3 +833,27 @@ describe("admin account", () => {
     await expect(as(ADMIN, `select public.is_admin_user('${ADMIN}')`)).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("admin metrics", () => {
+  const ADMIN = "abababab-abab-abab-abab-abababababab"; // created in "admin account"
+
+  it("gives admins growth and revenue numbers, and nobody else", async () => {
+    await expect(as("55555555-5555-5555-5555-555555555555", "select public.admin_metrics()")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_metrics()")).rejects.toThrow(/permission denied/);
+
+    const [{ m }] = await as<{ m: Record<string, unknown> }>(ADMIN, "select public.admin_metrics() as m");
+    const [{ users }] = (await db.query<{ users: number }>(
+      "select count(*)::int as users from auth.users u where not exists (select 1 from public.admins a where a.user_id = u.id)",
+    )).rows;
+    expect(Number(m.members)).toBe(users); // admins left out
+    const [{ kobo }] = (await db.query<{ kobo: number }>(
+      "select coalesce(sum(amount_kobo), 0)::int as kobo from public.payments where status = 'success'",
+    )).rows;
+    expect(Number(m.revenue_total_kobo)).toBe(kobo);
+    expect(Number(m.revenue_total_kobo)).toBeGreaterThan(0); // the credits test paid for a pack
+    expect(m.signups_by_week).toHaveLength(12);
+    expect(m.revenue_by_month).toHaveLength(6);
+    const months = m.revenue_by_month as { kobo: number }[];
+    expect(months.reduce((n, x) => n + Number(x.kobo), 0)).toBe(kobo); // all paid this month in tests
+  });
+});

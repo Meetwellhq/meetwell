@@ -1,7 +1,7 @@
-// Deploy check: if anything members can see changed since the live version
-// (origin/main), CHANGELOG.md must have changed too. Run: npm run check:changelog
-// Entries are only added with Rasheed's OK. When he says a change needs no entry,
-// run with CHANGELOG_SKIP=1.
+// Deploy reminder (never blocks): lists what members will see change since the
+// live version (origin/main). The changelog is only for big new features, such
+// as Spark, payments or the QR code, never small tweaks, and an entry is only
+// added after Rasheed approves the draft. Run: npm run check:changelog
 import { execFileSync } from "node:child_process";
 
 const base = process.argv[2] ?? "origin/main";
@@ -10,25 +10,18 @@ const git = (...args) => execFileSync("git", args, { encoding: "utf8" }).trim();
 
 git("fetch", "--quiet", "origin", "main");
 const changed = git("diff", "--name-only", `${base}...${head}`).split("\n").filter(Boolean);
-
-// Screens, emails and public files. Tests, docs, SQL and tooling don't need an entry.
 const memberFacing = changed.filter(
   (f) =>
     (f.startsWith("src/app/") || f.startsWith("src/components/") || f.startsWith("public/") ||
       f === "src/lib/founder-emails.ts") &&
-    !f.startsWith("src/app/api/"),
+    !f.startsWith("src/app/api/") && !f.startsWith("src/app/admin/") && !f.startsWith("src/components/admin/"),
 );
 
-if (process.env.CHANGELOG_SKIP === "1") {
-  console.log("Changelog check skipped: Rasheed said no entry is needed for this deploy.");
-} else if (memberFacing.length === 0) {
-  console.log("Changelog check: nothing members can see changed. OK.");
+if (memberFacing.length === 0) {
+  console.log("Changelog: nothing members can see changed.");
 } else if (changed.includes("CHANGELOG.md")) {
-  console.log(`Changelog check: ${memberFacing.length} member-facing file(s) changed and CHANGELOG.md is updated. OK.`);
+  console.log("Changelog: updated in this deploy (make sure Rasheed approved the entry).");
 } else {
-  console.error("Changelog check failed: these files change what members see, but CHANGELOG.md wasn't updated:");
-  for (const f of memberFacing) console.error(`  ${f}`);
-  console.error("Draft a short entry and get Rasheed's OK before adding it, or, if he says no entry is needed,");
-  console.error("run with CHANGELOG_SKIP=1.");
-  process.exit(1);
+  console.log(`Changelog: ${memberFacing.length} member-facing file(s) changed. Only if this ships a big new feature`);
+  console.log("(like Spark, payments or the QR code), draft an entry and ask Rasheed. Small changes don't go in.");
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { date, naira, NotReady, PageTitle, type PaymentRow, Stats } from "@/components/admin/admin-ui";
 import { Badge, EmptyState } from "@/components/ui/misc";
+import { getUsdRate, usdFromKobo } from "@/lib/fx";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Payments · Admin" };
@@ -12,9 +13,10 @@ const PAYMENT_BADGE = {
 } as const;
 
 export default async function AdminPaymentsPage() {
-  const { data, error } = await (await createClient()).rpc("admin_list_payments");
+  const [{ data, error }, rate] = await Promise.all([(await createClient()).rpc("admin_list_payments"), getUsdRate()]);
   const payments = (data ?? []) as PaymentRow[];
   const paid = payments.filter((p) => p.status === "success");
+  const received = paid.reduce((n, p) => n + p.amount_kobo, 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -27,7 +29,11 @@ export default async function AdminPaymentsPage() {
             columns={3}
             items={[
               { label: "Paid", value: paid.length },
-              { label: "Total received", value: naira(paid.reduce((n, p) => n + p.amount_kobo, 0)) },
+              {
+                label: "Total received",
+                value: rate ? usdFromKobo(received, rate) : naira(received),
+                note: rate ? `${naira(received)} at $1 = ${naira(rate.ngnPerUsd * 100)}` : undefined,
+              },
               { label: "Credits sold", value: paid.reduce((n, p) => n + p.credits, 0) },
             ]}
           />

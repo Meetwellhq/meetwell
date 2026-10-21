@@ -96,7 +96,10 @@ every migration.
   Members (card status, photo, views, QR scans, saves, reminder tags), Announcements, Payments;
   shared bits in `src/components/admin/admin-ui.tsx`. Admin accounts have no card: they're sent from /dashboard and /onboarding to /admin, and are
   left out of Members, announcements and reminders (`20261105000000_admin_account.sql`).
-  `/dashboard/invites` redirects to `/admin`. Database functions refuse non-admins.
+  `/dashboard/invites` redirects to `/admin`. Database functions refuse non-admins. The Overview
+  (`admin_metrics()`, `20261106000000_admin_metrics.sql`) shows revenue, MRR/ARR (run rate: last 30
+  days of credit sales), growth and Spark numbers with two charts; revenue shows in US dollars via
+  `src/lib/fx.ts` (daily rate from open.er-api.com, attribution shown; falls back to naira).
 - **Spark has two sides**, decided by years of experience (`MENTOR_MIN_YEARS` = 4 in
   `src/lib/matching/constants.ts`, same line in SQL): under 4 get introductions; 4+ are only
   recommended (`20261103000000_spark_roles.sql`). Years and field are asked in onboarding (step
@@ -133,7 +136,7 @@ every migration.
   admin area ("Send Spark email", in paced batches; click again for the rest). Each person gets each
   announcement once (`public.announcements_sent`, `20261102000000_announcements.sql`). Template:
   `sparkBetaEmail` in `src/lib/founder-emails.ts`.
-- **Changelog**: written at every deploy (see Deploying). `/changelog` is built from `CHANGELOG.md` (`src/lib/changelog.ts` reads the small
+- **Changelog**: big new features only, with Rasheed's OK (see Deploying). `/changelog` is built from `CHANGELOG.md` (`src/lib/changelog.ts` reads the small
   Markdown subset used there). Linked in the footer. Add a dated `## D Month YYYY: Title` entry per release.
 - **Automatic reminders**: `src/app/api/cron/reminders/route.ts`, scheduled in `vercel.json`
   (08:00 UTC daily). `public.claim_reminders()` picks who is due and records each send in
@@ -149,13 +152,11 @@ every migration.
 ## Deploying
 
 1. Get Rasheed's explicit OK.
-2. **Changelog, with Rasheed's OK first**: look at what changed since the live version
-   (`git log origin/main..HEAD`). Never add an entry on your own: draft it in chat
-   (`## D Month YYYY: Title`, a few plain bullets, only what members see) and wait for his OK.
-   He decides which changes go in; not every change gets an entry. `npm run check:changelog` fails
-   if screens, emails or public files changed without a changelog update; when Rasheed says no
-   entry is needed, run it as `CHANGELOG_SKIP=1 npm run check:changelog`. The `/changelog` page
-   rebuilds from the file on deploy.
+2. **Changelog: big new features only, with Rasheed's OK first.** It's for features like Spark,
+   payments/credits or the QR code, never small changes (forms, dropdowns, copy, layout, fixes).
+   Only when a deploy ships a real new feature, draft an entry in chat (`## D Month YYYY: Title`,
+   a few plain bullets) and wait for his OK. `npm run check:changelog` prints a reminder listing
+   member-facing changes; it never blocks. The `/changelog` page rebuilds from the file on deploy.
 3. Run `npm run check:changelog`, `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run build`.
 4. `git push origin main`. 5. Confirm a new Vercel deployment for that commit becomes READY
 (Vercel MCP `list_deployments`) and check the live site.

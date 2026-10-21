@@ -77,13 +77,20 @@ export function ReminderBadges({ reminders }: { reminders?: Reminder[] }) {
   ));
 }
 
-export function Stats({ items, columns = 4 }: { items: { label: string; value: ReactNode }[]; columns?: 3 | 4 }) {
+export function Stats({
+  items,
+  columns = 4,
+}: {
+  items: { label: string; value: ReactNode; note?: ReactNode }[];
+  columns?: 3 | 4;
+}) {
   return (
     <dl className={`grid grid-cols-2 gap-3 ${columns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-4"}`}>
       {items.map((s) => (
         <div key={s.label} className="rounded-xl border border-border bg-surface p-4">
           <dt className="text-sm text-ink-2">{s.label}</dt>
           <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{s.value}</dd>
+          {s.note && <dd className="mt-0.5 text-xs text-ink-3">{s.note}</dd>}
         </div>
       ))}
     </dl>
