@@ -4,6 +4,13 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
+## 21 October 2026: Easier card editing
+
+- Title and company are now one simple box: pick from the list or type your own.
+- You can update your years of experience on **Edit card**. Spark adjusts to it.
+
+---
+
 ## 21 October 2026: Pick your title and company
 
 - **Professional title** and **company** are now dropdowns, starting with tech careers and
