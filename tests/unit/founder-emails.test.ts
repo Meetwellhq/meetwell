@@ -75,7 +75,7 @@ describe("match email", () => {
         cardUrl: "https://meetwell.me/p/ada",
       },
     });
-    expect(subject).toBe("Your Meetwell match: meet Ada Obi");
+    expect(subject).toBe("Spark: meet Ada Obi");
     expect(text.startsWith("Hi Tunde,")).toBe(true);
     expect(html).toContain("3 more than you");
     expect(html).not.toContain("/qr");
@@ -118,7 +118,7 @@ describe("complete your profile email", () => {
     const { incompleteProfileEmail } = await import("@/lib/founder-emails");
     for (const experienceYears of [1, null]) {
       const e = incompleteProfileEmail({ ...args, hasPhoto: false, experienceYears });
-      expect(e.subject).toBe("Add a photo to get your Meetwell matches");
+      expect(e.subject).toBe("Add a photo to get Spark introductions");
       expect(e.text).toContain("60% complete");
       expect(e.html).toContain("Add my photo");
     }

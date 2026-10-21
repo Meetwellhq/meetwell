@@ -26,13 +26,13 @@ export function MatchingPrefsForm({ initial }: { initial: MatchingPrefs }) {
     <form action={action} className="flex flex-col gap-5 rounded-xl border border-border bg-surface p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-medium text-ink">Find me matches</p>
+          <p className="font-medium text-ink">Turn on Spark</p>
           <p className="mt-0.5 text-sm text-ink-2">
             Get recommendations of experienced people to meet. With 4+ years of experience and a profile photo,
             you&apos;ll also be recommended to people earlier in their careers.
           </p>
         </div>
-        <Switch checked={optIn} onChange={setOptIn} label="Find me matches" showState={false} />
+        <Switch checked={optIn} onChange={setOptIn} label="Turn on Spark" showState={false} />
         {optIn && <input type="hidden" name="optIn" value="on" />}
       </div>
 

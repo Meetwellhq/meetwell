@@ -40,7 +40,7 @@ const toSeeker = (r: Omit<DueRow, "user_id" | "email" | "profile_id">): Seeker =
 });
 
 /**
- * Daily AI Network Matching run (see vercel.json). Vercel sends
+ * Daily Spark (AI matching) run (see vercel.json). Vercel sends
  * `Authorization: Bearer <CRON_SECRET>`; the database checks the same secret.
  */
 export async function GET(request: Request) {

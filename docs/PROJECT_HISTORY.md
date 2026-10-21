@@ -87,6 +87,8 @@ No personal data or secrets belong in this file: the repo is public.
     - Claude (`claude-opus-5-5`, low effort, structured output) chooses from a rule-ranked
       shortlist and writes the reason; falls back to rules without an API key.
     - Paid plans with more matches were discussed for later (e.g. Paystack), not built.
+    - Named **Spark** for members ("Spark introduces you to someone a step ahead of you").
+      "Gravity" was tried and rejected. Release notes live in `CHANGELOG.md`.
 
 ## Lessons and gotchas
 

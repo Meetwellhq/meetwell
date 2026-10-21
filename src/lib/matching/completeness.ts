@@ -1,5 +1,5 @@
 /**
- * Profile completeness for AI Network Matching: ten items, 10% each. Members
+ * Profile completeness for Spark (AI matching): ten items, 10% each. Members
  * need 80% to get matches or be recommended. Keep in step with
  * public.profile_completeness() in the database, which enforces it.
  */
@@ -19,7 +19,7 @@ export type CompletenessInput = {
   city: string | null;
 };
 
-/** Where each item is filled in: the card editor or the matching details on the Matches page. */
+/** Where each item is filled in: the card editor or the matching details on the Spark page. */
 export type CompletenessItem = { label: string; done: boolean; where: "card" | "matching" };
 
 const filled = (v: string | null) => !!v && v.trim() !== "";

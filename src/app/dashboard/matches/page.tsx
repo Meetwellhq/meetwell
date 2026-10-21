@@ -9,7 +9,7 @@ import { publicProfilePath } from "@/lib/config";
 import { MATCHING_MIN_COMPLETENESS, profileCompleteness } from "@/lib/matching/completeness";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Matches" };
+export const metadata: Metadata = { title: "Spark" };
 
 type MatchRow = {
   id: number;
@@ -62,11 +62,11 @@ export default async function MatchesPage() {
     <div className="flex max-w-3xl flex-col gap-10">
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink">
-          <Sparkles className="size-5 text-accent" aria-hidden /> AI Network Matching
+          <Sparkles className="size-5 text-accent" aria-hidden /> Spark
         </h1>
         <p className="mt-1 text-ink-2">
-          We recommend experienced people in your field (4+ years) you can learn from and network with, based on
-          your field, experience and what you&apos;re looking for. Up to one new match a day, by email and here.
+          Spark introduces you to someone a step ahead of you: an experienced person in your field (4+ years) you
+          can learn from. Up to one new introduction a day, by email and here.
         </p>
       </div>
 
@@ -74,7 +74,7 @@ export default async function MatchesPage() {
         <div className="rounded-xl border border-border bg-surface">
           <EmptyState
             title="Create your card first"
-            description="Matching uses your card, so set it up and publish it to get matches."
+            description="Spark uses your card, so set it up and publish it to get matches."
             action={<ButtonLink href="/onboarding">Create your card</ButtonLink>}
           />
         </div>
@@ -155,7 +155,7 @@ export default async function MatchesPage() {
           <div className="rounded-xl border border-border bg-surface">
             <EmptyState
               title="No matches yet"
-              description="Turn on matching above. When we find someone worth meeting, they'll appear here and we'll email you."
+              description="Turn on Spark above. When we find someone worth meeting, they'll appear here and we'll email you."
             />
           </div>
         ) : (

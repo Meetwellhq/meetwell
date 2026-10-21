@@ -42,7 +42,7 @@ export default function PrivacyPage() {
           <li>whether each contact detail or link is Public or Private.</li>
         </ul>
         <p className="mt-3">
-          <strong>If you turn on AI Network Matching:</strong> your field, years of experience, what you&apos;re looking
+          <strong>If you turn on Spark (our AI matching feature):</strong> your field, years of experience, what you&apos;re looking
           for and your city, plus a record of the matches we send you. These details are private and aren&apos;t shown
           on your card.
         </p>
@@ -96,10 +96,10 @@ export default function PrivacyPage() {
             interest in running a safe, working product.
           </li>
           <li>
-            <strong>To recommend people for you to meet (AI Network Matching)</strong>, only if you turn it on. We
+            <strong>To recommend people for you to meet (Spark)</strong>, only if you turn it on. We
             compare your matching details, job title and bio with other members who also turned it on, and use AI to
             choose a match and explain why. When you&apos;re recommended to someone, they see your public card and the
-            reason, never your private matching details. You can turn matching off anytime on your Matches page.
+            reason, never your private matching details. You can turn Spark off anytime on your Spark page.
           </li>
           <li><strong>To meet legal obligations</strong>, where Nigerian law requires it.</li>
         </ul>
@@ -117,7 +117,7 @@ export default function PrivacyPage() {
           <li><strong>Resend</strong>: sending emails;</li>
           <li>
             <strong>Anthropic</strong> (Claude): choosing matches and writing the reason, for members who turn on
-            matching. Only the profile details needed for matching are sent.
+            Spark. Only the profile details needed for matching are sent.
           </li>
         </ul>
         <p className="mt-3">

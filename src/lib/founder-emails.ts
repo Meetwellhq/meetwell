@@ -235,7 +235,7 @@ export type MatchedMember = {
   cardUrl: string;
 };
 
-/** AI Network Matching: one recommendation, with the reason and a button to their card. */
+/** Spark (AI matching): one recommendation, with the reason and a button to their card. */
 export function matchEmail({
   fullName, appName, siteUrl, photoUrl, replyEmail, match, reason,
 }: Common & { match: MatchedMember; reason: string }) {
@@ -245,9 +245,9 @@ export function matchEmail({
   const matchesUrl = `${siteUrl}/dashboard/matches`;
   const intro = `Here's someone I think you should meet on ${appName}.`;
   const nudge = `If it feels right, save ${matchFirst}'s contact and send a short hello. Their card has a ready-made first message to get you started.`;
-  const why = `You're getting this because matching is on. You can turn it off anytime on your Matches page.`;
+  const why = `You're getting this because Spark is on. You can turn it off anytime on your Spark page.`;
 
-  const subject = `Your ${appName} match: meet ${match.fullName}`;
+  const subject = `Spark: meet ${match.fullName}`;
   const text = [
     `Hi ${firstName},`,
     intro,
@@ -289,9 +289,9 @@ export function matchEmail({
       p(intro),
       card,
       p(nudge),
-      `<p>Questions or feedback on your matches? Write to me at <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
+      `<p>Questions or feedback on Spark? Write to me at <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
     ].join("\n  "),
-    footerHtml: `${escapeHtml(why)} <a href="${matchesUrl}" style="color:#5c5c57">Matches page</a>.`,
+    footerHtml: `You're getting this because Spark is on. You can turn it off anytime on your <a href="${matchesUrl}" style="color:#5c5c57">Spark page</a>.`,
   });
   return { subject, text, html };
 }
@@ -302,23 +302,23 @@ export const RECOMMENDABLE_MIN_YEARS = 4;
 /**
  * Published card under 80% complete. Without a photo, the copy depends on
  * experience: 4+ years hear why people will want to learn from them; everyone
- * else hears that a photo is the first step to getting matches.
+ * else hears that a photo is the first step to getting Spark introductions.
  */
 export function incompleteProfileEmail(
   args: Common & { completeness: number; hasPhoto: boolean; experienceYears: number | null; fieldName: string | null },
 ) {
   const { appName, siteUrl, completeness, hasPhoto, experienceYears, fieldName } = args;
   const progress = `Your ${appName} profile is ${completeness}% complete.`;
-  const finish = "Then add the last few details listed on your Matches page.";
+  const finish = "Then add the last few details listed on your Spark page.";
 
-  // Photos are uploaded in the card editor; the Matches page lists everything else.
+  // Photos are uploaded in the card editor; the Spark page lists everything else.
   if (hasPhoto) {
     return reminder({
       ...args,
       subject: `Your ${appName} profile is ${completeness}% done`,
       before: [
-        `${progress} Once it reaches 80%, you'll start getting AI matches: more experienced people in your field worth meeting, up to one a day.`,
-        "A few more details will get you there, and you can see exactly what's missing on your Matches page.",
+        `${progress} Once it reaches 80%, you'll start getting Spark introductions: more experienced people in your field worth meeting, up to one a day.`,
+        "A few more details will get you there, and you can see exactly what's missing on your Spark page.",
       ],
       cta: { href: `${siteUrl}/dashboard/matches`, label: "Complete my profile" },
       after: [ONLY_ONCE],
@@ -331,7 +331,7 @@ export function incompleteProfileEmail(
       ...args,
       subject: "People want to learn from you. Add your photo",
       before: [
-        `With ${experienceYears} years${inField}, you're exactly the kind of person people earlier in their careers want to meet and learn from. ${appName} recommends experienced members like you to them, every day.`,
+        `With ${experienceYears} years${inField}, you're exactly the kind of person people earlier in their careers want to meet and learn from. Our Spark feature introduces experienced members like you to them every day.`,
         `A clear photo makes all the difference: people are far more likely to save your contact and reach out when they can see who they're meeting. ${progress} Add your photo and finish your profile to start being recommended.`,
       ],
       cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },
@@ -341,9 +341,9 @@ export function incompleteProfileEmail(
 
   return reminder({
     ...args,
-    subject: `Add a photo to get your ${appName} matches`,
+    subject: "Add a photo to get Spark introductions",
     before: [
-      `${progress} Once it reaches 80%, ${appName} will start recommending experienced people in your field for you to meet and learn from, up to one a day.`,
+      `${progress} Once it reaches 80%, Spark will start recommending experienced people in your field for you to meet and learn from, up to one a day.`,
       "The best first step is a clear photo of you. Experienced members are far more likely to reply when they can see who's reaching out.",
     ],
     cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },

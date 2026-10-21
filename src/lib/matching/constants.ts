@@ -1,4 +1,4 @@
-/** AI Network Matching: shared labels and limits. Values must match the database checks. */
+/** Spark (AI matching): shared labels and limits. Values must match the database checks. */
 
 export const FIELDS = [
   { value: "product_design", label: "Product design" },

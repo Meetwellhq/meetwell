@@ -86,7 +86,7 @@ every migration.
 - **Admin (Invites tab)**: `/dashboard/invites`, visible only to admins (`public.admins`).
   Waiting list with Invite/Resend, Members with card status, photo, views, QR scans, saves and
   reminder tags. Database functions refuse non-admins.
-- **AI Network Matching**: `/dashboard/matches` (opt-in + private fields: field, experience,
+- **Spark (AI Network Matching)**: `/dashboard/matches` (shown to members as "Spark"; the URL stays /matches so old email links work) (opt-in + private fields: field, experience,
   looking for, city; list of matches). Recommends only people with 4+ years, a profile
   photo and more experience than the member, in the same or a related field
   (`20261031000000_matching_min_experience.sql`). No monthly cap; at most one match per member per day. Daily job
