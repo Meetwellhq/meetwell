@@ -1,7 +1,5 @@
 /** AI Network Matching: shared labels and limits. Values must match the database checks. */
 
-export const FREE_MATCHES_PER_MONTH = 5;
-
 export const FIELDS = [
   { value: "product_design", label: "Product design" },
   { value: "software_engineering", label: "Software engineering" },

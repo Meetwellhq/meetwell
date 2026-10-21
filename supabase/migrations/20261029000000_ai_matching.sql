@@ -1,11 +1,11 @@
 -- AI Network Matching.
 --
--- Members who opt in get one-way recommendations of people worth meeting, based
--- on their field, experience and what they're looking for. A daily job (Vercel
--- Cron → /api/cron/matches) picks who is due, asks these functions for scored
--- candidates, lets Claude choose and explain the best one, then records it.
+-- Members who opt in get one-way recommendations of more experienced people in
+-- their field (or a related one) to learn from and network with. A daily job
+-- (Vercel Cron → /api/cron/matches) picks who is due, asks these functions for
+-- scored candidates, lets Claude choose and explain the best one, then records it.
 --
--- Free plan: up to 5 matches per calendar month, at least 5 days apart.
+-- No monthly cap: at most one match per member per day (the job runs daily).
 -- The matching fields are private: they are not part of the public card.
 
 -- ---------------------------------------------------------------------------
@@ -87,8 +87,8 @@ $$;
 revoke all on function public.check_cron_token(text) from public, anon, authenticated;
 
 -- Members due a match today: opted in, confirmed, published card with a field,
--- under the monthly limit, and no match in the last 5 days. Random order.
-create or replace function public.matching_due_users(p_token text, p_limit integer default 30, p_monthly_limit integer default 5)
+-- and no match in the last 20 hours (so at most one a day). Random order.
+create or replace function public.matching_due_users(p_token text, p_limit integer default 40)
 returns table (
   user_id uuid, email text, profile_id uuid, full_name text, title text, organization text, bio text,
   field text, experience_years smallint, looking_for text[], city text
@@ -110,25 +110,24 @@ begin
       and p.status = 'published'
       and p.field is not null
       and u.email_confirmed_at is not null
-      and (select count(*) from public.matches m
-           where m.user_id = u.id and m.created_at >= date_trunc('month', now())) < p_monthly_limit
       and not exists (select 1 from public.matches m
-           where m.user_id = u.id and m.created_at > now() - interval '5 days')
+           where m.user_id = u.id and m.created_at > now() - interval '20 hours')
     order by random()
-    limit greatest(least(coalesce(p_limit, 30), 100), 0);
+    limit greatest(least(coalesce(p_limit, 40), 200), 0);
 end;
 $$;
-revoke all on function public.matching_due_users(text, integer, integer) from public;
-grant execute on function public.matching_due_users(text, integer, integer) to anon;
+revoke all on function public.matching_due_users(text, integer) from public;
+grant execute on function public.matching_due_users(text, integer) to anon;
 
--- Scored candidates for one member. Rules (highest first):
+-- Scored candidates for one member: only people with MORE experience, in the
+-- same or a related field. Scores (highest first):
 --   same field +50, related field +20;
---   wants a mentor and the other person mentors, 2+ years ahead: +40;
---   same field, 2 to 8 years ahead (even without asking): +30;
---   both want peers and within 2 years: +25; both want collaborators: +20;
---   same city +10; has a photo +5.
--- Never: themselves, someone already recommended to them, or anyone recommended
--- 3+ times in the last week (so experienced people aren't flooded).
+--   5 points per year of extra experience, up to 10 years (+50);
+--   the member wants a mentor and the other person mentors: +30;
+--   same city +10; has a photo +5;
+--   minus 5 for each time they were recommended in the last week, so
+--   recommendations spread across experienced people instead of one person.
+-- Never: themselves, or someone already recommended to this member.
 create or replace function public.matching_candidates(p_token text, p_user_id uuid, p_limit integer default 8)
 returns table (
   profile_id uuid, slug text, full_name text, title text, organization text, bio text,
@@ -153,29 +152,24 @@ begin
   with scored as (
     select c.*,
       (case when c.field = s.field then 50 when public.field_group(c.field) = public.field_group(s.field) then 20 else 0 end)
-      + (case when 'mentor' = any(s.looking_for) and 'mentee' = any(c.looking_for)
-               and coalesce(c.experience_years, 0) >= coalesce(s.experience_years, 0) + 2 then 40 else 0 end)
-      + (case when c.field = s.field
-               and coalesce(c.experience_years, 0) - coalesce(s.experience_years, 0) between 2 and 8 then 30 else 0 end)
-      + (case when 'peers' = any(s.looking_for) and 'peers' = any(c.looking_for)
-               and abs(coalesce(c.experience_years, 0) - coalesce(s.experience_years, 0)) <= 2 then 25 else 0 end)
-      + (case when 'collaborators' = any(s.looking_for) and 'collaborators' = any(c.looking_for) then 20 else 0 end)
+      + least(coalesce(c.experience_years, 0) - coalesce(s.experience_years, 0), 10) * 5
+      + (case when 'mentor' = any(s.looking_for) and 'mentee' = any(c.looking_for) then 30 else 0 end)
       + (case when c.city is not null and s.city is not null and lower(c.city) = lower(s.city) then 10 else 0 end)
-      + (case when c.avatar_url is not null then 5 else 0 end) as score
+      + (case when c.avatar_url is not null then 5 else 0 end)
+      - 5 * (select count(*)::integer from public.matches m
+             where m.matched_profile_id = c.id and m.created_at > now() - interval '7 days') as score
     from public.profiles c
     where c.matching_opt_in
       and c.status = 'published'
       and c.field is not null
       and c.user_id <> p_user_id
       and public.field_group(c.field) = public.field_group(s.field)
+      and coalesce(c.experience_years, 0) > coalesce(s.experience_years, 0)
       and not exists (select 1 from public.matches m where m.user_id = p_user_id and m.matched_profile_id = c.id)
-      and (select count(*) from public.matches m
-           where m.matched_profile_id = c.id and m.created_at > now() - interval '7 days') < 3
   )
   select sc.id, sc.slug, sc.full_name, sc.professional_title, sc.organization, sc.bio,
     sc.field, sc.experience_years, sc.looking_for, sc.city, sc.avatar_url is not null, sc.score
   from scored sc
-  where sc.score > 0
   order by sc.score desc, random()
   limit greatest(least(coalesce(p_limit, 8), 20), 0);
 end;
@@ -184,10 +178,8 @@ revoke all on function public.matching_candidates(text, uuid, integer) from publ
 grant execute on function public.matching_candidates(text, uuid, integer) to anon;
 
 -- Records a match. Returns its id, or null if it was already recorded or the
--- member reached their limit in the meantime.
-create or replace function public.record_match(
-  p_token text, p_user_id uuid, p_profile_id uuid, p_reason text, p_monthly_limit integer default 5
-)
+-- member already got a match in the last 20 hours.
+create or replace function public.record_match(p_token text, p_user_id uuid, p_profile_id uuid, p_reason text)
 returns bigint
 language plpgsql
 volatile
@@ -198,8 +190,8 @@ declare
   v_id bigint;
 begin
   perform public.check_cron_token(p_token);
-  if (select count(*) from public.matches m
-      where m.user_id = p_user_id and m.created_at >= date_trunc('month', now())) >= p_monthly_limit then
+  if exists (select 1 from public.matches m
+             where m.user_id = p_user_id and m.created_at > now() - interval '20 hours') then
     return null;
   end if;
   insert into public.matches (user_id, matched_profile_id, reason)
@@ -209,8 +201,8 @@ begin
   return v_id;
 end;
 $$;
-revoke all on function public.record_match(text, uuid, uuid, text, integer) from public;
-grant execute on function public.record_match(text, uuid, uuid, text, integer) to anon;
+revoke all on function public.record_match(text, uuid, uuid, text) from public;
+grant execute on function public.record_match(text, uuid, uuid, text) to anon;
 
 create or replace function public.mark_match_emailed(p_token text, p_match_id bigint)
 returns void

@@ -515,63 +515,71 @@ describe("AI network matching", () => {
   });
 
   it("refuses callers without the job secret, and keeps matches private", async () => {
-    await expect(as(null, "select * from public.matching_due_users('wrong', 30, 5)")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.matching_due_users('wrong', 30)")).rejects.toThrow(/Not allowed/);
     await expect(as(null, `select * from public.matching_candidates('wrong', '${JUNIOR}', 8)`)).rejects.toThrow(/Not allowed/);
-    await expect(as(null, `select public.record_match('wrong', '${JUNIOR}', gen_random_uuid(), 'x', 5)`)).rejects.toThrow(/Not allowed/);
+    await expect(as(null, `select public.record_match('wrong', '${JUNIOR}', gen_random_uuid(), 'x')`)).rejects.toThrow(/Not allowed/);
     await expect(as(JUNIOR, "select * from public.matches")).rejects.toThrow(/permission denied/);
     await expect(as(null, "select * from public.my_matches()")).rejects.toThrow(/permission denied/);
   });
 
-  it("recommends the 4-year designer to the 1-year designer first, never opted-out people", async () => {
+  it("recommends only more experienced people, the 4-year designer first", async () => {
     const cands = await as<{ slug: string; score: number }>(
       null,
       `select slug, score from public.matching_candidates('${SECRET}', '${JUNIOR}', 8)`,
     );
     expect(cands[0].slug).toBe("senior");
-    expect(cands.map((c) => c.slug)).not.toContain("optout"); // not opted in
-    expect(cands.map((c) => c.slug)).not.toContain("marketer"); // unrelated field
-    expect(cands.map((c) => c.slug)).not.toContain("junior"); // not themselves
-    // The engineer is in a related field, so can appear lower down.
-    const engineer = cands.find((c) => c.slug === "engineer");
-    if (engineer) expect(engineer.score).toBeLessThan(cands[0].score);
+    const slugs = cands.map((c) => c.slug);
+    expect(slugs).not.toContain("optout"); // not opted in
+    expect(slugs).not.toContain("marketer"); // unrelated field
+    expect(slugs).not.toContain("junior"); // not themselves
+    expect(slugs).toContain("engineer"); // related field, 2 years ahead, lower score
+    expect(cands.find((c) => c.slug === "engineer")!.score).toBeLessThan(cands[0].score);
+
+    // Never the other way round: the senior is never shown people with less experience.
+    const forSenior = await as<{ slug: string }>(
+      null,
+      `select slug from public.matching_candidates('${SECRET}', '${SENIOR}', 8)`,
+    );
+    expect(forSenior.map((c) => c.slug)).not.toContain("junior");
+    expect(forSenior.map((c) => c.slug)).not.toContain("engineer");
   });
 
-  it("only lists members who are due, records matches once, and shows them to the member", async () => {
-    const due = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50, 5)`);
+  it("has no monthly cap, but at most one match a day and never the same person twice", async () => {
+    const due = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`);
     const dueEmails = due.map((d) => d.email);
     expect(dueEmails).toEqual(expect.arrayContaining(["junior@test", "senior@test", "engineer@test", "marketer@test"]));
     expect(dueEmails).not.toContain("optout@test");
 
     const [{ id: seniorId }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'senior'")).rows;
-    const [{ m }] = await as<{ m: string | null }>(
-      null,
-      `select public.record_match('${SECRET}', '${JUNIOR}', '${seniorId}', 'Ada is 3 years ahead of you in product design and mentors.', 5) as m`,
-    );
-    expect(m).not.toBeNull();
-    const [{ again }] = await as<{ again: string | null }>(
-      null,
-      `select public.record_match('${SECRET}', '${JUNIOR}', '${seniorId}', 'again', 5) as again`,
-    );
-    expect(again).toBeNull(); // no repeat recommendations
+    const [{ id: engId }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'engineer'")).rows;
+    const record = (profileId: string, reason: string) =>
+      as<{ m: string | null }>(null, `select public.record_match('${SECRET}', '${JUNIOR}', '${profileId}', '${reason}') as m`);
 
-    // Recently matched, so not due again for 5 days; and the senior isn't suggested twice.
-    const dueAfter = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50, 5)`);
+    expect((await record(seniorId, "Ada is 3 years ahead of you in product design and mentors."))[0].m).not.toBeNull();
+    expect((await record(engId, "x"))[0].m).toBeNull(); // already had one today
+
+    const dueAfter = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`);
     expect(dueAfter.map((d) => d.email)).not.toContain("junior@test");
-    const cands = await as<{ slug: string }>(null, `select slug from public.matching_candidates('${SECRET}', '${JUNIOR}', 8)`);
-    expect(cands.map((c) => c.slug)).not.toContain("senior");
 
-    const mine = await as<{ slug: string; reason: string }>(JUNIOR, "select slug, reason from public.my_matches()");
-    expect(mine).toEqual([{ slug: "senior", reason: "Ada is 3 years ahead of you in product design and mentors." }]);
-    expect(await as(JUNIOR, "select public.my_matches_this_month() as n")).toEqual([{ n: 1 }]);
+    // A day later: due again, and can get the next person (no monthly cap).
+    await db.exec("update public.matches set created_at = now() - interval '1 day'");
+    const dueNextDay = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`);
+    expect(dueNextDay.map((d) => d.email)).toContain("junior@test");
+    const cands = await as<{ slug: string }>(null, `select slug from public.matching_candidates('${SECRET}', '${JUNIOR}', 8)`);
+    expect(cands.map((c) => c.slug)).not.toContain("senior"); // never twice
+    expect((await record(engId, "Kemi has 2 more years in product and tech."))[0].m).not.toBeNull();
+    expect((await record(seniorId, "again"))[0].m).toBeNull();
+
+    const mine = await as<{ slug: string }>(JUNIOR, "select slug from public.my_matches()");
+    expect(mine.map((m) => m.slug).sort()).toEqual(["engineer", "senior"]);
     expect(await as(SENIOR, "select * from public.my_matches()")).toEqual([]); // one-way
   });
 
-  it("stops at the monthly limit", async () => {
-    const [{ id: engId }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'engineer'")).rows;
-    const [{ m }] = await as<{ m: string | null }>(
+  it("recommends nobody when no one in the field has more experience", async () => {
+    const before = await as<{ slug: string; score: number }>(
       null,
-      `select public.record_match('${SECRET}', '${JUNIOR}', '${engId}', 'x', 1) as m`,
+      `select slug, score from public.matching_candidates('${SECRET}', '${MARKETER}', 8)`,
     );
-    expect(m).toBeNull(); // limit of 1 already used this month
+    expect(before).toEqual([]); // nobody in growth with more experience
   });
 });

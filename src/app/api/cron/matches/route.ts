@@ -1,6 +1,5 @@
 import { publicProfileUrl } from "@/lib/config";
 import { sendMatchEmail } from "@/lib/email";
-import { FREE_MATCHES_PER_MONTH } from "@/lib/matching/constants";
 import { chooseMatch, type Candidate, type Seeker } from "@/lib/matching/engine";
 import { getPublicProfile } from "@/lib/profiles/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -8,10 +7,10 @@ import { createClient } from "@/lib/supabase/server";
 export const maxDuration = 60;
 
 // Keep each run comfortably inside the time limit; anyone not reached today is
-// still due tomorrow.
-const USERS_PER_RUN = 12;
-const PARALLEL = 3;
-const STOP_STARTING_AFTER_MS = 40_000;
+// first in line tomorrow (due members are picked in random order each day).
+const USERS_PER_RUN = 60;
+const PARALLEL = 6;
+const STOP_STARTING_AFTER_MS = 45_000;
 
 type DueRow = {
   user_id: string;
@@ -55,7 +54,6 @@ export async function GET(request: Request) {
   const { data: due, error } = await supabase.rpc("matching_due_users", {
     p_token: secret,
     p_limit: USERS_PER_RUN,
-    p_monthly_limit: FREE_MATCHES_PER_MONTH,
   });
   if (error) {
     console.error("matching_due_users failed", error.code, error.message);
@@ -92,10 +90,9 @@ export async function GET(request: Request) {
       p_user_id: user.user_id,
       p_profile_id: choice.candidate.profileId,
       p_reason: choice.reason,
-      p_monthly_limit: FREE_MATCHES_PER_MONTH,
     });
     if (recordError) throw new Error(`record_match: ${recordError.message}`);
-    if (matchId === null) return; // already matched, or at the limit
+    if (matchId === null) return; // already matched with them, or already had a match today
     tally.matched++;
     if (choice.by === "claude") tally.byClaude++;
 

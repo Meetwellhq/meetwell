@@ -6,7 +6,6 @@ import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert, EmptyState } from "@/components/ui/misc";
 import { publicProfilePath } from "@/lib/config";
-import { FREE_MATCHES_PER_MONTH } from "@/lib/matching/constants";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Matches" };
@@ -47,8 +46,8 @@ export default async function MatchesPage() {
           <Sparkles className="size-5 text-accent" aria-hidden /> AI Network Matching
         </h1>
         <p className="mt-1 text-ink-2">
-          We look at your field, experience and what you&apos;re looking for, and recommend people worth meeting. Up to{" "}
-          {FREE_MATCHES_PER_MONTH} matches a month, by email and here.
+          We recommend more experienced people in your field you can learn from and network with, based on your
+          field, experience and what you&apos;re looking for. Up to one new match a day, by email and here.
         </p>
       </div>
 
@@ -84,7 +83,7 @@ export default async function MatchesPage() {
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="text-lg font-semibold text-ink">Your matches</h2>
           <p className="text-sm text-ink-3">
-            {usedThisMonth} of {FREE_MATCHES_PER_MONTH} this month
+            {usedThisMonth} this month
           </p>
         </div>
         {rows.length === 0 ? (
