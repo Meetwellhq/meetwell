@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { ProfileEditor } from "@/components/editor/profile-editor";
 import { getSiteUrl } from "@/lib/config";
 import { getOwnProfile } from "@/lib/profiles/queries";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Edit card" };
 
@@ -12,6 +12,12 @@ export default async function EditProfilePage() {
   if (!user) redirect("/sign-in");
   const profile = await getOwnProfile();
   if (!profile) redirect("/onboarding");
+  // Spark details live on the profile row but outside the card fields.
+  const { data: spark } = await (await createClient())
+    .from("profiles")
+    .select("field, experience_years")
+    .eq("id", profile.id)
+    .maybeSingle();
 
   return (
     <>
@@ -24,6 +30,7 @@ export default async function EditProfilePage() {
         userId={user.id}
         email={user.email}
         siteHost={getSiteUrl().replace(/^https?:\/\//, "")}
+        initialExperience={{ field: spark?.field ?? "", experienceYears: spark?.experience_years?.toString() ?? "" }}
       />
     </>
   );

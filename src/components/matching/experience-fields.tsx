@@ -1,7 +1,7 @@
 "use client";
 
 import { Field, Input, Select } from "@/components/ui/field";
-import { FIELDS } from "@/lib/matching/constants";
+import { FIELDS, isMentor, MENTOR_MIN_YEARS } from "@/lib/matching/constants";
 
 export type Experience = { field: string; experienceYears: string };
 
@@ -15,9 +15,13 @@ export function ExperienceFields({
   onChange: (next: Experience) => void;
   errors?: Record<string, string>;
 }) {
+  const years = value.experienceYears.trim() === "" ? null : Number(value.experienceYears);
+  const hint = isMentor(years)
+    ? "You'll appear as a mentor on Spark, so people earlier in their careers can be introduced to you."
+    : `In whole years. With ${MENTOR_MIN_YEARS} or more, you can appear as a mentor on Spark and be introduced to people earlier in their careers.`;
   return (
     <div className="flex flex-col gap-5">
-      <Field label="Years of experience" error={errors.experienceYears} hint="In your work or field, in whole years.">
+      <Field label="Years of experience" error={errors.experienceYears} hint={hint}>
         {({ id, describedBy, invalid }) => (
           <Input
             id={id}

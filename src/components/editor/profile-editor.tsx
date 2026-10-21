@@ -20,7 +20,7 @@ type Props = {
   userId: string;
   email: string | null;
   siteHost: string;
-  /** Years of experience and field (onboarding only; saved separately from the card). */
+  /** Years of experience and field (saved separately from the card; never shown on it). */
   initialExperience?: Experience;
 };
 
@@ -50,6 +50,13 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
   const [showPreview, setShowPreview] = useState(false);
   const [experience, setExperience] = useState<Experience>(initialExperience ?? { field: "", experienceYears: "" });
   const [experienceErrors, setExperienceErrors] = useState<Errors>({});
+  const [experienceDirty, setExperienceDirty] = useState(false);
+  const changeExperience = (next: Experience) => {
+    setExperience(next);
+    setExperienceErrors({});
+    setExperienceDirty(true);
+    setDirty(true);
+  };
 
   const slugLocked = !!initial?.publishedAt;
 
@@ -136,14 +143,7 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
         <div className="mt-8">
           {current.key === "basics" && <BasicsSection values={values} errors={errors} set={set} userId={userId} slugLocked={slugLocked} siteHost={siteHost} />}
           {current.key === "experience" && (
-            <ExperienceFields
-              value={experience}
-              onChange={(next) => {
-                setExperience(next);
-                setExperienceErrors({});
-              }}
-              errors={experienceErrors}
-            />
+            <ExperienceFields value={experience} onChange={changeExperience} errors={experienceErrors} />
           )}
           {current.key === "contact" && <ContactSection values={values} errors={errors} set={set} />}
           {current.key === "social" && <SocialSection values={values} errors={errors} set={set} />}
@@ -180,6 +180,16 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
   // ----- Edit mode: all sections with a live preview -----
   const save = () =>
     startTransition(async () => {
+      // Experience is saved on its own, and only when changed (older cards may not have it yet).
+      if (experienceDirty) {
+        const saved = await saveExperience(experience);
+        setExperienceErrors(saved.fieldErrors ?? {});
+        if (!saved.ok) {
+          toast(saved.error ?? "Please fix your experience details.", "error");
+          return;
+        }
+        setExperienceDirty(false);
+      }
       const res = await submit(false);
       if (res.ok) {
         toast(initial?.status === "published" ? "Saved. Your public card is updated." : "Saved.");
@@ -191,6 +201,10 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
 
   const sections = [
     { title: "About you", body: <BasicsSection values={values} errors={errors} set={set} userId={userId} slugLocked={slugLocked} siteHost={siteHost} /> },
+    {
+      title: "Your experience",
+      body: <ExperienceFields value={experience} onChange={changeExperience} errors={experienceErrors} />,
+    },
     { title: "Contact details", body: <ContactSection values={values} errors={errors} set={set} /> },
     { title: "Social links", body: <SocialSection values={values} errors={errors} set={set} /> },
     { title: "Networking goals", body: <GoalsSection values={values} errors={errors} set={set} /> },

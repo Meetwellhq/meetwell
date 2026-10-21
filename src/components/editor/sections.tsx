@@ -72,8 +72,7 @@ export function BasicsSection({
               onChange={(v) => set("title", v)}
               groups={TITLE_GROUPS.map((g) => ({ label: g.label, options: g.titles }))}
               maxLength={LIMITS.title}
-              placeholder="Type your title"
-              otherLabel="Other (type your own)"
+              placeholder="Pick or type your title"
               autoComplete="organization-title"
             />
           )}
@@ -88,8 +87,7 @@ export function BasicsSection({
               onChange={(v) => set("organization", v)}
               groups={[{ label: "Companies", options: COMPANIES.map((c) => c.name) }]}
               maxLength={LIMITS.organization}
-              placeholder="Type your company, organization or school"
-              otherLabel="Other (type your own)"
+              placeholder="Pick or type your company"
               autoComplete="organization"
             />
           )}
