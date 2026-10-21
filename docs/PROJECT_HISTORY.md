@@ -39,7 +39,7 @@ No personal data or secrets belong in this file: the repo is public.
   tall, 6px corners, light shadow.
 - QR codes carry the Meetwell logo in the middle (error correction H).
 - Emails: personal notes from "Rasheed from Meetwell" with his photo in the sign-off; replies
-  go to hello@meetwell.me (sent from a no-reply address, so the email says where to write).
+  go to support@meetwell.me (hello@ until 21 Oct 2026). Emails come from a no-reply address, so they say where to write.
   Match email card: soft green background, no outline, white "Why we matched you" box,
   "Say hello to {name} →" button, profile photo or initials. He asked to remove a QR code
   from the match email in favour of a single CTA.

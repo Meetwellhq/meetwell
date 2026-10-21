@@ -1,6 +1,6 @@
 export const APP_NAME = "Meetwell";
 export const APP_TAGLINE = "Meet someone. Make it a connection.";
-export const SUPPORT_EMAIL = "hello@meetwell.me";
+export const SUPPORT_EMAIL = "support@meetwell.me";
 /** The registered company behind Meetwell (CAC, Companies and Allied Matters Act 2020). */
 export const COMPANY_NAME = "Meet Well Limited";
 export const COMPANY_RC = "RC 9952279";

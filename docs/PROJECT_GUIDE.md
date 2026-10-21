@@ -36,7 +36,7 @@ invites them from an admin page; they sign up with a personal access code.
 | Hosting | Vercel, project `meetwell`, team "Meetwell" (Hobby plan) | Auto-deploys on push to `main`. Domain `meetwell.me` (DNS on Vercel) |
 | Database, auth, storage | Supabase | RLS everywhere; public reads only through security-definer RPCs |
 | App emails | Resend (`noreply@meetwell.me`) | Via Supabase SMTP (auth emails) and the Resend API (founder emails) |
-| Mailbox | Zoho Mail: `info@meetwell.me`, alias `hello@meetwell.me` | MX, SPF (`include:zohomail.com`) and DKIM (`zmail._domainkey`) on Vercel DNS |
+| Mailbox | Zoho Mail: `info@meetwell.me`, aliases `hello@meetwell.me` and `support@meetwell.me` (support@ is the address shown on the site and in every email) | MX, SPF (`include:zohomail.com`) and DKIM (`zmail._domainkey`) on Vercel DNS |
 | Scheduled jobs | Vercel Cron (daily) + Supabase `pg_cron` (nightly) | See below |
 
 This version of Next.js has breaking changes: read `node_modules/next/dist/docs/` before
@@ -101,7 +101,7 @@ every migration.
   photo, 4+ years get "people want to learn from you" copy, others "a photo gets you matches".
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
-  `hello@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).
+  `support@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).
 - **Automatic reminders**: `src/app/api/cron/reminders/route.ts`, scheduled in `vercel.json`
   (08:00 UTC daily). `public.claim_reminders()` picks who is due and records each send in
   `public.reminders_sent`, so every reminder goes out at most once per person:
