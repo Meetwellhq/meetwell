@@ -4,6 +4,18 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
+## 21 October 2026: Spark for every stage of your career
+
+- Sign-up now asks for your **years of experience** and **field**. It stays private and never
+  shows on your card.
+- **Under 4 years:** Spark introduces you to experienced people a step ahead of you, up to 5
+  free a month.
+- **4 years or more:** Spark recommends you to people earlier in their careers. Your Spark page
+  shows a short checklist and how many people were introduced to you this month.
+- Already a member? Spark asks for your experience the first time you open it.
+
+---
+
 ## 21 October 2026: 5 free Spark introductions a month
 
 - Every member now gets up to **5 free Spark introductions a month**, still at most one a day.

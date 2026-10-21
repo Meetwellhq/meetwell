@@ -129,6 +129,9 @@ describe("complete your profile email", () => {
     const e = incompleteProfileEmail({ ...args, completeness: 70, hasPhoto: true, experienceYears: 6 });
     expect(e.subject).toBe("Your Meetwell profile is 70% done");
     expect(e.html).toContain('href="https://meetwell.me/dashboard/matches"');
+    expect(e.text).toContain("people earlier in their careers who want to learn from you"); // 4+ years: recommended
+    const junior = incompleteProfileEmail({ ...args, completeness: 70, hasPhoto: true, experienceYears: 2 });
+    expect(junior.text).toContain("up to 5 a month");
   });
 });
 

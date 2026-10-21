@@ -3,6 +3,13 @@
 /** Free Spark matches per calendar month (Lagos time). Matches `spark_matches_this_month` checks in SQL. */
 export const SPARK_FREE_PER_MONTH = 5;
 
+/**
+ * Years of experience that make a member a mentor on Spark: recommended to people earlier in
+ * their careers, and not introduced to anyone themselves. Matches the 4-year checks in SQL.
+ */
+export const MENTOR_MIN_YEARS = 4;
+export const isMentor = (years: number | null | undefined) => years != null && years >= MENTOR_MIN_YEARS;
+
 /** "1 November": when the free matches reset, in Lagos time. */
 export function sparkResetDate(now = new Date()): string {
   const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Lagos", year: "numeric", month: "numeric" })

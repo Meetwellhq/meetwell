@@ -17,7 +17,7 @@ export type MatchingPrefs = {
 };
 
 /** The member's matching details. Private: used for matching only, never shown on the public card. */
-export function MatchingPrefsForm({ initial }: { initial: MatchingPrefs }) {
+export function MatchingPrefsForm({ initial, mentor = false }: { initial: MatchingPrefs; mentor?: boolean }) {
   const [state, action, pending] = useActionState(saveMatchingPrefs, {});
   const [optIn, setOptIn] = useState(initial.optIn);
   const err = state.fieldErrors ?? {};
@@ -26,13 +26,14 @@ export function MatchingPrefsForm({ initial }: { initial: MatchingPrefs }) {
     <form action={action} className="flex flex-col gap-5 rounded-xl border border-border bg-surface p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-medium text-ink">Turn on Spark</p>
+          <p className="font-medium text-ink">{mentor ? "Let Spark recommend me" : "Turn on Spark"}</p>
           <p className="mt-0.5 text-sm text-ink-2">
-            Get recommendations of experienced people to meet. With 4+ years of experience and a profile photo,
-            you&apos;ll also be recommended to people earlier in their careers.
+            {mentor
+              ? "Spark will introduce you to people earlier in their careers who want to learn from you."
+              : "Get introductions to experienced people in your field who are a step ahead of you."}
           </p>
         </div>
-        <Switch checked={optIn} onChange={setOptIn} label="Turn on Spark" showState={false} />
+        <Switch checked={optIn} onChange={setOptIn} label={mentor ? "Let Spark recommend me" : "Turn on Spark"} showState={false} />
         {optIn && <input type="hidden" name="optIn" value="on" />}
       </div>
 

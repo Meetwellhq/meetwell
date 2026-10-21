@@ -1,14 +1,16 @@
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ExperienceForm } from "@/components/matching/experience-form";
 import { MatchingPrefsForm } from "@/components/matching/matching-prefs-form";
+import { MentorStatus } from "@/components/matching/mentor-status";
 import { SparkAllowance } from "@/components/matching/spark-allowance";
 import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert, EmptyState } from "@/components/ui/misc";
 import { publicProfilePath } from "@/lib/config";
 import { MATCHING_MIN_COMPLETENESS, profileCompleteness } from "@/lib/matching/completeness";
-import { SPARK_FREE_PER_MONTH } from "@/lib/matching/constants";
+import { fieldLabel, isMentor, MENTOR_MIN_YEARS, SPARK_FREE_PER_MONTH } from "@/lib/matching/constants";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Spark" };
@@ -30,7 +32,7 @@ const date = (iso: string) =>
 export default async function MatchesPage() {
   const user = await getCurrentUser();
   const supabase = await createClient();
-  const [{ data: profile }, matches, used] = await Promise.all([
+  const [{ data: profile }, matches, used, mentorStats] = await Promise.all([
     supabase
       .from("profiles")
       .select(
@@ -40,7 +42,12 @@ export default async function MatchesPage() {
       .maybeSingle(),
     supabase.rpc("my_matches"),
     supabase.rpc("my_matches_this_month"),
+    supabase.rpc("my_spark_mentor_stats"),
   ]);
+  // Years decide the side of Spark: under ${MENTOR_MIN_YEARS} get introductions, ${MENTOR_MIN_YEARS}+ are recommended.
+  const needsExperience = !!profile && profile.experience_years === null;
+  const mentor = !!profile && isMentor(profile.experience_years);
+  const introduced = ((mentorStats.data ?? []) as { this_month: number; total: number }[])[0] ?? { this_month: 0, total: 0 };
   const rows = (matches.data ?? []) as MatchRow[];
   const usedThisMonth = Number(used.data ?? 0);
   const completeness = profile
@@ -66,13 +73,21 @@ export default async function MatchesPage() {
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink">
           <Sparkles className="size-5 text-accent" aria-hidden /> Spark
         </h1>
-        <p className="mt-1 text-ink-2">
-          Spark introduces you to someone a step ahead of you: an experienced person in your field (4+ years) you
-          can learn from. Up to {SPARK_FREE_PER_MONTH} free introductions a month, at most one a day, by email and here.
-        </p>
+        {mentor ? (
+          <p className="mt-1 text-ink-2">
+            With {profile.experience_years} years of experience, you&apos;re someone others want to learn from. Spark
+            introduces you to members earlier in their careers in your field, so they can reach out and say hello.
+          </p>
+        ) : (
+          <p className="mt-1 text-ink-2">
+            Spark introduces you to someone a step ahead of you: an experienced person in your field ({MENTOR_MIN_YEARS}+
+            years) you can learn from. Up to {SPARK_FREE_PER_MONTH} free introductions a month, at most one a day, by
+            email and here.
+          </p>
+        )}
       </div>
 
-      {profile && <SparkAllowance used={usedThisMonth} />}
+      {profile && !needsExperience && !mentor && <SparkAllowance used={usedThisMonth} />}
 
       {!profile ? (
         <div className="rounded-xl border border-border bg-surface">
@@ -82,26 +97,35 @@ export default async function MatchesPage() {
             action={<ButtonLink href="/onboarding">Create your card</ButtonLink>}
           />
         </div>
+      ) : needsExperience ? (
+        <ExperienceForm initial={{ field: profile.field ?? "", experienceYears: "" }} />
       ) : (
         <>
           {profile.status !== "published" && (
             <Alert>
-              Your card isn&apos;t published yet, so you won&apos;t get matches.{" "}
+              Your card isn&apos;t published yet, so {mentor ? "Spark can’t recommend you" : "you won’t get matches"}.{" "}
               <Link href="/dashboard/profile" className="underline">Publish your card</Link> to start.
             </Alert>
           )}
-          {(profile.experience_years ?? 0) >= 4 && !profile.avatar_url && (
-            <Alert>
-              With {profile.experience_years} years of experience, people earlier in their careers will want to learn
-              from you. <Link href="/dashboard/profile" className="underline">Add a profile photo</Link> to be
-              recommended to them.
-            </Alert>
+          {mentor && (
+            <MentorStatus
+              fieldName={fieldLabel(profile.field)}
+              introduced={introduced}
+              checks={[
+                { label: "Spark switched on", done: profile.matching_opt_in, where: "below" },
+                { label: "Card published", done: profile.status === "published", where: "card" },
+                { label: "Profile photo", done: !!profile.avatar_url, where: "card" },
+                { label: `Profile at least ${MATCHING_MIN_COMPLETENESS}% complete`, done: !!completeness?.ready, where: "card" },
+              ]}
+            />
           )}
           {completeness && (
             <section className="rounded-xl border border-border bg-surface p-5">
               <div className="flex items-baseline justify-between gap-4">
                 <p className="font-medium text-ink">Your profile is {completeness.percent}% complete</p>
-                <p className="text-sm text-ink-3">{MATCHING_MIN_COMPLETENESS}% needed for matches</p>
+                <p className="text-sm text-ink-3">
+                  {MATCHING_MIN_COMPLETENESS}% needed {mentor ? "to be recommended" : "for matches"}
+                </p>
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2" aria-hidden>
                 <div
@@ -113,8 +137,10 @@ export default async function MatchesPage() {
                 <div className="mt-4 text-sm">
                   <p className="text-ink-2">
                     {completeness.ready
-                      ? "You're ready for matches. To stand out even more, add:"
-                      : "Add these to start getting matches:"}
+                      ? "You're ready. To stand out even more, add:"
+                      : mentor
+                        ? "Add these so Spark can recommend you:"
+                        : "Add these to start getting matches:"}
                   </p>
                   <ul className="mt-2 flex flex-col gap-1.5">
                     {completeness.missing.map((m) => (
@@ -137,6 +163,7 @@ export default async function MatchesPage() {
             </section>
           )}
           <MatchingPrefsForm
+            mentor={mentor}
             initial={{
               optIn: profile.matching_opt_in,
               field: profile.field,
@@ -148,6 +175,7 @@ export default async function MatchesPage() {
         </>
       )}
 
+      {profile && !needsExperience && !mentor && (
       <section className="flex flex-col gap-4">
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="text-lg font-semibold text-ink">Your matches</h2>
@@ -191,6 +219,7 @@ export default async function MatchesPage() {
           </ul>
         )}
       </section>
+      )}
     </div>
   );
 }

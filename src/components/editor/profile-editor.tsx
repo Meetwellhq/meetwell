@@ -3,10 +3,12 @@
 import { ArrowLeft, ArrowRight, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { type Experience, ExperienceFields } from "@/components/matching/experience-fields";
 import { ProfileView } from "@/components/profile/profile-view";
 import { Button } from "@/components/ui/button";
 import { Alert, Card } from "@/components/ui/misc";
 import { useToast } from "@/components/ui/toast";
+import { saveExperience } from "@/lib/matching/actions";
 import { saveProfile } from "@/lib/profiles/actions";
 import type { OwnProfile } from "@/lib/profiles/types";
 import { BasicsSection, ContactSection, GoalsSection, SocialSection } from "./sections";
@@ -18,10 +20,13 @@ type Props = {
   userId: string;
   email: string | null;
   siteHost: string;
+  /** Years of experience and field (onboarding only; saved separately from the card). */
+  initialExperience?: Experience;
 };
 
 const STEPS = [
   { key: "basics", title: "About you", description: "The essentials people see first.", fields: ["fullName", "slug", "title", "organization", "bio", "avatarUrl"] },
+  { key: "experience", title: "Your experience", description: "This decides how Spark works for you.", fields: [] },
   { key: "contact", title: "How to reach you", description: "Choose what's public. You can change this any time.", fields: ["contacts", "websiteUrl"] },
   { key: "social", title: "Your links", description: "Where people can see your work.", fields: ["socials"] },
   { key: "goals", title: "What you're open to", description: "Optional, but it makes first messages more relevant.", fields: ["networkingGoals"] },
@@ -33,7 +38,7 @@ function stepOf(errorKey: string) {
   return idx === -1 ? 0 : idx;
 }
 
-export function ProfileEditor({ mode, initial, userId, email, siteHost }: Props) {
+export function ProfileEditor({ mode, initial, userId, email, siteHost, initialExperience }: Props) {
   const router = useRouter();
   const toast = useToast();
   const [values, setValues] = useState<FormValues>(() => toFormValues(initial, email));
@@ -43,6 +48,8 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost }: Props)
   const [dirty, setDirty] = useState(false);
   const [pending, startTransition] = useTransition();
   const [showPreview, setShowPreview] = useState(false);
+  const [experience, setExperience] = useState<Experience>(initialExperience ?? { field: "", experienceYears: "" });
+  const [experienceErrors, setExperienceErrors] = useState<Errors>({});
 
   const slugLocked = !!initial?.publishedAt;
 
@@ -88,6 +95,14 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost }: Props)
           if (first) setStep((s) => Math.min(s, stepOf(first)));
           return;
         }
+        if (current.key === "experience") {
+          const saved = await saveExperience(experience);
+          setExperienceErrors(saved.fieldErrors ?? {});
+          if (!saved.ok) {
+            if (saved.error) setFormError(saved.error);
+            return;
+          }
+        }
         setStep((s) => s + 1);
         window.scrollTo({ top: 0 });
       });
@@ -120,6 +135,16 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost }: Props)
 
         <div className="mt-8">
           {current.key === "basics" && <BasicsSection values={values} errors={errors} set={set} userId={userId} slugLocked={slugLocked} siteHost={siteHost} />}
+          {current.key === "experience" && (
+            <ExperienceFields
+              value={experience}
+              onChange={(next) => {
+                setExperience(next);
+                setExperienceErrors({});
+              }}
+              errors={experienceErrors}
+            />
+          )}
           {current.key === "contact" && <ContactSection values={values} errors={errors} set={set} />}
           {current.key === "social" && <SocialSection values={values} errors={errors} set={set} />}
           {current.key === "goals" && <GoalsSection values={values} errors={errors} set={set} />}

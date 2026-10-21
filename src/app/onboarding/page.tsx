@@ -4,7 +4,7 @@ import { ProfileEditor } from "@/components/editor/profile-editor";
 import { Logo } from "@/components/marketing/logo";
 import { getSiteUrl } from "@/lib/config";
 import { getOwnProfile } from "@/lib/profiles/queries";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Set up your card" };
 
@@ -13,6 +13,10 @@ export default async function OnboardingPage() {
   if (!user) redirect("/sign-in?next=/onboarding");
   const profile = await getOwnProfile();
   if (profile?.publishedAt) redirect("/dashboard");
+  // Spark details live on the profile row but outside the card editor.
+  const { data: spark } = profile
+    ? await (await createClient()).from("profiles").select("field, experience_years").eq("id", profile.id).maybeSingle()
+    : { data: null };
 
   return (
     <>
@@ -23,7 +27,14 @@ export default async function OnboardingPage() {
         </div>
       </header>
       <main className="flex-1 px-4 py-10 sm:py-14">
-        <ProfileEditor mode="onboarding" initial={profile} userId={user.id} email={user.email} siteHost={getSiteUrl().replace(/^https?:\/\//, "")} />
+        <ProfileEditor
+          mode="onboarding"
+          initial={profile}
+          userId={user.id}
+          email={user.email}
+          siteHost={getSiteUrl().replace(/^https?:\/\//, "")}
+          initialExperience={{ field: spark?.field ?? "", experienceYears: spark?.experience_years?.toString() ?? "" }}
+        />
       </main>
     </>
   );

@@ -317,7 +317,9 @@ export function incompleteProfileEmail(
       ...args,
       subject: `Your ${appName} profile is ${completeness}% done`,
       before: [
-        `${progress} Once it reaches 80%, you'll start getting Spark introductions: more experienced people in your field worth meeting, up to 5 a month.`,
+        experienceYears !== null && experienceYears >= RECOMMENDABLE_MIN_YEARS
+          ? `${progress} Once it reaches 80%, Spark can start introducing you to people earlier in their careers who want to learn from you.`
+          : `${progress} Once it reaches 80%, you'll start getting Spark introductions: more experienced people in your field worth meeting, up to 5 a month.`,
         "A few more details will get you there, and you can see exactly what's missing on your Spark page.",
       ],
       cta: { href: `${siteUrl}/dashboard/matches`, label: "Complete my profile" },

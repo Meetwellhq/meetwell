@@ -558,8 +558,11 @@ describe("AI network matching", () => {
   it("gives at most one match a day and never the same person twice", async () => {
     const due = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`);
     const dueEmails = due.map((d) => d.email);
-    expect(dueEmails).toEqual(expect.arrayContaining(["junior@test", "senior@test", "engineer@test", "marketer@test"]));
+    expect(dueEmails).toEqual(expect.arrayContaining(["junior@test", "engineer@test"]));
     expect(dueEmails).not.toContain("optout@test");
+    // 4+ years: recommended to others, never introduced themselves.
+    expect(dueEmails).not.toContain("senior@test");
+    expect(dueEmails).not.toContain("marketer@test");
 
     const [{ id: seniorId }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'senior'")).rows;
     const [{ id: engId }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'engineer'")).rows;
@@ -665,6 +668,21 @@ describe("AI network matching", () => {
       `select slug, score from public.matching_candidates('${SECRET}', '${MARKETER}', 8)`,
     );
     expect(before).toEqual([]); // nobody in growth with more experience
+  });
+
+  it("tells members with 4+ years how often they were introduced, but not to whom", async () => {
+    const [{ id: seniorId }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'senior'")).rows;
+    await db.query("delete from public.matches where matched_profile_id = $1", [seniorId]);
+    await db.query(
+      `insert into public.matches (user_id, matched_profile_id, reason, created_at) values
+         ($1, $3, 'this month', now()),
+         ($2, $3, 'last month', public.spark_month_start() - interval '1 day')`,
+      [JUNIOR, ENGINEER, seniorId],
+    );
+    expect(await as(SENIOR, "select * from public.my_spark_mentor_stats()")).toEqual([{ this_month: 1, total: 2 }]);
+    expect(await as(JUNIOR, "select * from public.my_spark_mentor_stats()")).toEqual([{ this_month: 0, total: 0 }]);
+    await expect(as(null, "select * from public.my_spark_mentor_stats()")).rejects.toThrow(/permission denied/);
+    await db.query("delete from public.matches where matched_profile_id = $1", [seniorId]);
   });
 });
 

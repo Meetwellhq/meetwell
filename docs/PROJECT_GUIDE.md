@@ -86,6 +86,12 @@ every migration.
 - **Admin (Invites tab)**: `/dashboard/invites`, visible only to admins (`public.admins`).
   Waiting list with Invite/Resend, Members with card status, photo, views, QR scans, saves and
   reminder tags. Database functions refuse non-admins.
+- **Spark has two sides**, decided by years of experience (`MENTOR_MIN_YEARS` = 4 in
+  `src/lib/matching/constants.ts`, same line in SQL): under 4 get introductions; 4+ are only
+  recommended (`20261103000000_spark_roles.sql`). Years and field are asked in onboarding (step
+  "Your experience", `saveExperience` in `src/lib/matching/actions.ts`) or on the Spark page if
+  missing. 4+ members see a checklist and how often they were introduced (`my_spark_mentor_stats`).
+  A manual review of 4+ members is planned before paid features; not built yet.
 - **Spark (AI Network Matching)**: `/dashboard/matches` (shown to members as "Spark"; the URL stays /matches so old email links work) (opt-in + private fields: field, experience,
   looking for, city; list of matches). Recommends only people with 4+ years, a profile
   photo and more experience than the member, in the same or a related field
