@@ -12,11 +12,12 @@ const LINKS = [
   { href: "/dashboard/settings", label: "Settings" },
 ];
 
-export function DashboardNav() {
+/** Messages shows only for people who have a conversation, with their unread count. */
+export function DashboardNav({ messages }: { messages?: { unread: number } | null }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Dashboard" className="-mb-px flex gap-1 overflow-x-auto">
-      {LINKS.map((l) => {
+      {(messages ? [...LINKS.slice(0, 4), { href: "/dashboard/messages", label: "Messages" }, ...LINKS.slice(4)] : LINKS).map((l) => {
         const active = l.href === "/dashboard" ? pathname === l.href : pathname.startsWith(l.href);
         return (
           <Link
@@ -29,6 +30,12 @@ export function DashboardNav() {
             )}
           >
             {l.label}
+            {l.href === "/dashboard/messages" && !!messages?.unread && (
+              <span className="ml-1.5 rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-white">
+                {messages.unread > 99 ? "99+" : messages.unread}
+                <span className="sr-only"> unread</span>
+              </span>
+            )}
           </Link>
         );
       })}

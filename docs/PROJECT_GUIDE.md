@@ -129,6 +129,16 @@ every migration.
   set `https://meetwell.me/api/paystack/webhook` in Paystack → Settings → API Keys & Webhooks).
   `public.credit_ledger` has one row per credit added or used; `record_match()` uses a credit only
   after the free 5 in a month. Payments list in /admin. Refunds by hand in Paystack.
+- **Messages**: private conversations between a member (under 4 years) and a mentor (4+), in
+  `/dashboard/messages` (list) and `/dashboard/messages/[id]` (thread, refreshes every 8s). The Messages tab
+  only shows for people with a conversation, with an unread count. All rules live in
+  `20261107000000_messaging.sql` (`send_message` etc.): participants only, member writes first, 1–2,000
+  characters, 30 an hour, read-only after `access_until`, blocks both ways, 3 open reports pause
+  someone. Email alert at most once per conversation per 6 hours, only if unread
+  (`claim_message_email`, CRON_SECRET), off in Settings or via `/unsubscribe/messages?t=`. Admins open
+  free test conversations and handle reports in `/admin/messages`; they never see chats, only reported
+  messages with up to 3 either side. Rules page: `/community-rules`. Phase 4 will set `access_until`
+  from paid subscriptions.
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `support@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).

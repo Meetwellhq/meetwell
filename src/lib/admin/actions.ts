@@ -67,3 +67,41 @@ export async function sendSparkAnnouncement(): Promise<AnnounceState> {
   revalidatePath("/admin", "layout");
   return { sent, failed, remaining };
 }
+
+export type AdminFormState = { ok?: string; error?: string };
+
+/** Open (or extend) a test conversation between a member and a mentor. */
+export async function adminOpenConversation(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const member = emailSchema.safeParse(formData.get("member"));
+  const mentor = emailSchema.safeParse(formData.get("mentor"));
+  if (!member.success || !mentor.success) return { error: "Enter both email addresses." };
+  const days = Math.min(Math.max(Number(formData.get("days")) || 30, 1), 365);
+  const { error } = await (await createClient()).rpc("admin_open_conversation", {
+    p_member_email: member.data,
+    p_mentor_email: mentor.data,
+    p_days: days,
+  });
+  if (error) {
+    if (error.code === "22023") return { error: error.message };
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't open the conversation." };
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: `Conversation open for ${days} days.` };
+}
+
+export async function adminResolveReport(reportId: number, action: "dismiss" | "pause"): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_resolve_report", { p_report: reportId, p_action: action });
+  if (error) return { error: "Couldn't update the report." };
+  revalidatePath("/admin", "layout");
+  return {};
+}
+
+export async function adminSetPaused(email: string, paused: boolean): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_set_messaging_paused", { p_email: email, p_paused: paused });
+  if (error) return { error: error.code === "22023" ? error.message : "Couldn't update." };
+  revalidatePath("/admin", "layout");
+  return {};
+}

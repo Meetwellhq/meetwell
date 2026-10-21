@@ -857,3 +857,124 @@ describe("admin metrics", () => {
     expect(months.reduce((n, x) => n + Number(x.kobo), 0)).toBe(kobo); // all paid this month in tests
   });
 });
+
+describe("messaging", () => {
+  const SECRET = "test-secret-that-is-long-enough-1234567890";
+  const ADMIN = "abababab-abab-abab-abab-abababababab";
+  const JUNIOR = "55555555-5555-5555-5555-555555555555"; // 1 year
+  const SENIOR = "66666666-6666-6666-6666-666666666666"; // 4 years
+  const ENGINEER = "77777777-7777-7777-7777-777777777777"; // 3 years, not in the conversation
+  let conv = 0;
+
+  const send = (user: string, body: string, c = conv) =>
+    as<{ id: string }>(user, "select public.send_message($1, $2) as id", [c, body]);
+
+  it("only admins open conversations, member under 4 and mentor 4+", async () => {
+    await expect(as(JUNIOR, "select public.admin_open_conversation('junior@test', 'senior@test', 30)")).rejects.toThrow(/Not allowed/);
+    await expect(as(ADMIN, "select public.admin_open_conversation('senior@test', 'junior@test', 30)")).rejects.toThrow(/4\+ years/);
+    const [{ id }] = await as<{ id: number }>(ADMIN, "select public.admin_open_conversation('junior@test', 'senior@test', 30) as id");
+    conv = Number(id);
+    expect(conv).toBeGreaterThan(0);
+    await expect(as(JUNIOR, "select * from public.conversations")).rejects.toThrow(/permission denied/);
+    await expect(as(JUNIOR, "select * from public.messages")).rejects.toThrow(/permission denied/);
+  });
+
+  it("lets the member write first, keeps strangers out, and counts unread", async () => {
+    await expect(send(SENIOR, "Hi!")).rejects.toThrow(/member_first/);
+    await expect(send(ENGINEER, "Let me in")).rejects.toThrow(/Not allowed/);
+    await expect(as(ENGINEER, `select * from public.my_messages(${conv})`)).rejects.toThrow(/Not allowed/);
+    await expect(send(JUNIOR, "   ")).rejects.toThrow(/1 to 2,000/);
+    await expect(send(JUNIOR, "x".repeat(2001))).rejects.toThrow(/1 to 2,000/);
+
+    await send(JUNIOR, "Hello Ada, I'd love your advice on portfolios.");
+    expect((await as<{ n: number }>(SENIOR, "select public.my_unread_messages() as n"))[0].n).toBe(1);
+    expect((await as<{ n: number }>(JUNIOR, "select public.my_unread_messages() as n"))[0].n).toBe(0);
+    await send(SENIOR, "Happy to help. Send it over.");
+    const thread = await as<{ mine: boolean; body: string }>(JUNIOR, `select mine, body from public.my_messages(${conv})`);
+    expect(thread.map((m) => m.mine)).toEqual([true, false]);
+    await as(SENIOR, `select public.mark_conversation_read(${conv})`);
+    expect((await as<{ n: number }>(SENIOR, "select public.my_unread_messages() as n"))[0].n).toBe(0);
+    const list = await as<{ role: string; other_name: string; locked: string | null }>(SENIOR, "select role, locked from public.my_conversations()");
+    expect(list).toEqual([{ role: "mentor", locked: null }]);
+  });
+
+  it("emails the other person once per 6 hours, only if unread and switched on, with the secret", async () => {
+    const [{ id }] = await send(JUNIOR, "Here it is.");
+    await expect(as(null, `select * from public.claim_message_email('wrong', ${id})`)).rejects.toThrow(/Not allowed/);
+    const first = await as<{ email: string; sender_name: string }>(null, `select email, sender_name from public.claim_message_email('${SECRET}', ${id})`);
+    expect(first).toEqual([{ email: "senior@test", sender_name: "Test Person" }]);
+    const [{ id: id2 }] = await send(JUNIOR, "And one more thing.");
+    expect(await as(null, `select * from public.claim_message_email('${SECRET}', ${id2})`)).toEqual([]); // within 6 hours
+
+    // Turned off: no emails.
+    await db.exec("delete from public.message_emails_sent");
+    await as(SENIOR, "select public.set_message_emails(false)");
+    expect((await as<{ on: boolean }>(SENIOR, "select public.my_message_emails() as on"))[0].on).toBe(false);
+    expect(await as(null, `select * from public.claim_message_email('${SECRET}', ${id2})`)).toEqual([]);
+    await as(SENIOR, "select public.set_message_emails(true)");
+    // One-click off from the email link.
+    const [{ token }] = (await db.query<{ token: string }>("select token from public.email_prefs where user_id = $1", [SENIOR])).rows;
+    expect((await as<{ ok: boolean }>(null, `select public.unsubscribe_message_emails('${token}') as ok`))[0].ok).toBe(true);
+    expect(await as(null, `select * from public.claim_message_email('${SECRET}', ${id2})`)).toEqual([]);
+    await as(SENIOR, "select public.set_message_emails(true)");
+  });
+
+  it("limits messages per hour, and goes read-only when access ends", async () => {
+    await db.query(
+      "insert into public.messages (conversation_id, sender_id, body) select $1, $2, 'filler' from generate_series(1, 30)",
+      [conv, SENIOR],
+    );
+    await expect(send(SENIOR, "one too many")).rejects.toThrow(/Too many messages/);
+    await db.query("delete from public.messages where body = 'filler'");
+
+    await db.query("update public.conversations set access_until = now() - interval '1 minute' where id = $1", [conv]);
+    await expect(send(JUNIOR, "still there?")).rejects.toThrow(/ended/);
+    expect((await as<{ body: string }>(JUNIOR, `select body from public.my_messages(${conv})`)).length).toBeGreaterThan(0); // history stays
+    await db.query("update public.conversations set access_until = now() + interval '30 days' where id = $1", [conv]);
+  });
+
+  it("blocks both ways, and pauses after three open reports", async () => {
+    await as(SENIOR, `select public.set_block(${conv}, true)`);
+    await expect(send(JUNIOR, "hello?")).rejects.toThrow(/blocked/);
+    await expect(send(SENIOR, "hello?")).rejects.toThrow(/blocked/);
+    await as(SENIOR, `select public.set_block(${conv}, false)`);
+
+    const juniorMsgs = (await db.query<{ id: string }>(
+      "select id from public.messages where conversation_id = $1 and sender_id = $2 order by id limit 3", [conv, JUNIOR],
+    )).rows.map((r) => r.id);
+    expect(juniorMsgs).toHaveLength(3);
+    const [{ id: own }] = (await db.query<{ id: string }>("select id from public.messages where sender_id = $1 limit 1", [SENIOR])).rows;
+    await expect(as(SENIOR, `select public.report_message(${own}, 'spam', null)`)).rejects.toThrow(/Not allowed/); // not your own
+    await expect(as(SENIOR, `select public.report_message(${juniorMsgs[0]}, 'rude', null)`)).rejects.toThrow(/check/);
+    for (const id of juniorMsgs) await as(SENIOR, `select public.report_message(${id}, 'spam', 'test')`);
+    await expect(send(JUNIOR, "am I paused?")).rejects.toThrow(/paused/);
+
+    const reports = await as<{ status: string; reported_email: string; reported_paused: boolean; context: unknown[] }>(
+      ADMIN, "select status, reported_email, reported_paused, context from public.admin_list_reports()",
+    );
+    expect(reports).toHaveLength(3);
+    expect(reports[0]).toMatchObject({ status: "open", reported_email: "junior@test", reported_paused: true });
+    expect(reports[0].context.length).toBeLessThanOrEqual(7);
+    await expect(as(SENIOR, "select * from public.admin_list_reports()")).rejects.toThrow(/Not allowed/);
+
+    // Admin sees conversation counts, never messages.
+    const convs = await as<Record<string, unknown>>(ADMIN, "select * from public.admin_list_conversations()");
+    expect(Object.keys(convs[0])).not.toContain("body");
+
+    await as(ADMIN, "select public.admin_set_messaging_paused('junior@test', false)");
+    for (const r of await as<{ id: string }>(ADMIN, "select id from public.admin_list_reports()")) {
+      await as(ADMIN, `select public.admin_resolve_report(${r.id}, 'dismiss')`);
+    }
+    await send(JUNIOR, "Back again.");
+  });
+});
+
+describe("secret-protected functions for logged-in callers", () => {
+  it("lets the server confirm a payment during a member's session, still only with the secret", async () => {
+    const JUNIOR = "55555555-5555-5555-5555-555555555555";
+    await expect(
+      as(JUNIOR, "select * from public.confirm_payment('wrong', 'mw_x', 1, 'NGN', 1)"),
+    ).rejects.toThrow(/Not allowed/); // reaches the secret check, not "permission denied"
+    await expect(as(JUNIOR, "select * from public.claim_message_email('wrong', 1)")).rejects.toThrow(/Not allowed/);
+  });
+});

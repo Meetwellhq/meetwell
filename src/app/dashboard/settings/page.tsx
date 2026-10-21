@@ -3,12 +3,14 @@ import Link from "next/link";
 import { DangerZone, PublishButton } from "@/components/dashboard/publish-controls";
 import { Card } from "@/components/ui/misc";
 import { getOwnProfile } from "@/lib/profiles/queries";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { MessageEmailsSwitch } from "@/components/messaging/message-emails-switch";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const [user, profile] = await Promise.all([getCurrentUser(), getOwnProfile()]);
+  const supabase = await createClient();
+  const [user, profile, emails] = await Promise.all([getCurrentUser(), getOwnProfile(), supabase.rpc("my_message_emails")]);
   const isLive = profile?.status === "published";
 
   return (
@@ -24,6 +26,16 @@ export default async function SettingsPage() {
         <Link href="/forgot-password" className="mt-4 inline-block text-sm font-medium text-accent hover:underline">
           Change password
         </Link>
+      </Card>
+
+      <Card className="flex items-start justify-between gap-4 p-5 sm:p-6">
+        <div>
+          <h2 className="font-semibold">Message emails</h2>
+          <p className="mt-1 text-sm text-ink-2">
+            Get an email when someone messages you. At most one per conversation every few hours.
+          </p>
+        </div>
+        <MessageEmailsSwitch initial={emails.data !== false} />
       </Card>
 
       {profile && (

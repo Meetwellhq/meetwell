@@ -47,6 +47,11 @@ export default function PrivacyPage() {
           on your card.
         </p>
         <p className="mt-3">
+          <strong>If you use messages:</strong> the messages you send and receive, when they were sent, when you last
+          read a conversation, and any blocks or reports. Messages are private between the two people in the
+          conversation.
+        </p>
+        <p className="mt-3">
           <strong>If you buy Spark credits:</strong> what you bought, the price, the date, the payment reference and
           whether the payment went through. Paystack handles the payment itself, so we never receive your card or
           bank details.
@@ -107,6 +112,12 @@ export default function PrivacyPage() {
             reason, never your private matching details. You can turn Spark off anytime on your Spark page.
           </li>
           <li>
+            <strong>To deliver your messages and keep people safe</strong>, because it is needed for our agreement
+            with you. We don&apos;t read your conversations. Our team only sees a message if someone reports it, along
+            with a few messages around it, so we can decide what to do. We email you about new messages unless you turn
+            that off in Settings or with the link in any of those emails.
+          </li>
+          <li>
             <strong>To take payments and keep records of them</strong>, because it is needed for our agreement with
             you, and to meet tax and accounting law.
           </li>
@@ -152,6 +163,10 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Account and card:</strong> until you delete them.</li>
           <li><strong>Engagement events:</strong> up to 13 months, then deleted.</li>
+          <li>
+            <strong>Messages:</strong> until either person deletes their account. Reports about a message are deleted
+            with it.
+          </li>
           <li>
             <strong>Payment records:</strong> as long as Nigerian tax and accounting law requires, currently up to 6
             years, even if you delete your account.

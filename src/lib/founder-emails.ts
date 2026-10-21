@@ -393,3 +393,41 @@ export function sparkBetaEmail({ fullName, appName, siteUrl, photoUrl, replyEmai
   });
   return { subject, text, html };
 }
+
+/** Link that turns off message email alerts (no login needed). */
+export const messageEmailsOffUrl = (siteUrl: string, token: string) =>
+  `${siteUrl}/unsubscribe/messages?t=${encodeURIComponent(token)}`;
+
+/**
+ * "Ada sent you a message." The message itself isn't in the email, so it stays
+ * private if the email is forwarded or read over someone's shoulder.
+ */
+export function newMessageEmail({
+  fullName, appName, siteUrl, photoUrl, senderName, conversationId, offToken,
+}: Common & { senderName: string; conversationId: number; offToken: string }) {
+  const firstName = firstNameOf(fullName);
+  const link = `${siteUrl}/dashboard/messages/${conversationId}`;
+  const off = messageEmailsOffUrl(siteUrl, offToken);
+  const line = `${senderName} sent you a message on ${appName}.`;
+  const later = "We send at most one email per conversation every few hours, so you won't get one for every message.";
+  const smallPrint = "Don't want these emails?";
+
+  const subject = `New message from ${senderName}`;
+  const text = [
+    `Hi ${firstName},`,
+    line,
+    `Read and reply: ${link}`,
+    later,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+    `${smallPrint} Turn them off: ${off}`,
+  ].join("\n\n");
+  const html = founderLayout({
+    firstName,
+    appName,
+    siteUrl,
+    photoUrl,
+    bodyHtml: [p(line), button(link, "Read and reply"), p(later)].join("\n  "),
+    footerHtml: `${escapeHtml(smallPrint)} <a href="${off}" style="color:#5c5c57">Turn off message emails</a>.`,
+  });
+  return { subject, text, html };
+}

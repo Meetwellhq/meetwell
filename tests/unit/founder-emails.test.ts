@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inviteEmail, sparkBetaEmail, waitlistEmail } from "@/lib/founder-emails";
+import { inviteEmail, newMessageEmail, sparkBetaEmail, waitlistEmail } from "@/lib/founder-emails";
 
 const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "support@meetwell.me" };
 
@@ -144,5 +144,18 @@ describe("Spark beta announcement", () => {
     expect(html).toContain('href="https://meetwell.me/dashboard/matches"');
     expect(html).toContain('href="mailto:support@meetwell.me"');
     expect(text).toContain("one-off note");
+  });
+});
+
+describe("new message email", () => {
+  it("names the sender, links to the chat, never includes the message, and can be turned off", () => {
+    const { subject, text, html } = newMessageEmail({
+      ...base, fullName: "Ada Obi", senderName: "Tunde <b>", conversationId: 42, offToken: "11111111-2222-3333-4444-555555555555",
+    });
+    expect(subject).toBe("New message from Tunde <b>");
+    expect(html).not.toContain("Tunde <b>"); // escaped in the email body
+    expect(html).toContain('href="https://meetwell.me/dashboard/messages/42"');
+    expect(text).toContain("https://meetwell.me/unsubscribe/messages?t=11111111-2222-3333-4444-555555555555");
+    expect(html).toContain("Turn off message emails");
   });
 });

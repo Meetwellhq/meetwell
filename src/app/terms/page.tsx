@@ -90,6 +90,14 @@ export default function TermsPage() {
           are not a party to those conversations and we don&apos;t see them. Treat people you meet with the same care
           you would anywhere else.
         </p>
+        <p className="mt-3">
+          <strong>Messages in {APP_NAME}:</strong> some members can message each other inside {APP_NAME}. When you
+          do, you agree to follow our{" "}
+          <Link href="/community-rules" className="text-accent underline">community rules</Link>. You are responsible
+          for what you send, and advice from other members is their own, not ours. You can block or report anyone. We
+          may pause messaging or close accounts that break the rules. When access to a conversation ends, the
+          messages stay readable but no new ones can be sent.
+        </p>
       </section>
 
       <section>
