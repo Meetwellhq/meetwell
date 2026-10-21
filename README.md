@@ -163,4 +163,4 @@ Two-way contact exchange, saved connections with notes, follow-up reminders, eve
 
 ## License
 
-Copyright (c) 2026 Abdur-rasheed Idris, trading as Meetwell. **All rights reserved.** This repository is public for viewing only; it is not open source. See [LICENSE](LICENSE).
+Copyright (c) 2026 Meet Well Limited (RC 9952279), Nigeria. **All rights reserved.** This repository is public for viewing only; it is not open source. See [LICENSE](LICENSE).

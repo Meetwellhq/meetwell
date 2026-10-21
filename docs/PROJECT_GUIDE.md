@@ -152,5 +152,6 @@ does not remove that. Revoke from `anon` explicitly for anything visitors must n
 - Ideas waiting on user feedback: printable QR card, simpler onboarding, stats on each
   user's own dashboard, paid plans (e.g. Paystack).
 - Optional: add `ANTHROPIC_API_KEY` in Vercel for Claude-written match reasons.
-- CAC done (Meet Well Limited): still to do, LICENSE copyright holder (Rasheed personally today), and
+- CAC done (Meet Well Limited): LICENSE and README now name the company as copyright holder. Still to do:
+  a written transfer of the code and brand from Rasheed to the company (lawyer), and
   upgrade Paystack to a Registered Business when payments start.
