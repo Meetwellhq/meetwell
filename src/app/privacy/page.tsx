@@ -52,6 +52,11 @@ export default function PrivacyPage() {
           conversation.
         </p>
         <p className="mt-3">
+          <strong>If you are a mentor:</strong> your application and its review, your price, what members paid you,
+          your wallet balance and withdrawals, and where withdrawals go: your bank&apos;s name, the account name and the
+          last 4 digits of the account number. The full account number is held by Paystack, not by us.
+        </p>
+        <p className="mt-3">
           <strong>If you buy Spark credits:</strong> what you bought, the price, the date, the payment reference and
           whether the payment went through. Paystack handles the payment itself, so we never receive your card or
           bank details.
@@ -136,8 +141,9 @@ export default function PrivacyPage() {
           <li><strong>Vercel</strong>: website hosting;</li>
           <li><strong>Resend</strong>: sending emails;</li>
           <li>
-            <strong>Paystack</strong>: taking payments for Spark credits. Paystack receives your email address and the
-            amount, and you enter your payment details on Paystack&apos;s own page;
+            <strong>Paystack</strong>: taking payments (Spark credits and messages with mentors), refunds, and paying
+            mentors their earnings. Paystack receives your email address and the amount, you enter your payment details
+            on Paystack&apos;s own page, and mentors&apos; bank details are checked and stored by Paystack;
           </li>
           <li>
             <strong>Anthropic</strong> (Claude): choosing matches and writing the reason, for members who turn on

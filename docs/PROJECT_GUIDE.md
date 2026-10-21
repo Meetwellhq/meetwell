@@ -139,6 +139,18 @@ every migration.
   free test conversations and handle reports in `/admin/messages`; they never see chats, only reported
   messages with up to 3 either side. Rules page: `/community-rules`. Phase 4 will set `access_until`
   from paid subscriptions.
+- **Mentors and paid messages (phase 4)**: members with 4+ years apply on `/dashboard/mentor`
+  ("Mentoring" tab; checks: 4+ years, photo, 80%+, published, confirmed, 14+ days on Meetwell); Rasheed
+  approves in `/admin/mentors`. Approved mentors set a 30-day price (N2,000–N20,000) and their card shows
+  "Message {name} · price" → `/subscribe/[slug]` → Paystack. `confirm_payment()` opens/extends the
+  conversation by 30 days and puts 80% in the mentor's wallet (`wallet_ledger`), available after 7 days.
+  Withdrawals: N5,000 minimum to a Paystack-checked bank account (`payout_accounts` keeps only bank, name,
+  last 4 and Paystack's recipient code); Rasheed approves each in /admin/mentors and it's sent by Paystack
+  Transfer (needs the Registered Business upgrade, and Transfers OTP turned off for API transfers); the
+  webhook records transfer.success/failed. Failed or rejected withdrawals return to the wallet. Refunds:
+  /admin/mentors flags "No reply in 7 days"; Refund calls Paystack's refund API, takes the mentor's share
+  back and ends access. Renewal reminder 3 days before the end (daily reminders job). Admin revenue counts
+  only Meetwell's share. All in `20261108000000_mentor_subscriptions.sql`.
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `support@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).

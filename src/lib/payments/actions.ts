@@ -32,7 +32,7 @@ export async function buyCredits(_: BuyState, formData: FormData): Promise<BuySt
       amountKobo: row.amount_kobo,
       reference: row.reference,
       callbackUrl: `${getSiteUrl()}/api/paystack/callback`,
-      credits: row.credits,
+      metadata: { kind: "spark_credits", credits: row.credits },
     });
   } catch (err) {
     console.error("Paystack initialize failed", err);

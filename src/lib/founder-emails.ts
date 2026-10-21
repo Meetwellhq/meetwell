@@ -431,3 +431,74 @@ export function newMessageEmail({
   });
   return { subject, text, html };
 }
+
+/** Short note from the founder: paragraphs, one button, the reply line. */
+function note({
+  fullName, appName, siteUrl, photoUrl, replyEmail, subject, before, cta, after = [],
+}: Common & { subject: string; before: string[]; cta: { href: string; label: string }; after?: string[] }) {
+  const firstName = firstNameOf(fullName);
+  const ask = "Questions? Write to me at";
+  const text = [
+    `Hi ${firstName},`,
+    ...before,
+    `${cta.label}: ${cta.href}`,
+    ...after,
+    `${ask} ${replyEmail}.`,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+  ].join("\n\n");
+  const html = founderLayout({
+    firstName,
+    appName,
+    siteUrl,
+    photoUrl,
+    bodyHtml: [
+      ...before.map(p),
+      button(cta.href, cta.label),
+      ...after.map(p),
+      `<p>${escapeHtml(ask)} <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
+    ].join("\n  "),
+  });
+  return { subject, text, html };
+}
+
+/** Approved as a mentor: set a price and start taking messages. */
+export function mentorApprovedEmail(args: Common) {
+  return note({
+    ...args,
+    subject: `You're a ${args.appName} mentor now`,
+    before: [
+      `Good news: you're approved as a mentor on ${args.appName}.`,
+      "Members earlier in their careers can now pay a monthly fee to message you. You choose the price, and 80% of every payment goes into your wallet, ready to withdraw 7 days later.",
+      "Set your price and switch on messages to get started.",
+    ],
+    cta: { href: `${args.siteUrl}/dashboard/mentor`, label: "Set up mentoring" },
+    after: ["Please reply to new members within 7 days. If you don't, they get a full refund."],
+  });
+}
+
+/** A withdrawal was approved and sent to the mentor's bank. */
+export function withdrawalSentEmail(args: Common & { amount: string; bank: string }) {
+  return note({
+    ...args,
+    subject: `${args.amount} is on its way to you`,
+    before: [
+      `Your withdrawal of ${args.amount} has been sent to your ${args.bank} account. It usually arrives within a few hours.`,
+    ],
+    cta: { href: `${args.siteUrl}/dashboard/mentor`, label: "View your wallet" },
+  });
+}
+
+/** A member's 30 days with a mentor end in about 3 days. */
+export function renewalReminderEmail(args: Common & { mentorName: string; mentorSlug: string; endsOn: string }) {
+  const first = args.mentorName.split(" ")[0] || args.mentorName;
+  return note({
+    ...args,
+    subject: `Your messages with ${first} end on ${args.endsOn}`,
+    before: [
+      `Your 30 days of messages with ${args.mentorName} end on ${args.endsOn}.`,
+      "If you'd like to keep talking, you can renew for another 30 days. Your conversation stays where it is.",
+    ],
+    cta: { href: `${args.siteUrl}/subscribe/${encodeURIComponent(args.mentorSlug)}`, label: `Keep talking to ${first}` },
+    after: ["Nothing renews on its own, so you won't be charged unless you choose to."],
+  });
+}

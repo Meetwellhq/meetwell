@@ -24,7 +24,20 @@ function LockedNotice({ conversation }: { conversation: ConversationRow }) {
   const name = conversation.other_name.split(" ")[0];
   switch (conversation.locked) {
     case "ended":
-      return <>This conversation has ended. Your messages are still here to read.</>;
+      return (
+        <>
+          This conversation has ended. Your messages are still here to read.
+          {conversation.role === "member" && conversation.other_slug && (
+            <>
+              {" "}
+              <Link href={`/subscribe/${conversation.other_slug}`} className="font-medium underline">
+                Renew for 30 days
+              </Link>{" "}
+              to keep talking.
+            </>
+          )}
+        </>
+      );
     case "blocked":
       return conversation.blocked_by_me ? (
         <>You blocked {name}. Unblock them to send messages again.</>
@@ -48,7 +61,15 @@ function LockedNotice({ conversation }: { conversation: ConversationRow }) {
   }
 }
 
-export function Thread({ conversation, messages }: { conversation: ConversationRow; messages: MessageRow[] }) {
+export function Thread({
+  conversation,
+  messages,
+  justPaid = false,
+}: {
+  conversation: ConversationRow;
+  messages: MessageRow[];
+  justPaid?: boolean;
+}) {
   const router = useRouter();
   const toast = useToast();
   const [draft, setDraft] = useState("");
@@ -132,6 +153,13 @@ export function Thread({ conversation, messages }: { conversation: ConversationR
           )}
         </div>
       </div>
+
+      {justPaid && (
+        <Alert tone="success">
+          Payment received. You can message {conversation.other_name.split(" ")[0]} until{" "}
+          {new Date(conversation.access_until).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Africa/Lagos" })}.
+        </Alert>
+      )}
 
       <div className="flex min-h-[50vh] flex-col gap-2 rounded-xl border border-border bg-surface p-4">
         {messages.length === 0 && (

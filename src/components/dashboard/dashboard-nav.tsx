@@ -13,11 +13,16 @@ const LINKS = [
 ];
 
 /** Messages shows only for people who have a conversation, with their unread count. */
-export function DashboardNav({ messages }: { messages?: { unread: number } | null }) {
+export function DashboardNav({ messages, mentor = false }: { messages?: { unread: number } | null; mentor?: boolean }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Dashboard" className="-mb-px flex gap-1 overflow-x-auto">
-      {(messages ? [...LINKS.slice(0, 4), { href: "/dashboard/messages", label: "Messages" }, ...LINKS.slice(4)] : LINKS).map((l) => {
+      {[
+        ...LINKS.slice(0, 4),
+        ...(mentor ? [{ href: "/dashboard/mentor", label: "Mentoring" }] : []),
+        ...(messages ? [{ href: "/dashboard/messages", label: "Messages" }] : []),
+        ...LINKS.slice(4),
+      ].map((l) => {
         const active = l.href === "/dashboard" ? pathname === l.href : pathname.startsWith(l.href);
         return (
           <Link

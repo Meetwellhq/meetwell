@@ -8,11 +8,14 @@ import {
   inviteEmail,
   inviteReminderEmail,
   matchEmail,
+  mentorApprovedEmail,
   newMessageEmail,
   type MatchedMember,
   noScansEmail,
+  renewalReminderEmail,
   sparkBetaEmail,
   waitlistEmail,
+  withdrawalSentEmail,
 } from "./founder-emails";
 
 // Personal notes from the founder, sent from a no-reply address. The emails
@@ -101,4 +104,23 @@ export function sendNewMessageEmail(
   // Names go into the subject line, so keep them on one line.
   const senderName = details.senderName.replace(/s+/g, " ").trim().slice(0, 80) || "A Meetwell member";
   return send(to, newMessageEmail({ ...common(fullName), ...details, senderName }));
+}
+
+/** Approved as a mentor. */
+export function sendMentorApprovedEmail(to: string, fullName: string | null) {
+  return send(to, mentorApprovedEmail(common(fullName)));
+}
+
+/** A withdrawal was sent to the mentor's bank. */
+export function sendWithdrawalSentEmail(to: string, fullName: string | null, details: { amount: string; bank: string }) {
+  return send(to, withdrawalSentEmail({ ...common(fullName), ...details }));
+}
+
+/** A member's 30 days with a mentor end soon. */
+export function sendRenewalReminderEmail(
+  to: string,
+  fullName: string | null,
+  details: { mentorName: string; mentorSlug: string; endsOn: string },
+) {
+  return send(to, renewalReminderEmail({ ...common(fullName), ...details }));
 }

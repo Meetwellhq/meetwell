@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Globe, Mail, Phone, UserRoundPlus } from "lucide-react";
+import { ArrowUpRight, Globe, Mail, MessageCircle, Phone, UserRoundPlus } from "lucide-react";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { CompanyAvatar } from "./company-avatar";
 import { buttonClass } from "@/components/ui/button";
@@ -24,13 +24,18 @@ type Props = {
   profile: PublicProfile;
   /** In preview, links still render but analytics and vCard download are off. */
   preview?: boolean;
+  /** Set when this person is an approved mentor taking paid messages. */
+  offer?: { priceKobo: number; firstName: string } | null;
 };
+
+const naira = (kobo: number) =>
+  new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(kobo / 100);
 
 /**
  * The visitor-facing card. Receives only the public projection of a profile,
  * so private fields cannot leak into the rendered HTML.
  */
-export function ProfileView({ profile, preview = false }: Props) {
+export function ProfileView({ profile, preview = false, offer = null }: Props) {
   const slug = preview ? null : profile.slug;
   const allActions = contactActions(profile);
   // Icon-only quick actions under Save contact: email, WhatsApp, call, website.
@@ -67,6 +72,15 @@ export function ProfileView({ profile, preview = false }: Props) {
             </span>
           ) : (
             <SaveContactButton profile={profile} />
+          )}
+          {offer && !preview && (
+            <Link
+              href={`/subscribe/${profile.slug}`}
+              className={buttonClass({ variant: "secondary", size: "lg", className: "mt-3 w-full" })}
+            >
+              <MessageCircle className="size-5" aria-hidden />
+              Message {offer.firstName} · {naira(offer.priceKobo)}/month
+            </Link>
           )}
         </div>
 

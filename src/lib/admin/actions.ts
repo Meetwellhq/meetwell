@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { sendInviteEmail, sendSparkBetaEmail } from "../email";
+import { sendInviteEmail, sendMentorApprovedEmail, sendSparkBetaEmail, sendWithdrawalSentEmail } from "../email";
+import { refundPayment, sendTransfer } from "../payments/paystack";
 import { createClient, getCurrentUser } from "../supabase/server";
 import { emailSchema } from "../validation";
 
@@ -102,6 +103,74 @@ export async function adminSetPaused(email: string, paused: boolean): Promise<{ 
   if (!(await getCurrentUser())) return { error: "Please log in again." };
   const { error } = await (await createClient()).rpc("admin_set_messaging_paused", { p_email: email, p_paused: paused });
   if (error) return { error: error.code === "22023" ? error.message : "Couldn't update." };
+  revalidatePath("/admin", "layout");
+  return {};
+}
+
+/** Approve, reject or pause a mentor. Approval sends them a short email. */
+export async function adminDecideMentor(email: string, status: "approved" | "rejected" | "paused"): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { data, error } = await (await createClient()).rpc("admin_decide_mentor", { p_email: email, p_status: status });
+  if (error) return { error: error.code === "22023" ? error.message : "Couldn't update." };
+  const row = (data as { email: string; first_name: string }[] | null)?.[0];
+  if (status === "approved" && row) await sendMentorApprovedEmail(row.email, row.first_name || null);
+  revalidatePath("/admin", "layout");
+  return {};
+}
+
+const nairaText = (kobo: number) =>
+  new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(kobo / 100);
+
+/** Approve a withdrawal and send it with a Paystack Transfer. */
+export async function adminApproveWithdrawal(id: number): Promise<{ error?: string; message?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return { error: "CRON_SECRET isn't set." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_approve_withdrawal", { p_id: id });
+  const w = (data as { reference: string; amount_kobo: number; recipient_code: string; email: string; first_name: string }[] | null)?.[0];
+  if (error || !w) return { error: error?.code === "22023" ? error.message : "Couldn't approve." };
+
+  let result: "success" | "processing" | "failed" = "failed";
+  let code: string | null = null;
+  try {
+    const t = await sendTransfer({ amountKobo: w.amount_kobo, recipientCode: w.recipient_code, reference: w.reference });
+    code = t.transfer_code;
+    result = t.status === "success" ? "success" : t.status === "failed" ? "failed" : "processing";
+  } catch (err) {
+    console.error("Paystack transfer failed", w.reference, err);
+  }
+  await supabase.rpc("record_transfer_result", { p_token: secret, p_reference: w.reference, p_result: result, p_transfer_code: code });
+  revalidatePath("/admin", "layout");
+
+  if (result === "failed") {
+    return { error: "Paystack didn't accept the transfer, so the money went back to their wallet. Check Transfers is on in Paystack." };
+  }
+  const { data: bank } = await supabase.rpc("admin_list_withdrawals");
+  const row = ((bank ?? []) as { reference: string; bank_name: string }[]).find((x) => x.reference === w.reference);
+  await sendWithdrawalSentEmail(w.email, w.first_name || null, { amount: nairaText(w.amount_kobo), bank: row?.bank_name ?? "bank" });
+  return { message: result === "success" ? "Sent." : "Sent to Paystack. It will show as paid once the bank confirms." };
+}
+
+export async function adminRejectWithdrawal(id: number, note: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_reject_withdrawal", { p_id: id, p_note: note });
+  if (error) return { error: error.code === "22023" ? error.message : "Couldn't reject." };
+  revalidatePath("/admin", "layout");
+  return {};
+}
+
+/** Refund a subscription in full through Paystack, then take the mentor's share back and end access. */
+export async function adminRefundSubscription(reference: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  try {
+    await refundPayment(reference);
+  } catch (err) {
+    console.error("Paystack refund failed", reference, err);
+    return { error: "Paystack didn't accept the refund. You can refund it in the Paystack dashboard, then try again." };
+  }
+  const { error } = await (await createClient()).rpc("admin_mark_refunded", { p_reference: reference });
+  if (error) return { error: "Refunded in Paystack, but couldn't update Meetwell. Tell your developer." };
   revalidatePath("/admin", "layout");
   return {};
 }

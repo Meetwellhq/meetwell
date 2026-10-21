@@ -99,7 +99,7 @@ export function AdminOverview({ m, rate }: { m: Metrics; rate: UsdRate | null })
           format={money}
         />
         <p className="text-xs text-ink-3">
-          Members pay in naira.{" "}
+          Revenue is Meetwell&apos;s share: all credit sales and 20% of mentor subscriptions. Members pay in naira.{" "}
           {rate ? (
             <>
               Dollar amounts use $1 = {naira(rate.ngnPerUsd * 100)}, updated daily (

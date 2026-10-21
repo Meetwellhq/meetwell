@@ -4,6 +4,7 @@ import {
   sendIncompleteProfileEmail,
   sendInviteReminderEmail,
   sendNoScansEmail,
+  sendRenewalReminderEmail,
 } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 
@@ -67,6 +68,22 @@ export async function GET(request: Request) {
       if (resendError) console.error("Confirmation resend failed", resendError.code, resendError.message);
     }
     const tally = (results[r.kind] ??= { sent: 0, failed: 0 });
+    if (ok) tally.sent++;
+    else tally.failed++;
+    await pause(600);
+  }
+
+  // Members whose 30 days with a mentor end in about 3 days (once per period).
+  const { data: endings, error: endingError } = await supabase.rpc("claim_subscription_reminders", { p_token: secret });
+  if (endingError) console.error("claim_subscription_reminders failed", endingError.code, endingError.message);
+  for (const e of (endings ?? []) as { email: string; member_name: string | null; mentor_name: string | null; mentor_slug: string | null; access_until: string }[]) {
+    if (!e.mentor_slug) continue;
+    const ok = await sendRenewalReminderEmail(e.email, e.member_name, {
+      mentorName: e.mentor_name ?? "your mentor",
+      mentorSlug: e.mentor_slug,
+      endsOn: new Date(e.access_until).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Africa/Lagos" }),
+    });
+    const tally = (results.subscription_ending ??= { sent: 0, failed: 0 });
     if (ok) tally.sent++;
     else tally.failed++;
     await pause(600);

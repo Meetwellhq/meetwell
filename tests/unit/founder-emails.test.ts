@@ -159,3 +159,28 @@ describe("new message email", () => {
     expect(html).toContain("Turn off message emails");
   });
 });
+
+describe("mentor emails", () => {
+  it("approval links to the Mentoring page and mentions the 7-day reply rule", async () => {
+    const { mentorApprovedEmail } = await import("@/lib/founder-emails");
+    const e = mentorApprovedEmail({ ...base, fullName: "Ada Obi" });
+    expect(e.subject).toBe("You're a Meetwell mentor now");
+    expect(e.html).toContain('href="https://meetwell.me/dashboard/mentor"');
+    expect(e.text).toContain("within 7 days");
+  });
+
+  it("withdrawal email names the amount and bank", async () => {
+    const { withdrawalSentEmail } = await import("@/lib/founder-emails");
+    const e = withdrawalSentEmail({ ...base, fullName: "Ada Obi", amount: "₦9,600", bank: "GTBank" });
+    expect(e.subject).toBe("₦9,600 is on its way to you");
+    expect(e.text).toContain("GTBank");
+  });
+
+  it("renewal reminder links to the mentor's subscribe page and says nothing renews by itself", async () => {
+    const { renewalReminderEmail } = await import("@/lib/founder-emails");
+    const e = renewalReminderEmail({ ...base, fullName: "Tunde Bello", mentorName: "Ada Obi", mentorSlug: "ada", endsOn: "24 October" });
+    expect(e.subject).toBe("Your messages with Ada end on 24 October");
+    expect(e.html).toContain('href="https://meetwell.me/subscribe/ada"');
+    expect(e.text).toContain("won't be charged unless you choose to");
+  });
+});

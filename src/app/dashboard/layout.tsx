@@ -2,6 +2,7 @@ import { LogOut } from "lucide-react";
 import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { ExperiencePrompt } from "@/components/matching/experience-prompt";
+import { isMentor } from "@/lib/matching/constants";
 import { Logo } from "@/components/marketing/logo";
 import { signOut } from "@/lib/auth/actions";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
@@ -36,7 +37,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
               </form>
             </div>
           </div>
-          <DashboardNav messages={messages} />
+          <DashboardNav messages={messages} mentor={isMentor(profile?.experience_years)} />
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>

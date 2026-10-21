@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Messages" };
 
-export default async function ConversationPage({ params }: PageProps<"/dashboard/messages/[id]">) {
-  const { id } = await params;
+export default async function ConversationPage({ params, searchParams }: PageProps<"/dashboard/messages/[id]">) {
+  const [{ id }, { paid }] = await Promise.all([params, searchParams]);
   const conversationId = Number(id);
   if (!Number.isSafeInteger(conversationId) || conversationId <= 0) notFound();
 
@@ -19,5 +19,5 @@ export default async function ConversationPage({ params }: PageProps<"/dashboard
   const conversation = ((list ?? []) as ConversationRow[]).find((c) => Number(c.id) === conversationId);
   if (!conversation || error) notFound();
 
-  return <Thread conversation={conversation} messages={(messages ?? []) as MessageRow[]} />;
+  return <Thread conversation={conversation} messages={(messages ?? []) as MessageRow[]} justPaid={paid === "1"} />;
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
-import { EmptyState } from "@/components/ui/misc";
+import { Alert, EmptyState } from "@/components/ui/misc";
 import type { ConversationRow } from "@/lib/messaging/types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,7 +16,8 @@ const when = (iso: string) => {
   });
 };
 
-export default async function MessagesPage() {
+export default async function MessagesPage({ searchParams }: PageProps<"/dashboard/messages">) {
+  const { payment } = await searchParams;
   const { data } = await (await createClient()).rpc("my_conversations");
   const rows = (data ?? []) as ConversationRow[];
 
@@ -32,6 +33,11 @@ export default async function MessagesPage() {
           .
         </p>
       </div>
+
+      {payment === "pending" && (
+        <Alert>We&apos;re confirming your payment with Paystack. Your conversation will appear here in a minute.</Alert>
+      )}
+      {payment === "failed" && <Alert tone="danger">The payment didn&apos;t go through, so you weren&apos;t charged.</Alert>}
 
       {rows.length === 0 ? (
         <div className="rounded-xl border border-border bg-surface">

@@ -133,6 +133,21 @@ export default function TermsPage() {
             Consumer Protection Act 2018.
           </li>
           <li>
+            <strong>Messaging a mentor:</strong> members earlier in their careers can pay a mentor&apos;s price for 30
+            days of messages with them. It doesn&apos;t renew on its own; we remind you before it ends. If the mentor
+            doesn&apos;t reply within 7 days of your payment, we refund you in full. You pay for access to the
+            conversation, not for any particular advice or outcome.
+          </li>
+          <li>
+            <strong>Mentors:</strong> members with 4+ years of experience can apply, and we approve each one. Mentors
+            set their own price between ₦2,000 and ₦20,000. {APP_NAME} keeps 20% of each payment and covers the
+            payment fees; the other 80% goes into the mentor&apos;s wallet and can be withdrawn 7 days after the
+            payment, in amounts of ₦5,000 or more, to a bank account in their name. We approve each withdrawal. If a
+            member is refunded, the mentor&apos;s share of that payment comes back out of their wallet. Mentors are
+            independent, not employees of {APP_NAME}, and are responsible for their own taxes. We may pause a mentor
+            or hold payouts while we look into a report or a payment problem.
+          </li>
+          <li>
             We may add, change or remove features. If a change takes away something important, we will try to give
             you reasonable notice.
           </li>

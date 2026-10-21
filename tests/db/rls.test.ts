@@ -978,3 +978,160 @@ describe("secret-protected functions for logged-in callers", () => {
     await expect(as(JUNIOR, "select * from public.claim_message_email('wrong', 1)")).rejects.toThrow(/Not allowed/);
   });
 });
+
+describe("mentor subscriptions and wallet", () => {
+  const SECRET = "test-secret-that-is-long-enough-1234567890";
+  const ADMIN = "abababab-abab-abab-abab-abababababab";
+  const JUNIOR = "55555555-5555-5555-5555-555555555555"; // 1 year
+  const SENIOR = "66666666-6666-6666-6666-666666666666"; // 4 years, photo
+  const ENGINEER = "77777777-7777-7777-7777-777777777777"; // 3 years
+  const status = async (u: string) =>
+    (await as<{ status: string | null; checks: Record<string, boolean> }>(u, "select status, checks from public.my_mentor_status()"))[0];
+  const wallet = async (u: string) =>
+    (await as<{ available_kobo: number; pending_kobo: number }>(u, "select available_kobo, pending_kobo from public.my_wallet()"))[0];
+  const q = (sql: string, params: unknown[] = []) => db.query(sql, params);
+
+  it("lets eligible mentors apply, and only admins approve", async () => {
+    // Account under 14 days old: not yet.
+    expect((await status(SENIOR)).checks.account_age).toBe(false);
+    await expect(as(SENIOR, "select public.apply_as_mentor()")).rejects.toThrow(/Not eligible/);
+    await q("update auth.users set created_at = now() - interval '30 days' where id = $1", [SENIOR]);
+    const s = await status(SENIOR);
+    expect(Object.values(s.checks).every(Boolean)).toBe(true);
+    await as(SENIOR, "select public.apply_as_mentor()");
+    expect((await status(SENIOR)).status).toBe("applied");
+    await expect(as(JUNIOR, "select public.apply_as_mentor()")).rejects.toThrow(/Not eligible/); // 1 year
+
+    // Not approved yet: no offer, no price changes.
+    expect(await as(null, "select * from public.mentor_offer('senior')")).toEqual([]);
+    await expect(as(SENIOR, "select public.set_mentor_offer(500000, true)")).rejects.toThrow(/Not an approved mentor/);
+    await expect(as(SENIOR, "select * from public.admin_decide_mentor('senior@test', 'approved')")).rejects.toThrow(/Not allowed/);
+    const [decided] = await as<{ email: string }>(ADMIN, "select * from public.admin_decide_mentor('senior@test', 'approved')");
+    expect(decided.email).toBe("senior@test");
+
+    await expect(as(SENIOR, "select public.set_mentor_offer(100000, true)")).rejects.toThrow(/between/); // under N2,000
+    await expect(as(SENIOR, "select public.set_mentor_offer(2100000, true)")).rejects.toThrow(/between/);
+    await as(SENIOR, "select public.set_mentor_offer(600000, true)");
+    expect(await as(null, "select * from public.mentor_offer('senior')")).toEqual([{ price_kobo: 600000, first_name: "Test" }]);
+  });
+
+  it("sells 30 days of messages at the mentor's price, 80% to their wallet after 7 days", async () => {
+    await expect(as(SENIOR, "select * from public.start_subscription_purchase('senior')")).rejects.toThrow(/That is you/);
+    await q("update public.profiles set experience_years = 5 where user_id = $1", [ENGINEER]);
+    await expect(as(ENGINEER, "select * from public.start_subscription_purchase('senior')")).rejects.toThrow(/under 4 years/);
+    await q("update public.profiles set experience_years = 3 where user_id = $1", [ENGINEER]);
+
+    const [p] = await as<{ reference: string; amount_kobo: number }>(ENGINEER, "select * from public.start_subscription_purchase('senior')");
+    expect(p.amount_kobo).toBe(600000);
+    await expect(
+      as(null, `select * from public.confirm_payment('${SECRET}', '${p.reference}', 100, 'NGN', 9)`),
+    ).rejects.toThrow(/does not match/);
+    const [r] = await as<{ added: boolean; kind: string; conversation_id: number }>(
+      null,
+      `select added, kind, conversation_id from public.confirm_payment('${SECRET}', '${p.reference}', 600000, 'NGN', 9)`,
+    );
+    expect(r).toMatchObject({ added: true, kind: "subscription" });
+    const again = await as<{ added: boolean }>(null, `select added from public.confirm_payment('${SECRET}', '${p.reference}', 600000, 'NGN', 9)`);
+    expect(again[0].added).toBe(false); // webhook twice: no double access or earnings
+
+    const [conv] = (await q(
+      "select round(extract(epoch from access_until - now()) / 86400)::int as days from public.conversations where id = $1",
+      [r.conversation_id],
+    )).rows as { days: number }[];
+    expect(conv.days).toBe(30);
+    expect(await wallet(SENIOR)).toEqual({ available_kobo: 0, pending_kobo: 480000 }); // 80%, held 7 days
+    await expect(as(ENGINEER, "select * from public.wallet_ledger")).rejects.toThrow(/permission denied/);
+
+    // The member can message the mentor straight away.
+    await as(ENGINEER, `select public.send_message(${r.conversation_id}, 'Hi, thanks for taking my question.')`);
+  });
+
+  it("withdraws N5,000+ of available money to a checked account, with admin approval", async () => {
+    await expect(as(SENIOR, "select public.request_withdrawal(500000)")).rejects.toThrow(/bank account/);
+    await expect(
+      as(SENIOR, `select public.save_payout_account('wrong', '${SENIOR}', '058', 'GTBank', '1234', 'TEST PERSON', 'RCP_x')`),
+    ).rejects.toThrow(/Not allowed/);
+    await as(null, `select public.save_payout_account('${SECRET}', '${SENIOR}', '058', 'GTBank', '1234', 'TEST PERSON', 'RCP_x')`);
+    await expect(as(SENIOR, "select public.request_withdrawal(500000)")).rejects.toThrow(/available balance/); // still pending
+
+    // Seven days later the earning is available. Add another so there's N9,600.
+    await q("update public.wallet_ledger set available_at = now() - interval '1 minute' where user_id = $1", [SENIOR]);
+    await q("insert into public.wallet_ledger (user_id, amount_kobo, kind) values ($1, 480000, 'adjustment')", [SENIOR]);
+    expect((await wallet(SENIOR)).available_kobo).toBe(960000);
+    await expect(as(SENIOR, "select public.request_withdrawal(400000)")).rejects.toThrow(/minimum/);
+    await expect(as(SENIOR, "select public.request_withdrawal(1000000)")).rejects.toThrow(/available balance/);
+
+    const [{ id: w1 }] = await as<{ id: number }>(SENIOR, "select public.request_withdrawal(500000) as id");
+    expect((await wallet(SENIOR)).available_kobo).toBe(460000); // held straight away
+    await expect(as(SENIOR, `select * from public.admin_approve_withdrawal(${w1})`)).rejects.toThrow(/Not allowed/);
+    const [ap] = await as<{ reference: string; amount_kobo: number; recipient_code: string }>(
+      ADMIN,
+      `select reference, amount_kobo, recipient_code from public.admin_approve_withdrawal(${w1})`,
+    );
+    expect(ap).toMatchObject({ amount_kobo: 500000, recipient_code: "RCP_x" });
+    await as(null, `select public.record_transfer_result('${SECRET}', '${ap.reference}', 'success', 'TRF_1')`);
+    expect((await as<{ status: string }>(SENIOR, "select status from public.my_withdrawals()"))[0].status).toBe("paid");
+
+    // A failed transfer gives the money back, once.
+    await q("insert into public.wallet_ledger (user_id, amount_kobo, kind) values ($1, 100000, 'adjustment')", [SENIOR]);
+    const [{ id: w2 }] = await as<{ id: number }>(SENIOR, "select public.request_withdrawal(500000) as id");
+    const [ap2] = await as<{ reference: string }>(ADMIN, `select reference from public.admin_approve_withdrawal(${w2})`);
+    await as(null, `select public.record_transfer_result('${SECRET}', '${ap2.reference}', 'failed', null)`);
+    expect((await wallet(SENIOR)).available_kobo).toBe(560000);
+    await as(null, `select public.record_transfer_result('${SECRET}', '${ap2.reference}', 'failed', null)`);
+    expect((await wallet(SENIOR)).available_kobo).toBe(560000);
+
+    // Rejected by the admin: money back too.
+    const [{ id: w3 }] = await as<{ id: number }>(SENIOR, "select public.request_withdrawal(500000) as id");
+    await as(ADMIN, `select public.admin_reject_withdrawal(${w3}, 'Please check your bank details')`);
+    expect((await wallet(SENIOR)).available_kobo).toBe(560000);
+  });
+
+  it("flags subscriptions with no mentor reply after 7 days, and refunds take the share back", async () => {
+    const [p] = await as<{ reference: string }>(JUNIOR, "select * from public.start_subscription_purchase('senior')");
+    await as(null, `select * from public.confirm_payment('${SECRET}', '${p.reference}', 600000, 'NGN', 10)`);
+    await q("update public.payments set paid_at = now() - interval '8 days' where reference = $1", [p.reference]);
+    // Earlier tests left messages in this conversation; make them older than the payment.
+    await q(
+      "update public.messages set created_at = now() - interval '10 days' where conversation_id = (select id from public.conversations where member_id = $1 and mentor_id = $2)",
+      [JUNIOR, SENIOR],
+    );
+    const subs = await as<{ reference: string; refund_due: boolean }>(ADMIN, "select reference, refund_due from public.admin_list_subscriptions()");
+    expect(subs.find((s) => s.reference === p.reference)?.refund_due).toBe(true);
+
+    const before = await wallet(SENIOR);
+    await as(ADMIN, `select public.admin_mark_refunded('${p.reference}')`);
+    const after = await wallet(SENIOR);
+    expect(after.available_kobo + after.pending_kobo).toBe(before.available_kobo + before.pending_kobo - 480000);
+    await expect(as(ADMIN, `select public.admin_mark_refunded('${p.reference}')`)).rejects.toThrow(/Not a paid subscription/);
+    const [{ id: convId }] = (await q(
+      "select id from public.conversations where member_id = $1 and mentor_id = $2", [JUNIOR, SENIOR],
+    )).rows as { id: number }[];
+    await expect(as(JUNIOR, `select public.send_message(${convId}, 'hello')`)).rejects.toThrow(/ended/);
+  });
+
+  it("reminds members 3 days before access ends, once", async () => {
+    await q(
+      "update public.conversations set access_until = now() + interval '2 days 12 hours' where mentor_id = $1 and member_id = $2",
+      [SENIOR, ENGINEER],
+    );
+    const first = await as<{ email: string }>(null, `select email from public.claim_subscription_reminders('${SECRET}')`);
+    expect(first.map((r) => r.email)).toContain("engineer@test");
+    expect(await as(null, `select email from public.claim_subscription_reminders('${SECRET}')`)).toEqual([]);
+  });
+});
+
+describe("admin metrics with subscriptions", () => {
+  it("counts only Meetwell's share as revenue", async () => {
+    const ADMIN = "abababab-abab-abab-abab-abababababab";
+    const [{ m }] = await as<{ m: { revenue_total_kobo: number } }>(ADMIN, "select public.admin_metrics() as m");
+    const [{ ours }] = (await db.query<{ ours: number }>(
+      "select coalesce(sum(amount_kobo - coalesce(mentor_share_kobo, 0)), 0)::int as ours from public.payments where status = 'success'",
+    )).rows;
+    expect(Number(m.revenue_total_kobo)).toBe(ours);
+    const [{ gross }] = (await db.query<{ gross: number }>(
+      "select coalesce(sum(amount_kobo), 0)::int as gross from public.payments where status = 'success'",
+    )).rows;
+    expect(ours).toBeLessThan(gross); // a subscription was paid, so the mentor share is left out
+  });
+});
