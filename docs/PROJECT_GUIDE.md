@@ -102,6 +102,12 @@ every migration.
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `support@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).
+- **Announcements**: one-off emails from the founder to every confirmed member, sent from the
+  Invites tab ("Send Spark email", in paced batches; click again for the rest). Each person gets each
+  announcement once (`public.announcements_sent`, `20261102000000_announcements.sql`). Template:
+  `sparkBetaEmail` in `src/lib/founder-emails.ts`.
+- **Changelog**: `/changelog` is built from `CHANGELOG.md` (`src/lib/changelog.ts` reads the small
+  Markdown subset used there). Linked in the footer. Add a dated `## D Month YYYY: Title` entry per release.
 - **Automatic reminders**: `src/app/api/cron/reminders/route.ts`, scheduled in `vercel.json`
   (08:00 UTC daily). `public.claim_reminders()` picks who is due and records each send in
   `public.reminders_sent`, so every reminder goes out at most once per person:

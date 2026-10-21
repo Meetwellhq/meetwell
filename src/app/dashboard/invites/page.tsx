@@ -1,12 +1,16 @@
 import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { AnnounceButton } from "@/components/admin/announce-button";
 import { InviteButton } from "@/components/admin/invite-button";
 import { Badge, EmptyState } from "@/components/ui/misc";
 import { publicProfilePath } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Invites" };
+
+// Announcement emails are paced, so give the server action time for a batch.
+export const maxDuration = 60;
 
 type Reminder = { kind: keyof typeof REMINDER_LABEL; sent_at: string };
 
@@ -81,10 +85,12 @@ function Stats({ items, columns = 4 }: { items: { label: string; value: number }
 
 export default async function InvitesPage() {
   const supabase = await createClient();
-  const [waitlist, members] = await Promise.all([
+  const [waitlist, members, announcement] = await Promise.all([
     supabase.rpc("admin_list_waitlist"),
     supabase.rpc("admin_list_members"),
+    supabase.rpc("admin_announcement_status", { p_kind: "spark_beta" }),
   ]);
+  const spark = ((announcement.data ?? []) as { sent: number; remaining: number }[])[0] ?? { sent: 0, remaining: 0 };
   // Non-admins get a plain 404; the database refuses them anyway.
   if (waitlist.error) notFound();
   const rows = (waitlist.data ?? []) as WaitlistRow[];
@@ -145,6 +151,30 @@ export default async function InvitesPage() {
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-ink">Announcements</h2>
+          <p className="mt-1 text-ink-2">
+            One-off emails from you to every member with a confirmed account. Each person gets each one once.
+          </p>
+        </div>
+        {announcement.error ? (
+          <p className="rounded-xl border border-border bg-surface px-4 py-3.5 text-sm text-ink-2">
+            Announcements can&apos;t be loaded yet. Run the announcements SQL in Supabase first.
+          </p>
+        ) : (
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface px-4 py-3.5">
+            <div className="min-w-0">
+              <p className="font-medium text-ink">Come and try Spark, our new beta feature</p>
+              <p className="text-sm text-ink-2">
+                Sent to {spark.sent} · {spark.remaining} to go
+              </p>
+            </div>
+            <AnnounceButton remaining={spark.remaining} />
+          </div>
         )}
       </section>
 

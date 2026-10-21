@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inviteEmail, waitlistEmail } from "@/lib/founder-emails";
+import { inviteEmail, sparkBetaEmail, waitlistEmail } from "@/lib/founder-emails";
 
 const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "support@meetwell.me" };
 
@@ -129,5 +129,17 @@ describe("complete your profile email", () => {
     const e = incompleteProfileEmail({ ...args, completeness: 70, hasPhoto: true, experienceYears: 6 });
     expect(e.subject).toBe("Your Meetwell profile is 70% done");
     expect(e.html).toContain('href="https://meetwell.me/dashboard/matches"');
+  });
+});
+
+describe("Spark beta announcement", () => {
+  it("explains Spark and links to the Spark page", () => {
+    const { subject, text, html } = sparkBetaEmail({ ...base, fullName: "Ada Obi" });
+    expect(subject).toBe("Come and try Spark, our new beta feature");
+    expect(text.startsWith("Hi Ada,")).toBe(true);
+    expect(text).toContain("up to 5 free introductions a month");
+    expect(html).toContain('href="https://meetwell.me/dashboard/matches"');
+    expect(html).toContain('href="mailto:support@meetwell.me"');
+    expect(text).toContain("one-off note");
   });
 });

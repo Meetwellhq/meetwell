@@ -667,3 +667,31 @@ describe("AI network matching", () => {
     expect(before).toEqual([]); // nobody in growth with more experience
   });
 });
+
+describe("announcements", () => {
+  it("lets only admins send, to confirmed members, once each", async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    await expect(as(BOB, "select * from public.admin_announcement_recipients('spark_beta', 25)")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select public.admin_mark_announced('spark_beta', 'x@test')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_announcement_recipients('spark_beta', 25)")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select * from public.admin_announcement_status('spark_beta')")).rejects.toThrow(/permission denied/);
+    await expect(as(ALICE, "select * from public.announcements_sent")).rejects.toThrow(/permission denied/);
+
+    const recipients = await as<{ email: string }>(ALICE, "select email from public.admin_announcement_recipients('spark_beta', 100)");
+    const emails = recipients.map((r) => r.email);
+    const [{ confirmed }] = (await db.query<{ confirmed: number }>(
+      "select count(*)::int as confirmed from auth.users where email_confirmed_at is not null",
+    )).rows;
+    expect(emails).toHaveLength(Math.min(confirmed, 100));
+    expect(emails).not.toContain("unconfirmed@test"); // only confirmed accounts
+
+    const [first] = emails;
+    expect((await as<{ ok: boolean }>(ALICE, `select public.admin_mark_announced('spark_beta', '${first}') as ok`))[0].ok).toBe(true);
+    expect((await as<{ ok: boolean }>(ALICE, `select public.admin_mark_announced('spark_beta', '${first}') as ok`))[0].ok).toBe(false);
+    const after = await as<{ email: string }>(ALICE, "select email from public.admin_announcement_recipients('spark_beta', 100)");
+    expect(after.map((r) => r.email)).not.toContain(first);
+    const [status] = await as<{ sent: number; remaining: number }>(ALICE, "select * from public.admin_announcement_status('spark_beta')");
+    expect(status).toEqual({ sent: 1, remaining: confirmed - 1 });
+    await expect(as(ALICE, "select public.admin_mark_announced('other', 'x@test')")).rejects.toThrow(/check constraint/);
+  });
+});

@@ -4,11 +4,15 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
-## Spark: 5 free introductions a month
+## 21 October 2026: 5 free Spark introductions a month
 
 - Every member now gets up to **5 free Spark introductions a month**, still at most one a day.
 - Your Spark page shows how many you have left and when they reset (the 1st of each month,
   Lagos time).
+- Meetwell is now run by **Meet Well Limited** (RC 9952279). You'll see it in the footer,
+  Terms and Privacy.
+- Need help? Write to **support@meetwell.me**.
+- This changelog now has its own page, linked in the footer.
 
 ---
 
@@ -19,7 +23,7 @@ Meetwell finds a member with more experience in your field (or one close to it) 
 you why you two should talk. One tap and you're saying hello.
 
 **How it works**
-- Turn it on in **Dashboard → Matches** and tell us your field, years of experience, what
+- Turn it on in **Dashboard → Spark** and tell us your field, years of experience, what
   you're looking for and your city. Only Spark sees these. They never show on your card.
 - Each morning you may get one introduction by email, with a short note on why you were
   matched and a "Say hello" button that opens their card.

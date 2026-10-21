@@ -350,3 +350,44 @@ export function incompleteProfileEmail(
     after: [finish, ONLY_ONCE],
   });
 }
+
+/** One-off note to every member: Spark is a new beta feature, come and try it. */
+export function sparkBetaEmail({ fullName, appName, siteUrl, photoUrl, replyEmail }: Common) {
+  const firstName = firstNameOf(fullName);
+  const link = `${siteUrl}/dashboard/matches`;
+  const before = [
+    `I've just opened a new beta feature on ${appName} called Spark, and you're welcome to come and try it. It's free.`,
+    "Spark introduces you to someone a step ahead of you: a member with 4+ years of experience in your field, or one close to it. Each introduction comes with a short note on why you two should talk, and a button to open their card and say hello.",
+    "To try it, open Spark in your dashboard, switch it on and tell us a little about your work. Only Spark sees these answers. They never show on your card. Once your profile is 80% complete, you'll get up to 5 free introductions a month, by email and on your Spark page.",
+  ];
+  const after = [
+    "Been at it for 4 years or more? Turn Spark on and add a profile photo, and people earlier in their careers can be introduced to you.",
+  ];
+  const ask = "It's still in beta, so I'd love to hear what works and what doesn't. Write to me at";
+  const smallPrint = `This is a one-off note about a new feature, sent because you have a ${appName} account.`;
+
+  const subject = "Come and try Spark, our new beta feature";
+  const text = [
+    `Hi ${firstName},`,
+    ...before,
+    `Try Spark: ${link}`,
+    ...after,
+    `${ask} ${replyEmail}.`,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+    smallPrint,
+  ].join("\n\n");
+  const html = founderLayout({
+    firstName,
+    appName,
+    siteUrl,
+    photoUrl,
+    bodyHtml: [
+      ...before.map(p),
+      button(link, "Try Spark"),
+      ...after.map(p),
+      `<p>${escapeHtml(ask)} <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
+    ].join("\n  "),
+    footerHtml: escapeHtml(smallPrint),
+  });
+  return { subject, text, html };
+}

@@ -19,6 +19,9 @@ export function SiteFooter({ bordered = true, wide = false }: { bordered?: boole
           <Link href="/terms" className="hover:text-ink">
             Terms
           </Link>
+          <Link href="/changelog" className="hover:text-ink">
+            Changelog
+          </Link>
           <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-ink">
             Contact
           </a>

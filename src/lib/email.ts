@@ -10,6 +10,7 @@ import {
   matchEmail,
   type MatchedMember,
   noScansEmail,
+  sparkBetaEmail,
   waitlistEmail,
 } from "./founder-emails";
 
@@ -83,4 +84,9 @@ export function sendIncompleteProfileEmail(
     to,
     incompleteProfileEmail({ ...common(fullName), ...details, fieldName: fieldLabel(details.field) }),
   );
+}
+
+/** One-off announcement: Spark is a new beta feature, come and try it. */
+export function sendSparkBetaEmail(to: string, fullName: string | null) {
+  return send(to, sparkBetaEmail(common(fullName)));
 }
