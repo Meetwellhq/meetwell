@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/marketing/legal-page";
-import { APP_NAME, SUPPORT_EMAIL } from "@/lib/config";
+import { APP_NAME, COMPANY_NAME, COMPANY_RC, SUPPORT_EMAIL } from "@/lib/config";
 
 export const metadata: Metadata = { title: "Privacy notice" };
 
@@ -21,7 +21,7 @@ export default function PrivacyPage() {
           Constitution of the Federal Republic of Nigeria 1999 (as amended).
         </p>
         <p className="mt-3">
-          {APP_NAME}, operated from Lagos, Nigeria, is the data controller. For anything about your data, email {mail}.
+          {COMPANY_NAME} ({COMPANY_RC}), the company that runs {APP_NAME} from Lagos, Nigeria, is the data controller. For anything about your data, email {mail}.
         </p>
       </section>
 

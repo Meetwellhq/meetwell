@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { APP_NAME, SUPPORT_EMAIL } from "@/lib/config";
+import { COMPANY_NAME, COMPANY_RC, SUPPORT_EMAIL } from "@/lib/config";
 import { Logo } from "./logo";
 
 export function SiteFooter({ bordered = true, wide = false }: { bordered?: boolean; wide?: boolean }) {
@@ -9,7 +9,7 @@ export function SiteFooter({ bordered = true, wide = false }: { bordered?: boole
         <div className="flex flex-col gap-2">
           <Logo />
           <p className="text-sm text-ink-3">
-            © {new Date().getFullYear()} {APP_NAME}. All rights reserved.
+            © {new Date().getFullYear()} {COMPANY_NAME} ({COMPANY_RC}). All rights reserved.
           </p>
         </div>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-2">

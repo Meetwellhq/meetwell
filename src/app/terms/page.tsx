@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/marketing/legal-page";
-import { APP_NAME, SUPPORT_EMAIL } from "@/lib/config";
+import { APP_NAME, COMPANY_NAME, COMPANY_RC, SUPPORT_EMAIL } from "@/lib/config";
 
 export const metadata: Metadata = { title: "Terms of use" };
 
@@ -13,11 +13,11 @@ const mail = (
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of use" updated="October 18, 2026">
+    <LegalPage title="Terms of use" updated="October 21, 2026">
       <section>
         <p>
-          These terms are an agreement between you and {APP_NAME} (&ldquo;we&rdquo;, &ldquo;us&rdquo;), operated from
-          Lagos, Nigeria. They apply when you create an account, publish a card, or open someone&apos;s card on
+          These terms are an agreement between you and {COMPANY_NAME} ({COMPANY_RC}), the company that runs{" "}
+          {APP_NAME} (&ldquo;we&rdquo;, &ldquo;us&rdquo;), operating from Lagos, Nigeria. They apply when you create an account, publish a card, or open someone&apos;s card on
           meetwell.me. By creating an account you accept them. If you don&apos;t agree, please don&apos;t use{" "}
           {APP_NAME}.
         </p>

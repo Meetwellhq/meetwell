@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LogoMark } from "@/components/marketing/logo";
 import { Alert } from "@/components/ui/misc";
-import { APP_NAME, isSupabaseConfigured } from "@/lib/config";
+import { APP_NAME, COMPANY_NAME, isSupabaseConfigured } from "@/lib/config";
 
 const COLUMN = "mx-auto w-full max-w-[36rem] border-x border-border";
 
@@ -38,7 +38,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
             Terms of service
           </Link>
           <p className="mt-2 text-xs">
-            © {new Date().getFullYear()} {APP_NAME}. All rights reserved.
+            © {new Date().getFullYear()} {COMPANY_NAME}. All rights reserved.
           </p>
         </footer>
       </main>

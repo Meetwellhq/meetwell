@@ -110,7 +110,8 @@ every migration.
 - **Nightly clean-up**: `pg_cron` job `purge-profile-events` (03:00 UTC) deletes engagement
   events older than 13 months, as the Privacy notice promises.
 - **Legal**: `/terms` and `/privacy`, written for Nigerian law (Constitution s.37, NDPA 2023,
-  FCCPA 2018). Not yet reviewed by a lawyer; registered business name and RC number not added.
+  FCCPA 2018). Not yet reviewed by a lawyer. Run by **Meet Well Limited (RC 9952279)**, incorporated
+  21 October 2026 (`COMPANY_NAME`, `COMPANY_RC` in `src/lib/config.ts`; shown in the footer, Terms, Privacy).
 
 ## Deploying
 
@@ -146,9 +147,10 @@ does not remove that. Revoke from `anon` explicitly for anything visitors must n
 ## Open items
 
 - Talk to the first invited users; invite the next batch from the Invites tab.
-- Lawyer review of Terms and Privacy; add registered business name and RC number.
+- Lawyer review of Terms and Privacy.
 - Optional: delete meetwell.me from ImprovMX (no longer used).
 - Ideas waiting on user feedback: printable QR card, simpler onboarding, stats on each
   user's own dashboard, paid plans (e.g. Paystack).
 - Optional: add `ANTHROPIC_API_KEY` in Vercel for Claude-written match reasons.
-- After CAC registration: put the registered company name in the footer, LICENSE and Terms.
+- CAC done (Meet Well Limited): still to do, LICENSE copyright holder (Rasheed personally today), and
+  upgrade Paystack to a Registered Business when payments start.
