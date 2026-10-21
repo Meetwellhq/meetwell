@@ -4,6 +4,15 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
+## 21 October 2026: Pick your title and company
+
+- **Professional title** and **company** are now dropdowns, starting with tech careers and
+  leading Nigerian companies. Not on the list? Choose "Other" and type your own.
+- Your company now shows as a small badge on your card photo: the company's logo when we
+  have it, or a simple company icon.
+
+---
+
 ## 21 October 2026: Spark for every stage of your career
 
 - Sign-up now asks for your **years of experience** and **field**. It stays private and never

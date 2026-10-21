@@ -10,7 +10,9 @@ import { checkSlugAvailability } from "@/lib/profiles/actions";
 import { LIMITS, NETWORKING_GOALS, SOCIAL_PLATFORMS } from "@/lib/profiles/constants";
 import { cn } from "@/lib/cn";
 import { slugify } from "@/lib/validation";
+import { COMPANIES, TITLE_GROUPS } from "@/lib/profiles/careers";
 import { AvatarUpload } from "./avatar-upload";
+import { PickOrType } from "./pick-or-type";
 import type { SectionProps } from "./types";
 
 export function BasicsSection({
@@ -62,14 +64,34 @@ export function BasicsSection({
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Professional title" optional error={errors.title}>
           {({ id, describedBy, invalid }) => (
-            <Input id={id} aria-describedby={describedBy} invalid={invalid} value={values.title} maxLength={LIMITS.title}
-              placeholder="e.g. Product Designer" autoComplete="organization-title" onChange={(e) => set("title", e.target.value)} />
+            <PickOrType
+              id={id}
+              describedBy={describedBy}
+              invalid={invalid}
+              value={values.title}
+              onChange={(v) => set("title", v)}
+              groups={TITLE_GROUPS.map((g) => ({ label: g.label, options: g.titles }))}
+              maxLength={LIMITS.title}
+              placeholder="Type your title"
+              otherLabel="Other (type your own)"
+              autoComplete="organization-title"
+            />
           )}
         </Field>
         <Field label="Company, organization or school" optional error={errors.organization}>
           {({ id, describedBy, invalid }) => (
-            <Input id={id} aria-describedby={describedBy} invalid={invalid} value={values.organization} maxLength={LIMITS.organization}
-              autoComplete="organization" onChange={(e) => set("organization", e.target.value)} />
+            <PickOrType
+              id={id}
+              describedBy={describedBy}
+              invalid={invalid}
+              value={values.organization}
+              onChange={(v) => set("organization", v)}
+              groups={[{ label: "Companies", options: COMPANIES.map((c) => c.name) }]}
+              maxLength={LIMITS.organization}
+              placeholder="Type your company, organization or school"
+              otherLabel="Other (type your own)"
+              autoComplete="organization"
+            />
           )}
         </Field>
       </div>

@@ -81,6 +81,12 @@ every migration.
 - **Log in page**: `/sign-in` shows the private beta chooser; `?method=email` shows the form.
 - **Cards**: public card `/p/[slug]` (`src/components/profile/profile-view.tsx`) with a
   floating green "Try it for free" bar. Editor in `/dashboard/profile`.
+- **Title and company pickers**: `src/lib/profiles/careers.ts` holds the suggested titles (tech
+  careers) and companies; both stay free text ("Other"). `findCompany()` matches a card's
+  organisation to a company, and `CompanyAvatar` shows its logo (`public/companies/*.png`, 96px,
+  from each company's own site icon) or a building icon on the photo. Paystack, Access Bank and
+  Dangote have no logo file yet (Paystack blocks downloads, Dangote's site was down, Access only
+  has a 16px icon); add a 96px PNG and set `logo` to use one.
 - **QR codes**: `src/lib/qr.ts`. Error correction H with the Meetwell logo in the middle; PNG
   rendered with `sharp`. The QR encodes the profile URL only.
 - **Admin (Invites tab)**: `/dashboard/invites`, visible only to admins (`public.admins`).

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Globe, Mail, Phone, UserRoundPlus } from "lucide-react";
 import { SocialIcon } from "@/components/icons/social-icon";
-import { Avatar } from "@/components/ui/avatar";
+import { CompanyAvatar } from "./company-avatar";
 import { buttonClass } from "@/components/ui/button";
 import { LogoMark } from "@/components/marketing/logo";
 import { cn } from "@/lib/cn";
@@ -46,7 +46,7 @@ export function ProfileView({ profile, preview = false }: Props) {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4">
       <section className="rounded-2xl border border-border bg-surface px-5 pb-5 pt-7 text-center">
-        <Avatar name={profile.fullName} src={profile.avatarUrl} className="mx-auto size-24 text-2xl" />
+        <CompanyAvatar name={profile.fullName} src={profile.avatarUrl} organization={profile.organization} className="size-24 text-2xl" />
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-ink">{profile.fullName}</h1>
         {subtitle && <p className="mt-1 text-[15px] text-ink-2">{subtitle}</p>}
         {profile.bio && <p className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-ink-2">{profile.bio}</p>}

@@ -228,3 +228,18 @@ describe("contact actions", () => {
     expect(mailtoWithBody("a@x.test", "Hi there", "Line & more")).toBe("mailto:a@x.test?subject=Hi%20there&body=Line%20%26%20more");
   });
 });
+
+describe("findCompany", () => {
+  it("matches names and aliases loosely, and returns null for unknown companies", async () => {
+    const { findCompany, COMPANIES } = await import("@/lib/profiles/careers");
+    expect(findCompany("Kuda Bank")?.name).toBe("Kuda");
+    expect(findCompany("  mtn ")?.name).toBe("MTN Nigeria");
+    expect(findCompany("Raenest")?.logo).toBe("/companies/raenest.png");
+    expect(findCompany("Paystack")?.logo).toBeNull(); // known company, plain icon for now
+    expect(findCompany("Tiny Studio")).toBeNull();
+    expect(findCompany("")).toBeNull();
+    // Every logo file listed exists in /public.
+    const { existsSync } = await import("node:fs");
+    for (const c of COMPANIES) if (c.logo) expect(existsSync(`public${c.logo}`)).toBe(true);
+  });
+});
