@@ -225,3 +225,67 @@ export function noScansEmail(args: Common) {
     after: [ONLY_ONCE],
   });
 }
+
+export type FeaturedMember = {
+  fullName: string;
+  title: string | null;
+  organization: string | null;
+  avatarUrl: string | null;
+  /** The member's public card. */
+  cardUrl: string;
+  /** Public QR image for the card (absolute URL). */
+  qrImageUrl: string;
+};
+
+/** Introduces a member to someone on the waiting list. `note` is the founder's own words. */
+export function featureMemberEmail({
+  fullName, appName, siteUrl, photoUrl, replyEmail, unsubscribeToken, member, note,
+}: Common & { unsubscribeToken: string; member: FeaturedMember; note: string }) {
+  const firstName = firstNameOf(fullName);
+  const memberFirst = firstNameOf(member.fullName);
+  const subtitle = [member.title, member.organization].filter(Boolean).join(" · ");
+  const intro = `Someone worth knowing just joined ${appName}, and I thought you'd like to meet them.`;
+  const how = `Scan the QR code with your phone camera to see ${memberFirst}'s card and save their contact. Reading this on your phone? Tap the button instead.`;
+  const updates = `You're getting this because you joined the ${appName} waiting list. You'll still get your invite either way.`;
+  const unsubscribe = unsubscribeUrl(siteUrl, unsubscribeToken);
+  const cleanNote = note.trim();
+
+  const subject = `Meet ${member.fullName} on ${appName}`;
+  const text = [
+    `Hi ${firstName},`,
+    intro,
+    [member.fullName, subtitle].filter(Boolean).join("\n"),
+    ...(cleanNote ? [cleanNote] : []),
+    `See ${memberFirst}'s card: ${member.cardUrl}`,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+    `${updates} Unsubscribe from updates: ${unsubscribe}`,
+  ].join("\n\n");
+
+  const avatar = member.avatarUrl
+    ? `<img src="${escapeHtml(member.avatarUrl)}" width="72" height="72" alt="" style="display:block;margin:0 auto 12px;width:72px;height:72px;border-radius:50%;object-fit:cover">`
+    : "";
+  const card = `<div style="margin:24px 0;padding:24px;border:1px solid #e4e2dc;border-radius:12px;text-align:center">
+    ${avatar}
+    <p style="margin:0;font-size:18px;font-weight:600;color:#1c1c1a">${escapeHtml(member.fullName)}</p>
+    ${subtitle ? `<p style="margin:4px 0 0;color:#5c5c57;font-size:15px">${escapeHtml(subtitle)}</p>` : ""}
+    <img src="${escapeHtml(member.qrImageUrl)}" width="180" height="180" alt="QR code for ${escapeHtml(member.fullName)}'s Meetwell card" style="display:block;margin:20px auto 8px;width:180px;height:180px">
+    <p style="margin:0 0 16px;color:#5c5c57;font-size:13px">Scan with your phone camera</p>
+    <a href="${escapeHtml(member.cardUrl)}" style="display:inline-block;background:#1f4d3f;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:8px">View ${escapeHtml(memberFirst)}'s card</a>
+  </div>`;
+
+  const html = founderLayout({
+    firstName,
+    appName,
+    siteUrl,
+    photoUrl,
+    bodyHtml: [
+      p(intro),
+      ...(cleanNote ? [p(cleanNote)] : []),
+      card,
+      p(how),
+      `<p>Questions? Write to me at <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
+    ].join("\n  "),
+    footerHtml: `${escapeHtml(updates)} <a href="${unsubscribe}" style="color:#5c5c57">Unsubscribe from updates</a>.`,
+  });
+  return { subject, text, html };
+}

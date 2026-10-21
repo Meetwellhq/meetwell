@@ -5,8 +5,11 @@ import {
   FOUNDER_NAME,
   inviteEmail,
   inviteReminderEmail,
+  featureMemberEmail,
   noScansEmail,
+  unsubscribeUrl,
   waitlistEmail,
+  type FeaturedMember,
 } from "./founder-emails";
 
 // Personal notes from the founder, sent from a no-reply address. The emails
@@ -22,7 +25,11 @@ function common(fullName: string | null) {
  * Sends one email through Resend's API. Needs RESEND_API_KEY (server-only).
  * Without it the email is skipped, so local development sends nothing.
  */
-async function send(to: string, { subject, text, html }: { subject: string; text: string; html: string }) {
+async function send(
+  to: string,
+  { subject, text, html }: { subject: string; text: string; html: string },
+  headers?: Record<string, string>,
+) {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn(`RESEND_API_KEY is not set; skipping email "${subject}"`);
@@ -32,7 +39,7 @@ async function send(to: string, { subject, text, html }: { subject: string; text
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: FROM, to: [to], reply_to: SUPPORT_EMAIL, subject, text, html }),
+      body: JSON.stringify({ from: FROM, to: [to], reply_to: SUPPORT_EMAIL, subject, text, html, headers }),
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) console.error("Email failed", subject, res.status, await res.text());
@@ -62,4 +69,16 @@ export function sendDraftReminderEmail(to: string, fullName: string | null) {
 }
 export function sendNoScansEmail(to: string, fullName: string | null) {
   return send(to, noScansEmail(common(fullName)));
+}
+
+/** The "Feature a member" email, built the same way for the preview and the real send. */
+export function buildFeatureMemberEmail(fullName: string | null, unsubscribeToken: string, member: FeaturedMember, note: string) {
+  return featureMemberEmail({ ...common(fullName), unsubscribeToken, member, note });
+}
+
+/** Sends one "Feature a member" email, with an unsubscribe header email apps can show as a button. */
+export function sendFeatureMemberEmail(to: string, fullName: string | null, unsubscribeToken: string, member: FeaturedMember, note: string) {
+  return send(to, buildFeatureMemberEmail(fullName, unsubscribeToken, member, note), {
+    "List-Unsubscribe": `<${unsubscribeUrl(getSiteUrl(), unsubscribeToken)}>`,
+  });
 }

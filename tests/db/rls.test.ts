@@ -484,3 +484,43 @@ describe("waitlist updates and unsubscribe", () => {
     await expect(as(null, "select unsubscribe_token from public.waitlist")).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("feature a member emails", () => {
+  it("only admins can count or claim recipients, and only for published cards", async () => {
+    await expect(as(BOB, "select public.admin_feature_audience_count('quiet')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_feature_audience_count('quiet')")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select * from public.admin_claim_feature_recipients('quiet', 80)")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select * from public.feature_audience('quiet')")).rejects.toThrow(/permission denied/);
+    await expect(as(ALICE, "select public.admin_feature_audience_count('no-such-card')")).rejects.toThrow(/not published/);
+  });
+
+  it("sends to waiting people only, skipping members, unsubscribed people and repeats", async () => {
+    // 'quiet' (quiet@test) has a published card from the reminders test.
+    const audience = await as<{ email: string }>(ALICE, "select email from public.feature_audience('quiet')").catch(() => null);
+    expect(audience).toBeNull(); // helper isn't callable directly, even by admins
+
+    const waiting = (await db.query<{ email: string }>(
+      `select w.email from public.waitlist w
+       where w.unsubscribed_at is null and not exists (select 1 from auth.users u where lower(u.email) = w.email)`,
+    )).rows.map((r) => r.email).sort();
+    expect(waiting).not.toContain("updates@test"); // unsubscribed earlier
+    expect(waiting).not.toContain("invitee@test"); // has an account
+
+    const [{ n }] = await as<{ n: number }>(ALICE, "select public.admin_feature_audience_count('quiet') as n");
+    expect(n).toBe(waiting.length);
+
+    const first = await as<{ email: string; unsubscribe_token: string }>(
+      ALICE,
+      "select * from public.admin_claim_feature_recipients('quiet', 2)",
+    );
+    expect(first.length).toBe(Math.min(2, waiting.length));
+    expect(first.every((r) => /^[0-9a-f-]{36}$/.test(r.unsubscribe_token))).toBe(true);
+
+    const rest = await as<{ email: string }>(ALICE, "select * from public.admin_claim_feature_recipients('QUIET ', 80)");
+    const all = [...first, ...rest].map((r) => r.email).sort();
+    expect(all).toEqual(waiting); // everyone exactly once, across batches
+    expect(await as(ALICE, "select * from public.admin_claim_feature_recipients('quiet', 80)")).toEqual([]);
+    const [{ n: left }] = await as<{ n: number }>(ALICE, "select public.admin_feature_audience_count('quiet') as n");
+    expect(left).toBe(0);
+  });
+});

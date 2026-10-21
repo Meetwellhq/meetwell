@@ -62,3 +62,36 @@ describe("waitlist updates", () => {
     expect(html).toContain('href="https://meetwell.me/unsubscribe?t=11111111-2222-3333-4444-555555555555"');
   });
 });
+
+describe("feature a member email", () => {
+  const member = {
+    fullName: "Chioma Eze",
+    title: "Product Designer",
+    organization: "Studio North",
+    avatarUrl: null,
+    cardUrl: "https://meetwell.me/p/chioma",
+    qrImageUrl: "https://meetwell.me/p/chioma/qr",
+  };
+
+  it("introduces the member with their QR, card link and the founder's note", async () => {
+    const { featureMemberEmail } = await import("@/lib/founder-emails");
+    const { subject, text, html } = featureMemberEmail({
+      ...base, fullName: "Tunde Bello", unsubscribeToken: "11111111-2222-3333-4444-555555555555", member,
+      note: "Chioma designs tools for small shops in Lagos.",
+    });
+    expect(subject).toBe("Meet Chioma Eze on Meetwell");
+    expect(text.startsWith("Hi Tunde,")).toBe(true);
+    expect(html).toContain('src="https://meetwell.me/p/chioma/qr"');
+    expect(html).toContain('href="https://meetwell.me/p/chioma"');
+    expect(html).toContain("Chioma designs tools for small shops in Lagos.");
+    expect(html).toContain("unsubscribe?t=11111111-2222-3333-4444-555555555555");
+  });
+
+  it("escapes the note so it can't inject HTML", async () => {
+    const { featureMemberEmail } = await import("@/lib/founder-emails");
+    const { html } = featureMemberEmail({
+      ...base, fullName: null, unsubscribeToken: "11111111-2222-3333-4444-555555555555", member, note: "<script>x</script>",
+    });
+    expect(html).not.toContain("<script>");
+  });
+});
