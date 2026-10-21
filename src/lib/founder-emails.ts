@@ -233,11 +233,9 @@ export type MatchedMember = {
   avatarUrl: string | null;
   /** The member's public card. */
   cardUrl: string;
-  /** Public QR image for the card (absolute URL). */
-  qrImageUrl: string;
 };
 
-/** AI Network Matching: one recommendation, with the reason, their card and QR. */
+/** AI Network Matching: one recommendation, with the reason and a button to their card. */
 export function matchEmail({
   fullName, appName, siteUrl, photoUrl, replyEmail, match, reason,
 }: Common & { match: MatchedMember; reason: string }) {
@@ -269,9 +267,7 @@ export function matchEmail({
     <p style="margin:0;font-size:18px;font-weight:600;color:#1c1c1a">${escapeHtml(match.fullName)}</p>
     ${subtitle ? `<p style="margin:4px 0 0;color:#5c5c57;font-size:15px">${escapeHtml(subtitle)}</p>` : ""}
     <p style="margin:16px 0 0;padding:12px 14px;background:#eef4f1;border-radius:8px;color:#1f4d3f;font-size:15px;line-height:1.5;text-align:left">${escapeHtml(reason)}</p>
-    <img src="${escapeHtml(match.qrImageUrl)}" width="160" height="160" alt="QR code for ${escapeHtml(match.fullName)}'s Meetwell card" style="display:block;margin:20px auto 8px;width:160px;height:160px">
-    <p style="margin:0 0 16px;color:#5c5c57;font-size:13px">Scan with your phone camera, or tap below</p>
-    <a href="${escapeHtml(match.cardUrl)}" style="display:inline-block;background:#1f4d3f;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:8px">View ${escapeHtml(matchFirst)}'s card</a>
+    <p style="margin:20px 0 0"><a href="${escapeHtml(match.cardUrl)}" style="display:inline-block;background:#1f4d3f;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:8px">View ${escapeHtml(matchFirst)}'s card</a></p>
   </div>`;
 
   const html = founderLayout({

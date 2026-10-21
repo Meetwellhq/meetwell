@@ -72,13 +72,14 @@ describe("match email", () => {
       reason: "Ada has 4 years in product design (3 more than you), and is open to mentoring.",
       match: {
         fullName: "Ada Obi", title: "Senior Product Designer", organization: "Studio North", avatarUrl: null,
-        cardUrl: "https://meetwell.me/p/ada", qrImageUrl: "https://meetwell.me/p/ada/qr",
+        cardUrl: "https://meetwell.me/p/ada",
       },
     });
     expect(subject).toBe("Your Meetwell match: meet Ada Obi");
     expect(text.startsWith("Hi Tunde,")).toBe(true);
     expect(html).toContain("3 more than you");
-    expect(html).toContain('src="https://meetwell.me/p/ada/qr"');
+    expect(html).not.toContain("/qr");
+    expect(html).toContain('href="https://meetwell.me/p/ada"');
     expect(html).toContain('href="https://meetwell.me/dashboard/matches"');
   });
 });

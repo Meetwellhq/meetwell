@@ -1,4 +1,4 @@
-import { getSiteUrl, publicProfilePath, publicProfileUrl } from "@/lib/config";
+import { publicProfileUrl } from "@/lib/config";
 import { sendMatchEmail } from "@/lib/email";
 import { FREE_MATCHES_PER_MONTH } from "@/lib/matching/constants";
 import { chooseMatch, type Candidate, type Seeker } from "@/lib/matching/engine";
@@ -111,7 +111,6 @@ export async function GET(request: Request) {
         organization: card.organization,
         avatarUrl: card.avatarUrl,
         cardUrl: publicProfileUrl(card.slug),
-        qrImageUrl: `${getSiteUrl()}${publicProfilePath(card.slug)}/qr`,
       },
       choice.reason,
     );
