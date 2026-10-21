@@ -13,7 +13,7 @@ export function MessageEmailsSwitch({ initial }: { initial: boolean }) {
     <Switch
       checked={on}
       disabled={pending}
-      label="Email me about new messages"
+      label="Email me about new conversations"
       onChange={(next) =>
         start(async () => {
           setOn(next);

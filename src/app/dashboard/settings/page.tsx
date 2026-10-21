@@ -32,7 +32,7 @@ export default async function SettingsPage() {
         <div>
           <h2 className="font-semibold">Message emails</h2>
           <p className="mt-1 text-sm text-ink-2">
-            Get an email when someone messages you. At most one per conversation every few hours.
+            Get an email when someone sends you their first message in a conversation. We don&apos;t email you about every message.
           </p>
         </div>
         <MessageEmailsSwitch initial={emails.data !== false} />

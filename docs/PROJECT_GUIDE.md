@@ -134,8 +134,9 @@ every migration.
   only shows for people with a conversation, with an unread count. All rules live in
   `20261107000000_messaging.sql` (`send_message` etc.): participants only, member writes first, 1–2,000
   characters, 30 an hour, read-only after `access_until`, blocks both ways, 3 open reports pause
-  someone. Email alert at most once per conversation per 6 hours, only if unread
-  (`claim_message_email`, CRON_SECRET), off in Settings or via `/unsubscribe/messages?t=`. Admins open
+  someone. Email alert only for the first message each person sends in a conversation, LinkedIn-style
+  (sender photo, title, preview, Reply; `claim_message_email`, CRON_SECRET, `20261109000000_first_message_email.sql`),
+  off in Settings or via `/unsubscribe/messages?t=`. Admins open
   free test conversations and handle reports in `/admin/messages`; they never see chats, only reported
   messages with up to 3 either side. Rules page: `/community-rules`. Phase 4 will set `access_until`
   from paid subscriptions.

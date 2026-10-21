@@ -898,24 +898,38 @@ describe("messaging", () => {
     expect(list).toEqual([{ role: "mentor", locked: null }]);
   });
 
-  it("emails the other person once per 6 hours, only if unread and switched on, with the secret", async () => {
-    const [{ id }] = await send(JUNIOR, "Here it is.");
-    await expect(as(null, `select * from public.claim_message_email('wrong', ${id})`)).rejects.toThrow(/Not allowed/);
-    const first = await as<{ email: string; sender_name: string }>(null, `select email, sender_name from public.claim_message_email('${SECRET}', ${id})`);
-    expect(first).toEqual([{ email: "senior@test", sender_name: "Test Person" }]);
-    const [{ id: id2 }] = await send(JUNIOR, "And one more thing.");
-    expect(await as(null, `select * from public.claim_message_email('${SECRET}', ${id2})`)).toEqual([]); // within 6 hours
+  it("emails each person once, for the first message the other sends, if switched on, with the secret", async () => {
+    const firstOf = async (sender: string) =>
+      (await db.query<{ id: string }>(
+        "select id from public.messages where conversation_id = $1 and sender_id = $2 order by created_at, id limit 1",
+        [conv, sender],
+      )).rows[0].id;
+    const claim = (id: string) =>
+      as<{ email: string; sender_name: string; preview: string }>(
+        null,
+        `select email, sender_name, preview from public.claim_message_email('${SECRET}', ${id})`,
+      );
+    const juniorFirst = await firstOf(JUNIOR);
+    await expect(as(null, `select * from public.claim_message_email('wrong', ${juniorFirst})`)).rejects.toThrow(/Not allowed/);
+    expect(await claim(juniorFirst)).toEqual([
+      { email: "senior@test", sender_name: "Test Person", preview: "Hello Ada, I'd love your advice on portfolios." },
+    ]);
+    expect(await claim(juniorFirst)).toEqual([]); // only once
+    const [{ id: later }] = await send(JUNIOR, "Here it is.");
+    expect(await claim(later)).toEqual([]); // not the first message: no email
+    expect(await claim((await send(JUNIOR, "And one more thing."))[0].id)).toEqual([]);
+    expect((await claim(await firstOf(SENIOR))).map((r) => r.email)).toEqual(["junior@test"]); // the reply's first message
 
     // Turned off: no emails.
     await db.exec("delete from public.message_emails_sent");
     await as(SENIOR, "select public.set_message_emails(false)");
     expect((await as<{ on: boolean }>(SENIOR, "select public.my_message_emails() as on"))[0].on).toBe(false);
-    expect(await as(null, `select * from public.claim_message_email('${SECRET}', ${id2})`)).toEqual([]);
+    expect(await claim(juniorFirst)).toEqual([]);
     await as(SENIOR, "select public.set_message_emails(true)");
     // One-click off from the email link.
     const [{ token }] = (await db.query<{ token: string }>("select token from public.email_prefs where user_id = $1", [SENIOR])).rows;
     expect((await as<{ ok: boolean }>(null, `select public.unsubscribe_message_emails('${token}') as ok`))[0].ok).toBe(true);
-    expect(await as(null, `select * from public.claim_message_email('${SECRET}', ${id2})`)).toEqual([]);
+    expect(await claim(juniorFirst)).toEqual([]);
     await as(SENIOR, "select public.set_message_emails(true)");
   });
 

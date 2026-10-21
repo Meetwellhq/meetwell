@@ -95,11 +95,18 @@ export function sendSparkBetaEmail(to: string, fullName: string | null) {
   return send(to, sparkBetaEmail(common(fullName)));
 }
 
-/** "Ada sent you a message." Sent at most once per conversation every 6 hours (the database decides). */
+/** LinkedIn-style alert for the first message someone sends in a conversation (the database decides). */
 export function sendNewMessageEmail(
   to: string,
   fullName: string | null,
-  details: { senderName: string; conversationId: number; offToken: string },
+  details: {
+    senderName: string;
+    senderTitle: string | null;
+    senderAvatar: string | null;
+    preview: string;
+    conversationId: number;
+    offToken: string;
+  },
 ) {
   // Names go into the subject line, so keep them on one line.
   const senderName = details.senderName.replace(/s+/g, " ").trim().slice(0, 80) || "A Meetwell member";

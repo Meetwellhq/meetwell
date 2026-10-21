@@ -148,11 +148,17 @@ describe("Spark beta announcement", () => {
 });
 
 describe("new message email", () => {
-  it("names the sender, links to the chat, never includes the message, and can be turned off", () => {
+  it("shows the sender and a preview like LinkedIn, links to the chat, escapes text, and can be turned off", () => {
     const { subject, text, html } = newMessageEmail({
-      ...base, fullName: "Ada Obi", senderName: "Tunde <b>", conversationId: 42, offToken: "11111111-2222-3333-4444-555555555555",
+      ...base, fullName: "Ada Obi", senderName: "Tunde <b>", senderTitle: "Product Designer · Kuda", senderAvatar: null,
+      preview: "Hi Ada <script>", conversationId: 42, offToken: "11111111-2222-3333-4444-555555555555",
     });
-    expect(subject).toBe("New message from Tunde <b>");
+    expect(subject).toBe("Tunde <b> sent you a message");
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("Hi Ada &lt;script&gt;");
+    expect(html).toContain("Product Designer · Kuda");
+    expect(html).toContain(">T<"); // initials if no photo, symbols ignored
+    expect(text).toContain("only the first one in each conversation");
     expect(html).not.toContain("Tunde <b>"); // escaped in the email body
     expect(html).toContain('href="https://meetwell.me/dashboard/messages/42"');
     expect(text).toContain("https://meetwell.me/unsubscribe/messages?t=11111111-2222-3333-4444-555555555555");

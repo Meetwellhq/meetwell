@@ -398,37 +398,70 @@ export function sparkBetaEmail({ fullName, appName, siteUrl, photoUrl, replyEmai
 export const messageEmailsOffUrl = (siteUrl: string, token: string) =>
   `${siteUrl}/unsubscribe/messages?t=${encodeURIComponent(token)}`;
 
+function initialsOf(name: string) {
+  // Only words that start with a letter, so stray symbols don't become initials.
+  const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w));
+  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "?";
+}
+
 /**
- * "Ada sent you a message." The message itself isn't in the email, so it stays
- * private if the email is forwarded or read over someone's shoulder.
+ * LinkedIn-style message alert, sent only for the first message someone sends
+ * in a conversation: the sender's photo, name and title, a short preview of the
+ * message, and a Reply button.
  */
 export function newMessageEmail({
-  fullName, appName, siteUrl, photoUrl, senderName, conversationId, offToken,
-}: Common & { senderName: string; conversationId: number; offToken: string }) {
+  fullName, appName, siteUrl, senderName, senderTitle, senderAvatar, preview, conversationId, offToken,
+}: Common & {
+  senderName: string;
+  senderTitle: string | null;
+  senderAvatar: string | null;
+  preview: string;
+  conversationId: number;
+  offToken: string;
+}) {
   const firstName = firstNameOf(fullName);
   const link = `${siteUrl}/dashboard/messages/${conversationId}`;
   const off = messageEmailsOffUrl(siteUrl, offToken);
-  const line = `${senderName} sent you a message on ${appName}.`;
-  const later = "We send at most one email per conversation every few hours, so you won't get one for every message.";
-  const smallPrint = "Don't want these emails?";
+  const why = `You're getting this because ${senderName} sent you their first message on ${appName}. We don't email you about every message, only the first one in each conversation.`;
 
-  const subject = `New message from ${senderName}`;
+  const subject = `${senderName} sent you a message`;
   const text = [
     `Hi ${firstName},`,
-    line,
-    `Read and reply: ${link}`,
-    later,
-    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
-    `${smallPrint} Turn them off: ${off}`,
+    `${senderName} sent you a message on ${appName}.`,
+    `${senderName}${senderTitle ? `\n${senderTitle}` : ""}\n"${preview}"`,
+    `Reply: ${link}`,
+    why,
+    `Turn off message emails: ${off}`,
   ].join("\n\n");
-  const html = founderLayout({
-    firstName,
-    appName,
-    siteUrl,
-    photoUrl,
-    bodyHtml: [p(line), button(link, "Read and reply"), p(later)].join("\n  "),
-    footerHtml: `${escapeHtml(smallPrint)} <a href="${off}" style="color:#5c5c57">Turn off message emails</a>.`,
-  });
+
+  const avatar = senderAvatar
+    ? `<img src="${escapeHtml(senderAvatar)}" width="56" height="56" alt="" style="display:block;width:56px;height:56px;border-radius:50%;object-fit:cover">`
+    : `<div style="width:56px;height:56px;border-radius:50%;background:#e8f0ec;color:#1f4d3f;font-weight:600;font-size:20px;line-height:56px;text-align:center">${escapeHtml(initialsOf(senderName))}</div>`;
+
+  const html = `<div style="background:#f6f6f4;padding:24px 12px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1c1c1a">
+  <div style="display:none;max-height:0;overflow:hidden">${escapeHtml(preview)}</div>
+  <div style="max-width:520px;margin:0 auto">
+    <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#1f4d3f">${escapeHtml(appName)}</p>
+    <div style="background:#ffffff;border:1px solid #e6e5e1;border-radius:12px;padding:24px">
+      <p style="margin:0 0 20px;font-size:16px;line-height:1.5">Hi ${escapeHtml(firstName)}, you have a new message.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">
+        <tr>
+          <td style="width:56px;vertical-align:top;padding-right:14px">${avatar}</td>
+          <td style="vertical-align:top">
+            <p style="margin:0;font-size:16px;font-weight:600">${escapeHtml(senderName)}</p>
+            ${senderTitle ? `<p style="margin:2px 0 0;font-size:14px;color:#5c5c57">${escapeHtml(senderTitle)}</p>` : ""}
+            <div style="margin-top:12px;background:#f3f2ef;border-radius:4px 14px 14px 14px;padding:12px 14px;font-size:15px;line-height:1.55;white-space:pre-wrap">${escapeHtml(preview)}</div>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:24px 0 0">
+        <a href="${link}" style="display:inline-block;background:#1f4d3f;color:#ffffff;text-decoration:none;font-weight:600;padding:11px 24px;border-radius:8px">Reply</a>
+        <a href="${link}" style="display:inline-block;margin-left:12px;color:#1f4d3f;text-decoration:none;font-weight:600;padding:11px 4px">View conversation</a>
+      </p>
+    </div>
+    <p style="margin:16px 4px 0;font-size:12px;line-height:1.5;color:#7a7a74">${escapeHtml(why)} <a href="${off}" style="color:#7a7a74">Turn off message emails</a>.</p>
+  </div>
+</div>`;
   return { subject, text, html };
 }
 

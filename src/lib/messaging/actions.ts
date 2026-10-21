@@ -34,14 +34,25 @@ export async function sendMessage(conversationId: number, body: string): Promise
     return { error: "Couldn't send. Please try again." };
   }
 
-  // Email alert: the database decides (alerts on, still unread, not emailed in the last 6 hours).
+  // Email alert: only for the sender's first message in this conversation, if alerts are on (the database decides).
   const secret = process.env.CRON_SECRET;
   if (secret) {
     const { data: due } = await supabase.rpc("claim_message_email", { p_token: secret, p_message: id });
-    const row = (due as { email: string; full_name: string | null; sender_name: string; unsubscribe_token: string }[] | null)?.[0];
+    const row = (due as {
+      email: string;
+      full_name: string | null;
+      sender_name: string;
+      sender_title: string | null;
+      sender_avatar: string | null;
+      preview: string;
+      unsubscribe_token: string;
+    }[] | null)?.[0];
     if (row) {
       await sendNewMessageEmail(row.email, row.full_name, {
         senderName: row.sender_name,
+        senderTitle: row.sender_title,
+        senderAvatar: row.sender_avatar,
+        preview: row.preview,
         conversationId,
         offToken: row.unsubscribe_token,
       });
