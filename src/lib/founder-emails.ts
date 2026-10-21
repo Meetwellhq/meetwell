@@ -253,7 +253,7 @@ export function matchEmail({
     intro,
     [match.fullName, subtitle].filter(Boolean).join("\n"),
     reason,
-    `See ${matchFirst}'s card: ${match.cardUrl}`,
+    `Say hello to ${matchFirst}: ${match.cardUrl}`,
     nudge,
     `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
     `${why} ${matchesUrl}`,
@@ -268,8 +268,8 @@ export function matchEmail({
     .join("");
   const avatar = match.avatarUrl
     ? `<img src="${escapeHtml(match.avatarUrl)}" width="80" height="80" alt="${escapeHtml(match.fullName)}" style="display:block;margin:0 auto 12px;width:80px;height:80px;border-radius:50%;object-fit:cover">`
-    : `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 12px;border-collapse:collapse"><tr><td width="80" height="80" align="center" valign="middle" style="width:80px;height:80px;border-radius:50%;background:#e3efe9;color:#1f4d3f;font-size:26px;font-weight:600">${escapeHtml(initials)}</td></tr></table>`;
-  const card = `<div style="margin:24px 0;padding:28px 24px;background:#f4f3f0;border-radius:12px;text-align:center">
+    : `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 12px;border-collapse:collapse"><tr><td width="80" height="80" align="center" valign="middle" style="width:80px;height:80px;border-radius:50%;background:#ffffff;color:#1f4d3f;font-size:26px;font-weight:600">${escapeHtml(initials)}</td></tr></table>`;
+  const card = `<div style="margin:24px 0;padding:28px 24px;background:#e9f2ed;border-radius:12px;text-align:center">
     ${avatar}
     <p style="margin:0;font-size:18px;font-weight:600;color:#1c1c1a">${escapeHtml(match.fullName)}</p>
     ${subtitle ? `<p style="margin:4px 0 0;color:#5c5c57;font-size:15px">${escapeHtml(subtitle)}</p>` : ""}
@@ -277,7 +277,7 @@ export function matchEmail({
       <p style="margin:0 0 6px;color:#1f4d3f;font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase">Why we matched you</p>
       <p style="margin:0;color:#1c1c1a;font-size:15px;line-height:1.6">${escapeHtml(reason)}</p>
     </div>
-    <p style="margin:24px 0 0"><a href="${escapeHtml(match.cardUrl)}" style="display:inline-block;background:#1f4d3f;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:8px">View ${escapeHtml(matchFirst)}'s card</a></p>
+    <p style="margin:24px 0 0"><a href="${escapeHtml(match.cardUrl)}" style="display:inline-block;background:#1f4d3f;color:#ffffff;text-decoration:none;font-weight:600;padding:13px 26px;border-radius:8px">Say hello to ${escapeHtml(matchFirst)} &rarr;</a></p>
   </div>`;
 
   const html = founderLayout({
