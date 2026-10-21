@@ -140,3 +140,24 @@ export function sendRenewalReminderEmail(
 ) {
   return send(to, renewalReminderEmail({ ...common(fullName), ...details }));
 }
+
+/** A day without a reply: "Tunde is waiting for your reply", once per waiting message. */
+export function sendReplyReminderEmail(
+  to: string,
+  fullName: string | null,
+  details: {
+    senderName: string;
+    senderTitle: string | null;
+    senderAvatar: string | null;
+    preview: string;
+    conversationId: number;
+    offToken: string;
+    toMentor: boolean;
+  },
+) {
+  const senderName = details.senderName.replace(/\s+/g, " ").trim().slice(0, 80) || "A Meetwell member";
+  return send(to, newMessageEmail({ ...common(fullName), ...details, senderName, reminder: true }), {
+    from: messageFromLine(senderName, APP_NAME),
+    replyTo: null,
+  });
+}

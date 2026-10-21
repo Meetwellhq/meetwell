@@ -1147,3 +1147,41 @@ describe("admin metrics with subscriptions", () => {
     expect(ours).toBeLessThan(gross); // a subscription was paid, so the mentor share is left out
   });
 });
+
+describe("reply reminders", () => {
+  const SECRET = "test-secret-that-is-long-enough-1234567890";
+  const JUNIOR = "55555555-5555-5555-5555-555555555555";
+  const SENIOR = "66666666-6666-6666-6666-666666666666";
+  const ENGINEER = "77777777-7777-7777-7777-777777777777";
+
+  it("reminds the person a message is waiting on after 4 hours, once", async () => {
+    const [{ id: conv }] = (await db.query<{ id: number }>(
+      "select id from public.conversations where member_id = $1 and mentor_id = $2", [ENGINEER, SENIOR],
+    )).rows;
+    await db.query("update public.conversations set access_until = now() + interval '10 days' where id = $1", [conv]);
+    const claim = () =>
+      as<{ email: string; to_mentor: boolean; preview: string }>(
+        null, `select email, to_mentor, preview from public.claim_reply_reminders('${SECRET}', 50)`,
+      );
+    await expect(as(null, "select * from public.claim_reply_reminders('wrong', 50)")).rejects.toThrow(/Not allowed/);
+
+    const [{ id: msg }] = (await db.query<{ id: number }>(
+      "insert into public.messages (conversation_id, sender_id, body) values ($1, $2, 'Are you free to chat this week?') returning id",
+      [conv, ENGINEER],
+    )).rows;
+    expect((await claim()).map((r) => r.email)).not.toContain("senior@test"); // only just sent
+
+    // Everything in this conversation is now older; the newest is the member's question.
+    await db.query("update public.messages set created_at = now() - interval '30 hours' where conversation_id = $1 and id <> $2", [conv, msg]);
+    await db.query("update public.messages set created_at = now() - interval '5 hours' where id = $1", [msg]);
+    const due = (await claim()).filter((r) => r.email === "senior@test");
+    expect(due).toEqual([{ email: "senior@test", to_mentor: true, preview: "Are you free to chat this week?" }]);
+    expect((await claim()).map((r) => r.email)).not.toContain("senior@test"); // once
+
+    // A reply means nothing is waiting on the mentor any more.
+    await db.query("delete from public.message_reminders_sent");
+    await db.query("insert into public.messages (conversation_id, sender_id, body) values ($1, $2, 'Yes, Thursday?')", [conv, SENIOR]);
+    expect((await claim()).map((r) => r.email)).not.toContain("senior@test");
+    await expect(as(JUNIOR, "select * from public.message_reminders_sent")).rejects.toThrow(/permission denied/);
+  });
+});

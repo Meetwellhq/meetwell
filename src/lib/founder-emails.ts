@@ -411,6 +411,7 @@ function initialsOf(name: string) {
  */
 export function newMessageEmail({
   fullName, appName, siteUrl, senderName, senderTitle, senderAvatar, preview, conversationId, offToken,
+  reminder = false, toMentor = false,
 }: Common & {
   senderName: string;
   senderTitle: string | null;
@@ -418,16 +419,24 @@ export function newMessageEmail({
   preview: string;
   conversationId: number;
   offToken: string;
+  /** A day has passed without a reply: "Tunde is waiting for your reply." */
+  reminder?: boolean;
+  /** The reminder goes to a mentor, who has 7 days to reply before a refund. */
+  toMentor?: boolean;
 }) {
   const firstName = firstNameOf(fullName);
   const link = `${siteUrl}/dashboard/messages/${conversationId}`;
   const off = messageEmailsOffUrl(siteUrl, offToken);
   const why = "You're receiving this because message emails are on.";
+  const senderFirst = senderName.split(" ")[0] || senderName;
+  const headline = reminder ? `Hi ${firstName}, ${senderFirst} is waiting for your reply.` : `Hi ${firstName}, you have a new message.`;
+  const mentorNote = reminder && toMentor ? "Members who don't get a reply within 7 days of paying get a full refund." : null;
 
-  const subject = `${senderName} sent you a message`;
+  const subject = reminder ? `${senderFirst} is waiting for your reply` : `${senderName} sent you a message`;
   const text = [
     `Hi ${firstName},`,
-    `${senderName} sent you a message on ${appName}.`,
+    reminder ? `${senderFirst} is waiting for your reply on ${appName}.` : `${senderName} sent you a message on ${appName}.`,
+    ...(mentorNote ? [mentorNote] : []),
     `${senderName}${senderTitle ? `\n${senderTitle}` : ""}\n"${preview}"`,
     `Reply: ${link}`,
     why,
@@ -443,7 +452,7 @@ export function newMessageEmail({
   <div style="max-width:520px;margin:0 auto">
     <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#1f4d3f">${escapeHtml(appName)}</p>
     <div style="background:#ffffff;border:1px solid #e6e5e1;border-radius:12px;padding:24px">
-      <p style="margin:0 0 20px;font-size:16px;line-height:1.5">Hi ${escapeHtml(firstName)}, you have a new message.</p>
+      <p style="margin:0 0 20px;font-size:16px;line-height:1.5">${escapeHtml(headline)}</p>
       <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">
         <tr>
           <td style="width:56px;vertical-align:top;padding-right:14px">${avatar}</td>
@@ -457,7 +466,8 @@ export function newMessageEmail({
       <p style="margin:24px 0 0">
         <a href="${link}" style="display:inline-block;background:#1f4d3f;color:#ffffff;text-decoration:none;font-weight:600;padding:11px 24px;border-radius:8px">Reply</a>
         <a href="${link}" style="display:inline-block;margin-left:12px;color:#1f4d3f;text-decoration:none;font-weight:600;padding:11px 4px">View conversation</a>
-      </p>
+      </p>${mentorNote ? `
+      <p style="margin:16px 0 0;font-size:14px;color:#5c5c57">${escapeHtml(mentorNote)}</p>` : ""}
     </div>
     <p style="margin:16px 4px 0;font-size:12px;line-height:1.5;color:#7a7a74">${escapeHtml(why)} <a href="${off}" style="color:#7a7a74">Turn off message emails</a>.</p>
   </div>

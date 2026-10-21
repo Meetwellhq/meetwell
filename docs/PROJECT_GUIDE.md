@@ -37,7 +37,7 @@ invites them from an admin page; they sign up with a personal access code.
 | Database, auth, storage | Supabase | RLS everywhere; public reads only through security-definer RPCs |
 | App emails | Resend (`noreply@meetwell.me`) | Via Supabase SMTP (auth emails) and the Resend API (founder emails) |
 | Mailbox | Zoho Mail: `info@meetwell.me`, aliases `hello@meetwell.me` and `support@meetwell.me` (support@ is the address shown on the site and in every email) | MX, SPF (`include:zohomail.com`) and DKIM (`zmail._domainkey`) on Vercel DNS |
-| Scheduled jobs | Vercel Cron (daily) + Supabase `pg_cron` (nightly) | See below |
+| Scheduled jobs | Vercel Cron (daily) + Supabase `pg_cron` (nightly clean-up, reply reminders every 15 min) | See below |
 
 This version of Next.js has breaking changes: read `node_modules/next/dist/docs/` before
 writing Next.js code (see `AGENTS.md`).
@@ -136,7 +136,10 @@ every migration.
   characters, 30 an hour, read-only after `access_until`, blocks both ways, 3 open reports pause
   someone. Email alert only for the first message each person sends in a conversation, LinkedIn-style
   (sender photo, title, preview, Reply; `claim_message_email`, CRON_SECRET, `20261109000000_first_message_email.sql`),
-  off in Settings or via `/unsubscribe/messages?t=`. Admins open
+  off in Settings or via `/unsubscribe/messages?t=`. Message emails come from "Name via Meetwell" <messages-noreply@meetwell.me> (`messageFromLine`).
+  Reply reminder: a message unanswered for 4 hours emails the person it waits on, once (`claim_reply_reminders`,
+  `20261111000000_reply_reminders.sql`), via `/api/cron/reply-reminders`, called every 15 minutes by the Supabase
+  pg_cron job `reply-reminders` (pg_net `http_get` with the cron secret from `internal_settings`). Admins open
   free test conversations and handle reports in `/admin/messages`; they never see chats, only reported
   messages with up to 3 either side. Rules page: `/community-rules`. Phase 4 will set `access_until`
   from paid subscriptions.

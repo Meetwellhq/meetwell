@@ -210,3 +210,19 @@ describe("messageFromLine", () => {
     expect(messageFromLine("   ", "Meetwell")).toBe('"A Meetwell member via Meetwell" <messages-noreply@meetwell.me>');
   });
 });
+
+describe("reply reminder email", () => {
+  it("says who is waiting, and reminds mentors about the 7-day refund", async () => {
+    const { newMessageEmail } = await import("@/lib/founder-emails");
+    const args = {
+      ...base, fullName: "Ada Obi", senderName: "Tunde Bello", senderTitle: null, senderAvatar: null,
+      preview: "Are you free this week?", conversationId: 7, offToken: "11111111-2222-3333-4444-555555555555", reminder: true,
+    };
+    const mentor = newMessageEmail({ ...args, toMentor: true });
+    expect(mentor.subject).toBe("Tunde is waiting for your reply");
+    expect(mentor.html).toContain("Hi Ada, Tunde is waiting for your reply.");
+    expect(mentor.text).toContain("within 7 days of paying get a full refund");
+    const member = newMessageEmail({ ...args, toMentor: false });
+    expect(member.text).not.toContain("refund");
+  });
+});
