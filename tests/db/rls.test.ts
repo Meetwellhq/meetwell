@@ -555,7 +555,7 @@ describe("AI network matching", () => {
     expect(forSenior.map((c) => c.slug)).not.toContain("engineer");
   });
 
-  it("has no monthly cap, but at most one match a day and never the same person twice", async () => {
+  it("gives at most one match a day and never the same person twice", async () => {
     const due = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`);
     const dueEmails = due.map((d) => d.email);
     expect(dueEmails).toEqual(expect.arrayContaining(["junior@test", "senior@test", "engineer@test", "marketer@test"]));
@@ -572,7 +572,7 @@ describe("AI network matching", () => {
     const dueAfter = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`);
     expect(dueAfter.map((d) => d.email)).not.toContain("junior@test");
 
-    // A day later: due again, and can get the next person (no monthly cap).
+    // A day later: due again, and can get the next person.
     await db.exec("update public.matches set created_at = now() - interval '1 day'");
     const dueNextDay = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`);
     expect(dueNextDay.map((d) => d.email)).toContain("junior@test");
@@ -584,6 +584,48 @@ describe("AI network matching", () => {
     const mine = await as<{ slug: string }>(JUNIOR, "select slug from public.my_matches()");
     expect(mine.map((m) => m.slug).sort()).toEqual(["engineer", "senior"]);
     expect(await as(SENIOR, "select * from public.my_matches()")).toEqual([]); // one-way
+  });
+
+  it("stops at 5 free matches a month (Lagos time), and last month doesn't count", async () => {
+    const used = async () =>
+      (await db.query<{ n: number }>(`select public.spark_matches_this_month('${JUNIOR}') as n`)).rows[0].n;
+    const due = async () =>
+      (await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`)).map((d) => d.email);
+    const ids = (await db.query<{ id: string }>(
+      "select id from public.profiles where slug not in ('junior', 'sparse') order by slug limit 5",
+    )).rows.map((r) => r.id);
+    expect(ids).toHaveLength(5);
+    const insertFive = (when: string) =>
+      db.query(
+        `insert into public.matches (user_id, matched_profile_id, reason, created_at)
+         select $1, id, 'test', ${when} from unnest($2::uuid[]) as id`,
+        [JUNIOR, ids],
+      );
+    await db.query("delete from public.matches where user_id = $1", [JUNIOR]);
+
+    // Five matches last month: none of them count, so the member is due.
+    await insertFive("public.spark_month_start() - interval '1 day'");
+    expect(await used()).toBe(0);
+    expect(await due()).toContain("junior@test");
+
+    // Five this month: no sixth until next month.
+    await db.query("delete from public.matches where user_id = $1", [JUNIOR]);
+    await insertFive("public.spark_month_start()");
+    expect(await used()).toBe(5);
+    expect(await due()).not.toContain("junior@test");
+    const [{ id: sixth }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'sparse'")).rows;
+    const recorded = await as<{ m: string | null }>(
+      null,
+      `select public.record_match('${SECRET}', '${JUNIOR}', '${sixth}', 'sixth') as m`,
+    );
+    expect(recorded[0].m).toBeNull();
+
+    // The member sees their own count; the helpers stay locked.
+    expect((await as<{ n: number }>(JUNIOR, "select public.my_matches_this_month() as n"))[0].n).toBe(5);
+    await expect(as(null, `select public.spark_matches_this_month('${JUNIOR}')`)).rejects.toThrow(/permission denied/);
+    await expect(as(JUNIOR, `select public.spark_matches_this_month('${JUNIOR}')`)).rejects.toThrow(/permission denied/);
+    await expect(as(JUNIOR, "select public.spark_month_start()")).rejects.toThrow(/permission denied/);
+    await db.query("delete from public.matches where user_id = $1", [JUNIOR]);
   });
 
   it("leaves out profiles under 80% complete, both ways", async () => {

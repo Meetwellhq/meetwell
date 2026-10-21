@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { chooseMatch, ruleReason, type Candidate, type Seeker } from "@/lib/matching/engine";
+import { sparkResetDate } from "@/lib/matching/constants";
 
 const junior: Seeker = {
   fullName: "Tunde Bello", title: "Product Designer", organization: null, bio: null,
@@ -49,5 +50,14 @@ describe("profile completeness", () => {
     expect(thin.ready).toBe(false);
     expect(thin.missing.map((m) => m.label)).toEqual(["Photo", "Bio", "City"]);
     expect(profileCompleteness({ ...full, avatarUrl: null, city: null }).ready).toBe(true); // 80%
+  });
+});
+
+describe("sparkResetDate", () => {
+  it("is the 1st of next month in Lagos time", () => {
+    expect(sparkResetDate(new Date("2026-10-21T12:00:00Z"))).toBe("1 November");
+    expect(sparkResetDate(new Date("2026-12-31T12:00:00Z"))).toBe("1 January");
+    // 23:30 UTC on 31 October is already 1 November in Lagos (UTC+1).
+    expect(sparkResetDate(new Date("2026-10-31T23:30:00Z"))).toBe("1 December");
   });
 });

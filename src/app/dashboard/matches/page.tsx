@@ -2,11 +2,13 @@ import { ArrowUpRight, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MatchingPrefsForm } from "@/components/matching/matching-prefs-form";
+import { SparkAllowance } from "@/components/matching/spark-allowance";
 import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert, EmptyState } from "@/components/ui/misc";
 import { publicProfilePath } from "@/lib/config";
 import { MATCHING_MIN_COMPLETENESS, profileCompleteness } from "@/lib/matching/completeness";
+import { SPARK_FREE_PER_MONTH } from "@/lib/matching/constants";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Spark" };
@@ -66,9 +68,11 @@ export default async function MatchesPage() {
         </h1>
         <p className="mt-1 text-ink-2">
           Spark introduces you to someone a step ahead of you: an experienced person in your field (4+ years) you
-          can learn from. Up to one new introduction a day, by email and here.
+          can learn from. Up to {SPARK_FREE_PER_MONTH} free introductions a month, at most one a day, by email and here.
         </p>
       </div>
+
+      {profile && <SparkAllowance used={usedThisMonth} />}
 
       {!profile ? (
         <div className="rounded-xl border border-border bg-surface">
@@ -147,9 +151,7 @@ export default async function MatchesPage() {
       <section className="flex flex-col gap-4">
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="text-lg font-semibold text-ink">Your matches</h2>
-          <p className="text-sm text-ink-3">
-            {usedThisMonth} this month
-          </p>
+          <p className="text-sm text-ink-3">{rows.length} in total</p>
         </div>
         {rows.length === 0 ? (
           <div className="rounded-xl border border-border bg-surface">

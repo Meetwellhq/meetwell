@@ -1,5 +1,18 @@
 /** Spark (AI matching): shared labels and limits. Values must match the database checks. */
 
+/** Free Spark matches per calendar month (Lagos time). Matches `spark_matches_this_month` checks in SQL. */
+export const SPARK_FREE_PER_MONTH = 5;
+
+/** "1 November": when the free matches reset, in Lagos time. */
+export function sparkResetDate(now = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Lagos", year: "numeric", month: "numeric" })
+    .formatToParts(now);
+  const part = (type: "year" | "month") => Number(parts.find((p) => p.type === type)!.value);
+  // Month is 1-based here, so Date.UTC(year, month) is next month. Noon UTC is the 1st in Lagos too.
+  const next = new Date(Date.UTC(part("year"), part("month"), 1, 12));
+  return next.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Africa/Lagos" });
+}
+
 export const FIELDS = [
   { value: "product_design", label: "Product design" },
   { value: "software_engineering", label: "Software engineering" },

@@ -4,6 +4,14 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
+## Spark: 5 free introductions a month
+
+- Every member now gets up to **5 free Spark introductions a month**, still at most one a day.
+- Your Spark page shows how many you have left and when they reset (the 1st of each month,
+  Lagos time).
+
+---
+
 ## 21 October 2026: Meet Spark ✨
 
 **Spark introduces you to someone a step ahead of you.** Every day,

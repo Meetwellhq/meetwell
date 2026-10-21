@@ -317,7 +317,7 @@ export function incompleteProfileEmail(
       ...args,
       subject: `Your ${appName} profile is ${completeness}% done`,
       before: [
-        `${progress} Once it reaches 80%, you'll start getting Spark introductions: more experienced people in your field worth meeting, up to one a day.`,
+        `${progress} Once it reaches 80%, you'll start getting Spark introductions: more experienced people in your field worth meeting, up to 5 a month.`,
         "A few more details will get you there, and you can see exactly what's missing on your Spark page.",
       ],
       cta: { href: `${siteUrl}/dashboard/matches`, label: "Complete my profile" },
@@ -343,7 +343,7 @@ export function incompleteProfileEmail(
     ...args,
     subject: "Add a photo to get Spark introductions",
     before: [
-      `${progress} Once it reaches 80%, Spark will start recommending experienced people in your field for you to meet and learn from, up to one a day.`,
+      `${progress} Once it reaches 80%, Spark will start recommending experienced people in your field for you to meet and learn from, up to 5 a month.`,
       "The best first step is a clear photo of you. Experienced members are far more likely to reply when they can see who's reaching out.",
     ],
     cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },

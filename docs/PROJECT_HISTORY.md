@@ -77,7 +77,8 @@ No personal data or secrets belong in this file: the repo is public.
 15. **AI Network Matching** (current headline feature), shaped by these decisions:
     - One-way: only the less experienced person is told.
     - Email + a Matches page in the dashboard.
-    - Started as 5 a month for free users; changed to **no cap, at most one a day**.
+    - Started as 5 a month for free users; changed to **no cap, at most one a day**; then back to
+      **5 free a month** (still at most one a day).
     - Recommend **more experienced** people only; later **only people with 4+ years** and later
       still **only those with a profile photo**.
     - Only members with a confirmed account and a profile **at least 80% complete** take part,
