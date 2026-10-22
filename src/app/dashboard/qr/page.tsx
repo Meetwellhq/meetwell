@@ -24,7 +24,7 @@ export default async function QrPage() {
   const svg = await qrSvg(qrTargetUrl(profile.slug));
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[22rem_1fr]">
+    <div className="grid gap-6 xl:grid-cols-[22rem_1fr]">
       <Card className="flex flex-col items-center p-6">
         <div className="w-full rounded-2xl border border-border bg-white p-4 [&>svg]:h-auto [&>svg]:w-full" role="img" aria-label={`QR code linking to ${url}`} dangerouslySetInnerHTML={{ __html: svg }} />
         <div className="mt-5 grid w-full grid-cols-2 gap-2">

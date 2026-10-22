@@ -211,7 +211,7 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
   ];
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem]">
+    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="flex flex-col gap-6 pb-24">
         {formError && <Alert tone="danger">{formError}</Alert>}
         {sections.map((s) => (
@@ -222,17 +222,17 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
         ))}
       </div>
 
-      <aside className="hidden lg:block">
-        <div className="sticky top-24">
+      <aside className="hidden xl:block">
+        <div className="sticky top-6">
           <p className="mb-3 text-sm font-medium text-ink-2">Live preview</p>
-          <div className="max-h-[calc(100vh-8rem)] overflow-y-auto rounded-3xl bg-surface-2 p-3">
+          <div className="max-h-[calc(100vh-5rem)] overflow-y-auto rounded-3xl bg-surface-2 p-3">
             <ProfileView profile={toPreview(values)} preview />
           </div>
         </div>
       </aside>
 
       {showPreview && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-surface-2 px-3 py-6 lg:hidden" role="dialog" aria-modal="true" aria-label="Preview">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-surface-2 px-3 py-6 xl:hidden" role="dialog" aria-modal="true" aria-label="Preview">
           <div className="mx-auto mb-4 flex max-w-md justify-end">
             <Button variant="secondary" size="sm" onClick={() => setShowPreview(false)}>Close preview</Button>
           </div>
@@ -244,7 +244,7 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <p className="text-sm text-ink-3" aria-live="polite">{dirty ? "Unsaved changes" : "All changes saved"}</p>
           <div className="flex gap-2">
-            <Button variant="secondary" className="lg:hidden" onClick={() => setShowPreview(true)} icon={<Eye className="size-4" />}>
+            <Button variant="secondary" className="xl:hidden" onClick={() => setShowPreview(true)} icon={<Eye className="size-4" />}>
               Preview
             </Button>
             <Button onClick={save} loading={pending} disabled={!dirty}>

@@ -101,6 +101,10 @@ export type ProfileStats = {
   saves: number;
   contactClicks: number;
   messagesCopied: number;
+  /** Totals per event type, for the "what visitors do" breakdown. */
+  byType: Record<EventType, number>;
+  /** Views by where they came from: QR scan, shared link, or neither (opened directly). */
+  viewsBySource: { qr: number; link: number; direct: number };
 };
 
 export async function getOwnProfileStats(days = 30): Promise<ProfileStats> {
@@ -111,15 +115,55 @@ export async function getOwnProfileStats(days = 30): Promise<ProfileStats> {
   const rows = (data ?? []) as { event_type: EventType; source: string | null; total: number }[];
   const sum = (pred: (r: (typeof rows)[number]) => boolean) =>
     rows.filter(pred).reduce((n, r) => n + Number(r.total), 0);
+  const type = (t: EventType) => sum((r) => r.event_type === t);
 
   return {
     days,
-    views: sum((r) => r.event_type === "view"),
+    views: type("view"),
     qrScans: sum((r) => r.event_type === "view" && r.source === "qr"),
-    saves: sum((r) => r.event_type === "save_contact"),
+    saves: type("save_contact"),
     contactClicks: sum((r) =>
       ["email_click", "phone_click", "website_click", "social_click"].includes(r.event_type),
     ),
-    messagesCopied: sum((r) => r.event_type === "copy_message"),
+    messagesCopied: type("copy_message"),
+    byType: {
+      view: type("view"),
+      save_contact: type("save_contact"),
+      email_click: type("email_click"),
+      phone_click: type("phone_click"),
+      website_click: type("website_click"),
+      social_click: type("social_click"),
+      copy_message: type("copy_message"),
+    },
+    viewsBySource: {
+      qr: sum((r) => r.event_type === "view" && r.source === "qr"),
+      link: sum((r) => r.event_type === "view" && r.source === "link"),
+      direct: sum((r) => r.event_type === "view" && r.source !== "qr" && r.source !== "link"),
+    },
   };
+}
+
+/**
+ * When each view in the last `days` days happened, for the daily views chart.
+ * RLS only returns the owner's own events. Read in pages because the API caps
+ * each request at 1,000 rows.
+ */
+export async function getOwnViewTimes(days = 30): Promise<string[]> {
+  const supabase = await createClient();
+  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  const times: string[] = [];
+  const page = 1000;
+  for (let from = 0; from < 20_000; from += page) {
+    const { data, error } = await supabase
+      .from("profile_events")
+      .select("created_at")
+      .eq("event_type", "view")
+      .gte("created_at", since)
+      .order("created_at")
+      .range(from, from + page - 1);
+    if (error) throw new Error(`Could not load views: ${error.message}`);
+    times.push(...(data ?? []).map((r) => r.created_at as string));
+    if (!data || data.length < page) break;
+  }
+  return times;
 }

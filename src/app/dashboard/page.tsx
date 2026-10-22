@@ -9,30 +9,70 @@ import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
 import { Alert, Badge, Card } from "@/components/ui/misc";
 import { publicProfilePath, publicProfileUrl, qrTargetUrl } from "@/lib/config";
-import { getOwnProfile, getOwnProfileStats } from "@/lib/profiles/queries";
+import { LineChart } from "@/components/dashboard/line-chart";
+import { BarList } from "@/components/dashboard/bar-list";
+import { BreakdownBar, type Slice } from "@/components/dashboard/breakdown-bar";
+import { dailyCounts, percentChange, rate } from "@/lib/profiles/analytics";
+import { getOwnProfile, getOwnProfileStats, getOwnViewTimes } from "@/lib/profiles/queries";
 import { qrSvg } from "@/lib/qr";
 
 export const metadata: Metadata = { title: "Dashboard" };
+
+/** "▲ 12% vs last 30 days", or a quiet dash when there's nothing to compare with. */
+function Change({ value }: { value: number | null }) {
+  if (value === null) return <span className="text-xs text-ink-3">No earlier data</span>;
+  if (value === 0) return <span className="text-xs text-ink-3">Same as before</span>;
+  const up = value > 0;
+  return (
+    <span className={up ? "text-xs font-medium text-success" : "text-xs font-medium text-danger"}>
+      {up ? "▲" : "▼"} {Math.abs(value)}% <span className="font-normal text-ink-3">vs last 30 days</span>
+    </span>
+  );
+}
 
 export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const profile = await getOwnProfile();
   if (!profile) redirect("/onboarding");
 
-  const [{ published, password }, stats, qr] = await Promise.all([
+  const [{ published, password }, stats, stats60, viewTimes, qr] = await Promise.all([
     searchParams,
     getOwnProfileStats(30),
+    getOwnProfileStats(60),
+    getOwnViewTimes(60),
     qrSvg(qrTargetUrl(profile.slug), { margin: 1 }),
   ]);
   const isLive = profile.status === "published";
   const { checks, percent } = completion(toFormValues(profile, null));
   const url = publicProfileUrl(profile.slug);
 
+  // The 30 days before this period: the last 60 days minus the last 30.
+  const before = (key: "views" | "qrScans" | "saves" | "contactClicks" | "messagesCopied") => stats60[key] - stats[key];
   const statCards = [
-    { label: "Profile views", value: stats.views },
-    { label: "From QR scans", value: stats.qrScans },
-    { label: "Contacts saved", value: stats.saves },
-    { label: "Contact & link taps", value: stats.contactClicks },
-    { label: "Messages copied", value: stats.messagesCopied },
+    { label: "Profile views", value: stats.views, change: percentChange(stats.views, before("views")) },
+    { label: "From QR scans", value: stats.qrScans, change: percentChange(stats.qrScans, before("qrScans")) },
+    { label: "Contacts saved", value: stats.saves, change: percentChange(stats.saves, before("saves")) },
+    { label: "Contact & link taps", value: stats.contactClicks, change: percentChange(stats.contactClicks, before("contactClicks")) },
+    { label: "Messages copied", value: stats.messagesCopied, change: percentChange(stats.messagesCopied, before("messagesCopied")) },
+    { label: "Save rate", value: `${rate(stats.saves, stats.views)}%`, hint: "of views saved your contact" },
+  ];
+  const daily = dailyCounts(viewTimes, 30);
+  // The 30 days before, lined up day by day for the dashed comparison line.
+  const dailyBefore = dailyCounts(viewTimes, 60).slice(0, 30).map((p) => p.value);
+  const best = daily.reduce((a, b) => (b.value > a.value ? b : a), daily[0]);
+  const t = stats.byType;
+  // Three tones of the brand green; the legend names each.
+  const sources: Slice[] = [
+    { label: "QR scans", value: stats.viewsBySource.qr, color: "#1f4d3f" },
+    { label: "Shared link", value: stats.viewsBySource.link, color: "#4f9474" },
+    { label: "Opened directly", value: stats.viewsBySource.direct, color: "#a3d1b8" },
+  ];
+  const actions = [
+    { label: "Saved contact", value: t.save_contact },
+    { label: "Email", value: t.email_click },
+    { label: "Phone", value: t.phone_click },
+    { label: "Website", value: t.website_click },
+    { label: "Social links", value: t.social_click },
+    { label: "Copied message", value: t.copy_message },
   ];
 
   return (
@@ -64,7 +104,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
         </Alert>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_20rem]">
         <div className="flex flex-col gap-6">
           <Card className="p-5 sm:p-6">
             <div className="flex items-baseline justify-between">
@@ -76,10 +116,31 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
                 <div key={s.label} className="rounded-xl bg-surface-2 p-4">
                   <dt className="text-sm text-ink-2">{s.label}</dt>
                   <dd className="mt-1 text-2xl font-semibold tabular-nums">{s.value}</dd>
+                  {"hint" in s ? (
+                    <dd className="mt-1 text-xs text-ink-3">{s.hint}</dd>
+                  ) : (
+                    <dd className="mt-1">
+                      <Change value={s.change} />
+                    </dd>
+                  )}
                 </div>
               ))}
             </dl>
-            <p className="mt-4 text-xs text-ink-3">Anonymous totals only — we don&apos;t record who visitors are. Your own visits aren&apos;t counted.</p>
+
+            <div className="mt-5">
+              <LineChart title="Views per day" points={daily} compare={dailyBefore} labelEvery={7} />
+              {best.value > 0 && (
+                <p className="mt-2 text-xs text-ink-3">
+                  Best day: {best.label}, with {best.value} {best.value === 1 ? "view" : "views"}.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <BreakdownBar title="Where views come from" slices={sources} unit="views" change={percentChange(stats.views, before("views"))} empty="No views yet. Share your link or QR code." />
+              <BarList title="What visitors do" rows={actions} empty="No taps yet. They'll show here." />
+            </div>
+            <p className="mt-4 text-xs text-ink-3">Anonymous totals only. We don&apos;t record who visitors are, and your own visits aren&apos;t counted. Changes compare with the 30 days before.</p>
           </Card>
 
           <Card className="p-5 sm:p-6">

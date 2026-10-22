@@ -42,7 +42,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <span className="rounded-full bg-ink px-2 py-0.5 text-xs font-medium text-white">Admin</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-3 rounded-full border border-border py-1.5 pl-1.5 pr-1.5 sm:pr-4">
+            <div className="flex items-center gap-3">
               <span className="grid size-8 place-items-center rounded-full bg-accent text-white">
                 <ShieldCheck className="size-4" aria-hidden />
               </span>
