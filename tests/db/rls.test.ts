@@ -1206,3 +1206,52 @@ describe("payment history", () => {
     expect(theirs.some((p) => juniorRefs.has(p.reference))).toBe(false);
   });
 });
+
+describe("outreach tracker", () => {
+  it("is for admins only", async () => {
+    await expect(as(BOB, "select * from public.admin_list_outreach()")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select public.admin_add_outreach('Dan', 'dan', null)")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_list_outreach()")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select public.admin_add_outreach('Dan', 'dan', null)")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.outreach_contacts")).rejects.toThrow(/permission denied/);
+  });
+
+  it("gives each person a personal code and tracks them to sign-up", async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    const [{ code }] = await as<{ code: string }>(ALICE, "select public.admin_add_outreach(' Daniel ', ' @DanBuilds ', 'Backend lead') as code");
+    expect(code).toMatch(/^MW-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/);
+    await expect(as(ALICE, "select public.admin_add_outreach('Dan', 'danbuilds', null)")).rejects.toThrow(/already on the list/);
+    await expect(as(ALICE, "select public.admin_add_outreach('Dan', 'not a handle!', null)")).rejects.toThrow(/check/);
+
+    const [row] = await as<{ id: number; first_name: string; x_handle: string; status: string; joined: boolean }>(
+      ALICE,
+      "select id, first_name, x_handle, status, joined from public.admin_list_outreach() where x_handle = 'danbuilds'",
+    );
+    expect(row).toMatchObject({ first_name: "Daniel", status: "to_contact", joined: false });
+
+    await as(ALICE, "select public.admin_set_outreach_status($1, 'replied')", [row.id]);
+    const [moved] = await as<{ status: string; contacted_at: string | null; replied_at: string | null }>(
+      ALICE,
+      "select status, contacted_at, replied_at from public.admin_list_outreach() where id = $1",
+      [row.id],
+    );
+    expect(moved.status).toBe("replied");
+    expect(moved.contacted_at).not.toBeNull();
+    expect(moved.replied_at).not.toBeNull();
+    await expect(as(ALICE, "select public.admin_set_outreach_status($1, 'spammed')", [row.id])).rejects.toThrow(/check/);
+
+    await db.query("insert into auth.users (id, email, raw_user_meta_data) values (gen_random_uuid(), 'dan@out.test', $1)", [
+      { access_code: code },
+    ]);
+    const [joined] = await as<{ joined: boolean }>(ALICE, "select joined from public.admin_list_outreach() where id = $1", [row.id]);
+    expect(joined.joined).toBe(true);
+  });
+
+  it("removes a person and their unused code", async () => {
+    const [{ code }] = await as<{ code: string }>(ALICE, "select public.admin_add_outreach('Tolu', 'tolu_dev', null) as code");
+    const [{ id }] = await as<{ id: number }>(ALICE, "select id from public.admin_list_outreach() where x_handle = 'tolu_dev'");
+    await as(ALICE, "select public.admin_delete_outreach($1)", [id]);
+    expect(await as(ALICE, "select id from public.admin_list_outreach() where x_handle = 'tolu_dev'")).toEqual([]);
+    expect((await db.query("select 1 from public.access_codes where code = $1", [code])).rows).toEqual([]);
+  });
+});

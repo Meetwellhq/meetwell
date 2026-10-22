@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { sendInviteEmail, sendMentorApprovedEmail, sendSparkBetaEmail, sendWithdrawalSentEmail } from "../email";
 import { refundPayment, sendTransfer } from "../payments/paystack";
 import { createClient, getCurrentUser } from "../supabase/server";
+import { xHandle } from "../outreach";
 import { emailSchema } from "../validation";
 
 export type InviteState = { ok?: boolean; error?: string };
@@ -171,6 +172,44 @@ export async function adminRefundSubscription(reference: string): Promise<{ erro
   }
   const { error } = await (await createClient()).rpc("admin_mark_refunded", { p_reference: reference });
   if (error) return { error: "Refunded in Paystack, but couldn't update Meetwell. Tell your developer." };
+  revalidatePath("/admin", "layout");
+  return {};
+}
+
+export type OutreachStatus = "to_contact" | "contacted" | "replied" | "declined";
+
+/** Add someone found on X to the outreach list, with their own access code. */
+export async function adminAddOutreach(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const firstName = String(formData.get("firstName") ?? "").trim().slice(0, 40);
+  const handle = xHandle(String(formData.get("handle") ?? ""));
+  const note = String(formData.get("note") ?? "").trim().slice(0, 300);
+  if (!firstName) return { error: "Add their first name." };
+  if (!handle) return { error: "That doesn't look like an X handle or profile link." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_add_outreach", { p_first_name: firstName, p_handle: handle, p_note: note });
+  if (error) {
+    console.error("admin_add_outreach failed", error.code, error.message);
+    if (error.code === "23505") return { error: `@${handle} is already on the list.` };
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't add them." };
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: `Added ${firstName} (@${handle}).` };
+}
+
+export async function adminSetOutreachStatus(id: number, status: OutreachStatus): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_set_outreach_status", { p_id: id, p_status: status });
+  if (error) return { error: "Couldn't update that." };
+  revalidatePath("/admin", "layout");
+  return {};
+}
+
+export async function adminDeleteOutreach(id: number): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_delete_outreach", { p_id: id });
+  if (error) return { error: "Couldn't remove them." };
   revalidatePath("/admin", "layout");
   return {};
 }

@@ -8,6 +8,7 @@ import {
   LogOut,
   Megaphone,
   MessagesSquare,
+  Send,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -27,6 +28,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
       { href: "/admin", label: "Overview", icon: LayoutDashboard },
       { href: "/admin/waitlist", label: "Waiting list", icon: ListOrdered, count: "waiting" },
       { href: "/admin/users", label: "Users", icon: Users },
+      { href: "/admin/outreach", label: "Outreach", icon: Send },
     ],
   },
   {

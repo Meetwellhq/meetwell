@@ -156,6 +156,11 @@ every migration.
   /admin/mentors flags "No reply in 7 days"; Refund calls Paystack's refund API, takes the mentor's share
   back and ends access. Renewal reminder 3 days before the end (daily reminders job). Admin revenue counts
   only Meetwell's share. All in `20261108000000_mentor_subscriptions.sql`.
+- **Outreach tracker**: `/admin/outreach` (`20261113000000_outreach.sql`, `src/lib/outreach.ts`). Rasheed adds
+  people he finds on X (first name, handle, note); each gets a single-use access code (60 days), a "Copy message"
+  with their name and invite link, and a status (to contact, messaged, replied, not interested). "Signed up" comes
+  from the code being used. Nothing is sent automatically: messages go out by hand on X. No scraping or bulk
+  emailing to collected addresses (X rules, NDPA consent, Resend's rules).
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `support@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).
