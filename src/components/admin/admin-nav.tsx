@@ -1,39 +1,135 @@
 "use client";
 
+import {
+  BadgeCheck,
+  CreditCard,
+  LayoutDashboard,
+  ListOrdered,
+  LogOut,
+  Megaphone,
+  MessagesSquare,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 
-const LINKS = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/waitlist", label: "Waiting list" },
-  { href: "/admin/users", label: "Users" },
-  { href: "/admin/mentors", label: "Mentors" },
-  { href: "/admin/messages", label: "Messages" },
-  { href: "/admin/announcements", label: "Announcements" },
-  { href: "/admin/payments", label: "Payments" },
+type Item = { href: string; label: string; icon: LucideIcon; count?: keyof Counts };
+/** Things waiting on the admin: invites to send, open reports, mentor applications plus withdrawals to approve. */
+export type Counts = { waiting: number; reports: number; mentors: number };
+
+const SECTIONS: { title: string; items: Item[] }[] = [
+  {
+    title: "Menu",
+    items: [
+      { href: "/admin", label: "Overview", icon: LayoutDashboard },
+      { href: "/admin/waitlist", label: "Waiting list", icon: ListOrdered, count: "waiting" },
+      { href: "/admin/users", label: "Users", icon: Users },
+    ],
+  },
+  {
+    title: "Mentoring",
+    items: [
+      { href: "/admin/mentors", label: "Mentors", icon: BadgeCheck, count: "mentors" },
+      { href: "/admin/messages", label: "Messages", icon: MessagesSquare, count: "reports" },
+    ],
+  },
+  {
+    title: "Money and emails",
+    items: [
+      { href: "/admin/payments", label: "Payments", icon: CreditCard },
+      { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
+    ],
+  },
 ];
 
-export function AdminNav() {
-  const pathname = usePathname();
+const isActive = (pathname: string, href: string) => (href === "/admin" ? pathname === href : pathname.startsWith(href));
+
+function CountBadge({ n, active }: { n: number; active: boolean }) {
+  if (!n) return null;
   return (
-    <nav aria-label="Admin" className="-mb-px flex gap-1 overflow-x-auto">
-      {LINKS.map((l) => {
-        const active = l.href === "/admin" ? pathname === l.href : pathname.startsWith(l.href);
-        return (
-          <Link
-            key={l.href}
-            href={l.href}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "whitespace-nowrap border-b-2 px-3 py-3 text-sm transition-colors",
-              active ? "border-ink font-medium text-ink" : "border-transparent text-ink-2 hover:text-ink",
-            )}
-          >
-            {l.label}
-          </Link>
-        );
-      })}
-    </nav>
+    <span
+      className={cn(
+        "ml-auto rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+        active ? "bg-white/20 text-white" : "bg-accent text-white",
+      )}
+    >
+      {n > 99 ? "99+" : n}
+    </span>
+  );
+}
+
+/** Admin sidebar on large screens; a scrollable row of tabs on small ones. */
+export function AdminNav({ counts }: { counts: Counts }) {
+  const pathname = usePathname();
+  const all = SECTIONS.flatMap((s) => s.items);
+
+  return (
+    <>
+      {/* Small screens: one scrollable row. */}
+      <nav aria-label="Admin" className="flex gap-1.5 overflow-x-auto rounded-2xl bg-surface p-2 lg:hidden">
+        {all.map((item) => {
+          const active = isActive(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm",
+                active ? "bg-accent font-medium text-white" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+              )}
+            >
+              <item.icon className="size-4" aria-hidden />
+              {item.label}
+              {item.count && <CountBadge n={counts[item.count]} active={active} />}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Large screens: the sidebar. */}
+      <aside className="hidden lg:block">
+        <nav aria-label="Admin" className="sticky top-6 flex flex-col gap-6 rounded-2xl bg-surface p-4">
+          {SECTIONS.map((section) => (
+            <div key={section.title} className="flex flex-col gap-1">
+              <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>
+              {section.items.map((item) => {
+                const active = isActive(pathname, item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors",
+                      active ? "bg-accent font-medium text-white" : "text-ink hover:bg-surface-2",
+                    )}
+                  >
+                    <item.icon className="size-[18px] shrink-0" aria-hidden />
+                    {item.label}
+                    {item.count && <CountBadge n={counts[item.count]} active={active} />}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+          <div className="flex flex-col gap-1">
+            <p className="px-3 pb-1 text-sm text-ink-3">General</p>
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="flex w-full items-center gap-3 rounded-lg bg-surface-2 px-3 py-2.5 text-[15px] text-danger hover:bg-danger/10"
+              >
+                <LogOut className="size-[18px]" aria-hidden />
+                Log out
+              </button>
+            </form>
+          </div>
+        </nav>
+      </aside>
+    </>
   );
 }
