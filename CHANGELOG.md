@@ -4,6 +4,15 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
+## 22 October 2026: Message a mentor, and Spark credits
+
+- Members with 4+ years can become mentors on Meetwell and set their own monthly price.
+- Members earlier in their careers can pay for 30 days of private messages with a mentor. No reply in 7 days? Full refund.
+- Mentors keep 80% and withdraw to their bank.
+- Want more Spark introductions? Buy credits on your Spark page.
+
+---
+
 ## 21 October 2026: Easier card editing
 
 - Title and company are now one simple box: pick from the list or type your own.
