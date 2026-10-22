@@ -3,7 +3,7 @@ export const APP_TAGLINE = "Meet someone. Make it a connection.";
 export const SUPPORT_EMAIL = "support@meetwell.me";
 /** Meetwell's own social accounts, shown in the footer. Empty ones are hidden. */
 export const SOCIAL_LINKS: { platform: "linkedin" | "instagram" | "x"; label: string; url: string }[] = [
-  { platform: "linkedin", label: "LinkedIn", url: "" },
+  { platform: "linkedin", label: "LinkedIn", url: "https://www.linkedin.com/company/meet-well-me" },
   { platform: "instagram", label: "Instagram", url: "https://www.instagram.com/trymeetwell" },
   { platform: "x", label: "X", url: "https://x.com/trymeetwell" },
 ];
