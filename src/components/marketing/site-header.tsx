@@ -1,5 +1,4 @@
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { JOIN_CTA } from "@/lib/config";
 import { Logo } from "./logo";
@@ -10,9 +9,6 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
       <div className="mx-auto flex h-16 max-w-[90rem] items-center justify-between px-4 sm:px-8">
         <Logo />
         <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
-          <Link href="/about" className="hidden rounded-full px-3 py-1.5 text-sm text-ink-2 hover:text-ink sm:inline">
-            About
-          </Link>
           {signedIn ? (
             <ButtonLink href="/dashboard" size="sm">
               Dashboard

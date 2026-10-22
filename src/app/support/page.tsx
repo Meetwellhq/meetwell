@@ -135,7 +135,7 @@ export default async function SupportPage() {
           </p>
         </Section>
       </main>
-      <SiteFooter wide />
+      <SiteFooter wide light />
     </div>
   );
 }
