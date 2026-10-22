@@ -237,7 +237,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           </div>
         </section>
       </main>
-      <SiteFooter bordered={false} wide />
+      <SiteFooter wide />
     </div>
   );
 }
