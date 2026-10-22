@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Illustrated example person for marketing pictures (not a real member). -->
+  <rect width="200" height="200" fill="#ece5d8"/>
+  <path d="M58 70c-14 30-16 70-10 104h104c6-34 4-74-10-104z" fill="#1b1b1a"/>
+  <path d="M32 200c4-36 32-56 68-56s64 20 68 56z" fill="#c2410c"/>
+  <path d="M86 132h28v18c0 8-6 14-14 14s-14-6-14-14z" fill="#6b3f26"/>
+  <ellipse cx="100" cy="98" rx="36" ry="42" fill="#7b4a2c"/>
+  <path d="M62 92c-2-34 16-52 38-52s40 18 38 52c-8-16-20-26-38-28-18 2-30 12-38 28z" fill="#1b1b1a"/>
+  <circle cx="100" cy="34" r="16" fill="#1b1b1a"/>
+  <ellipse cx="87" cy="100" rx="3.8" ry="4.4" fill="#1b1b1a"/>
+  <ellipse cx="113" cy="100" rx="3.8" ry="4.4" fill="#1b1b1a"/>
+  <path d="M80 91c4-2 8-2 12 0M108 91c4-2 8-2 12 0" stroke="#1b1b1a" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M98 104c-2 6-2 9 0 10 2 1 4 1 6 0" stroke="#5e351f" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <path d="M89 121c7 5 15 5 22 0" stroke="#7a1d1d" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <circle cx="64" cy="112" r="4" fill="#eab308"/>
+  <circle cx="136" cy="112" r="4" fill="#eab308"/>
+</svg>
