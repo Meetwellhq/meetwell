@@ -4,11 +4,11 @@ import { SocialIcon } from "@/components/icons/social-icon";
 import { CompanyAvatar } from "./company-avatar";
 import { buttonClass } from "@/components/ui/button";
 import { LogoMark } from "@/components/marketing/logo";
-import { cn } from "@/lib/cn";
 import { APP_NAME, SIGNUPS_OPEN } from "@/lib/config";
 import { goalLabel, isOfferedGoal, socialLabel } from "@/lib/profiles/constants";
 import { contactActions, displayUrl, type ContactAction } from "@/lib/profiles/links";
 import type { PublicProfile } from "@/lib/profiles/types";
+import { CardKeeper, type Viewer } from "./card-keeper";
 import { ConversationStarter } from "./conversation-starter";
 import { SaveContactButton } from "./save-contact-button";
 import { TrackedLink } from "./tracking";
@@ -26,6 +26,9 @@ type Props = {
   preview?: boolean;
   /** Set when this person is an approved mentor taking paid messages. */
   offer?: { priceKobo: number; firstName: string } | null;
+  /** Who is looking: members keep the card in Contacts, visitors on their phone. */
+  viewer?: Viewer;
+  source?: "qr" | "link";
 };
 
 const naira = (kobo: number) =>
@@ -35,7 +38,7 @@ const naira = (kobo: number) =>
  * The visitor-facing card. Receives only the public projection of a profile,
  * so private fields cannot leak into the rendered HTML.
  */
-export function ProfileView({ profile, preview = false, offer = null }: Props) {
+export function ProfileView({ profile, preview = false, offer = null, viewer = "visitor", source = "link" }: Props) {
   const slug = preview ? null : profile.slug;
   const allActions = contactActions(profile);
   // Icon-only quick actions under Save contact: email, WhatsApp, call, website.
@@ -157,9 +160,14 @@ export function ProfileView({ profile, preview = false, offer = null }: Props) {
         </>
       ) : (
         // Floats at the bottom of the screen while visitors scroll the card.
-        <Link href={CREATE_HREF} className={cn(CREATE_BAR, "sticky bottom-4 mb-4 transition-colors hover:bg-accent-hover")}>
-          <CreateBarContent />
-        </Link>
+        <CardKeeper
+          slug={profile.slug}
+          fullName={profile.fullName}
+          source={source}
+          viewer={viewer}
+          barClass={CREATE_BAR}
+          fallback={{ href: CREATE_HREF, content: <CreateBarContent /> }}
+        />
       )}
     </div>
   );

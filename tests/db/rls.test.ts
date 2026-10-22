@@ -1269,3 +1269,78 @@ describe("outreach tracker", () => {
     expect((await db.query("select 1 from public.access_codes where code = $1", [code])).rows).toEqual([]);
   });
 });
+
+describe("contacts and sign-up through a card", () => {
+  const OWNER = "c0c0c0c0-c0c0-c0c0-c0c0-c0c0c0c0c0c0";
+  const THIRD = "c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1";
+  const FRIEND = "f1f1f1f1-f1f1-f1f1-f1f1-f1f1f1f1f1f1";
+  const newUser = (id: string, email: string, meta: Record<string, unknown>) =>
+    db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)", [id, email, meta]);
+
+  beforeAll(async () => {
+    await db.exec("insert into public.access_codes (code, max_uses) values ('CONTACTS-CODE', 5)");
+    await newUser(OWNER, "owner@contacts.test", { access_code: "CONTACTS-CODE" });
+    await createProfile(OWNER, "owner-card");
+    await newUser(THIRD, "third@contacts.test", { access_code: "CONTACTS-CODE" });
+    await createProfile(THIRD, "third-card");
+  });
+
+  it("lets a visitor sign up through a member's card and keeps their saved cards", async () => {
+    expect(await as(null, "select public.card_invite_open('Owner-Card') as open")).toEqual([{ open: true }]);
+    expect(await as(null, "select public.card_invite_open('nobody-here') as open")).toEqual([{ open: false }]);
+    await expect(as(null, "select public.card_invite_profile('owner-card')")).rejects.toThrow(/permission denied/);
+
+    await newUser(FRIEND, "friend@contacts.test", { via_card: "owner-card", saved_cards: ["third-card", "owner-card", "missing"] });
+    const [{ meta }] = (await db.query<{ meta: Record<string, unknown> }>("select raw_user_meta_data as meta from auth.users where id = $1", [FRIEND])).rows;
+    expect(meta).toEqual({});
+    const mine = await as<{ slug: string; source: string }>(FRIEND, "select slug, source from public.my_contacts() order by slug");
+    expect(mine).toEqual([
+      { slug: "owner-card", source: "qr" },
+      { slug: "third-card", source: "link" },
+    ]);
+  });
+
+  it("refuses sign-up without a code or a real card", async () => {
+    await expect(newUser("d0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d0", "x@contacts.test", { via_card: "nobody-here" })).rejects.toThrow(/access code is required/);
+    await expect(newUser("d0d0d0d0-d0d0-d0d0-d0d0-d0d0d0d0d0d1", "y@contacts.test", {})).rejects.toThrow(/access code is required/);
+  });
+
+  it("stops at 20 sign-ups per card", async () => {
+    for (let i = 2; i <= 20; i++) {
+      const id = `e0e0e0e0-e0e0-e0e0-e0e0-${String(i).padStart(12, "0")}`;
+      await newUser(id, `card${i}@contacts.test`, { via_card: "owner-card" });
+    }
+    expect(await as(null, "select public.card_invite_open('owner-card') as open")).toEqual([{ open: false }]);
+    await expect(newUser("e0e0e0e0-e0e0-e0e0-e0e0-000000000099", "late@contacts.test", { via_card: "owner-card" })).rejects.toThrow(/access code is required/);
+    // An access code still works, and the card is still saved.
+    await newUser("e0e0e0e0-e0e0-e0e0-e0e0-000000000098", "coded@contacts.test", { access_code: "contacts-code", via_card: "owner-card" });
+    expect(await as("e0e0e0e0-e0e0-e0e0-e0e0-000000000098", "select slug from public.my_contacts()")).toEqual([{ slug: "owner-card" }]);
+  });
+
+  it("lets members keep, note and remove contacts, never their own card", async () => {
+    expect(await as(OWNER, "select public.save_contact('owner-card') as ok")).toEqual([{ ok: false }]);
+    expect(await as(OWNER, "select public.save_contact('third-card', 'qr') as ok")).toEqual([{ ok: true }]);
+    expect(await as(OWNER, "select public.save_contact('third-card') as ok")).toEqual([{ ok: true }]); // twice is fine
+    await as(OWNER, "select public.set_contact_note('third-card', '  Met at the fintech meetup ')");
+    expect(await as(OWNER, "select slug, note, source from public.my_contacts()")).toEqual([
+      { slug: "third-card", note: "Met at the fintech meetup", source: "qr" },
+    ]);
+    // Other people can't see or change it.
+    expect(await as(BOB, "select * from public.my_contacts()")).toEqual([]);
+    await expect(as(BOB, "select * from public.saved_contacts")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select public.save_contact('third-card')")).rejects.toThrow(/permission denied/);
+    await as(OWNER, "select public.remove_contact('third-card')");
+    expect(await as(OWNER, "select * from public.my_contacts()")).toEqual([]);
+  });
+
+  it("shows owners which members with a card saved them", async () => {
+    // FRIEND saved owner-card but has no card yet, so they don't show.
+    expect(await as<{ slug: string }>(OWNER, "select slug from public.who_saved_me()")).toEqual([]);
+    await createProfile(FRIEND, "friend-card");
+    const rows = await as<{ slug: string; saved_back: boolean }>(OWNER, "select slug, saved_back from public.who_saved_me()");
+    expect(rows).toEqual([{ slug: "friend-card", saved_back: false }]);
+    await as(OWNER, "select public.save_contact('friend-card')");
+    expect(await as(OWNER, "select saved_back from public.who_saved_me()")).toEqual([{ saved_back: true }]);
+    await expect(as(null, "select * from public.who_saved_me()")).rejects.toThrow(/permission denied/);
+  });
+});

@@ -2,6 +2,7 @@
 
 import {
   BadgeCheck,
+  BookUser,
   IdCard,
   LayoutDashboard,
   LogOut,
@@ -54,6 +55,7 @@ export function DashboardNav({ messages, mentor = false }: { messages?: { unread
     {
       title: "Connect",
       items: [
+        { href: "/dashboard/contacts", label: "Contacts", icon: BookUser },
         { href: "/dashboard/matches", label: "Spark", icon: Sparkles },
         ...(mentor ? [{ href: "/dashboard/mentor", label: "Mentoring", icon: BadgeCheck }] : []),
         ...(messages ? [{ href: "/dashboard/messages", label: "Messages", icon: MessagesSquare, unread: true }] : []),

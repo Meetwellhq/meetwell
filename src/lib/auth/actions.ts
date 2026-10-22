@@ -38,6 +38,20 @@ const credentialsSchema = z.object({ email: emailSchema, password: passwordSchem
 
 const INVALID_CODE = "That access code isn't valid or has already been used. Check your invite, or request early access.";
 
+const CARD_FULL =
+  "This card can't invite more people right now. Use an access code if you have one, or request early access.";
+
+/** Card links saved on the visitor's phone, sent along with sign-up (slugs only, up to 50). */
+function parseSavedCards(value: FormDataEntryValue | null): string[] {
+  try {
+    const list = JSON.parse(typeof value === "string" ? value.slice(0, 5000) : "[]");
+    if (!Array.isArray(list)) return [];
+    return [...new Set(list.filter((s): s is string => typeof s === "string" && /^[a-z0-9-]{1,64}$/i.test(s)).map((s) => s.toLowerCase()))].slice(0, 50);
+  } catch {
+    return [];
+  }
+}
+
 export type AccessCodeState = { error?: string; code?: string; input?: string };
 
 /** Step 1 of invite sign-up: check the code before asking for email and password. */
@@ -68,17 +82,27 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   const parsed = credentialsSchema.safeParse({ email, password: formData.get("password") });
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), email };
 
+  // Joining through someone's card: that card counts as the invite (20 per card,
+  // checked again in the database), and cards saved on this phone come along.
+  const viaCard = String(formData.get("viaCard") ?? "").trim().toLowerCase().slice(0, 64);
+  const savedCards = parseSavedCards(formData.get("savedCards"));
+
   const supabase = await createClient();
   if (!SIGNUPS_OPEN) {
-    const { data: valid } = await supabase.rpc("check_access_code", { p_code: accessCode });
-    if (valid !== true) return { error: INVALID_CODE, email };
+    const { data: valid } = accessCode ? await supabase.rpc("check_access_code", { p_code: accessCode }) : { data: false };
+    const { data: cardOpen } = valid !== true && viaCard ? await supabase.rpc("card_invite_open", { p_slug: viaCard }) : { data: false };
+    if (valid !== true && cardOpen !== true) return { error: viaCard ? CARD_FULL : INVALID_CODE, email };
   }
+  const meta: Record<string, unknown> = {};
+  if (!SIGNUPS_OPEN && accessCode) meta.access_code = accessCode;
+  if (viaCard) meta.via_card = viaCard;
+  if (savedCards.length) meta.saved_cards = savedCards;
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
       emailRedirectTo: `${getSiteUrl()}/auth/callback?next=/onboarding`,
-      data: SIGNUPS_OPEN ? undefined : { access_code: accessCode },
+      data: Object.keys(meta).length ? meta : undefined,
     },
   });
   const outcome = classifySignUp(data, error?.code);
@@ -90,8 +114,8 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   }
   if (error) {
     if (error.code === "weak_password") return { error: error.message, email };
-    // The database refused the account: the code was used up in the meantime.
-    if (!SIGNUPS_OPEN && error.code === "unexpected_failure") return { error: INVALID_CODE, email };
+    // The database refused the account: the code (or the card's invites) ran out in the meantime.
+    if (!SIGNUPS_OPEN && error.code === "unexpected_failure") return { error: viaCard ? CARD_FULL : INVALID_CODE, email };
     console.error("signUp failed", error.code, error.message);
     return { error: "We couldn't create your account. Please try again.", email };
   }

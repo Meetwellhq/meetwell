@@ -1,6 +1,7 @@
 import { LogOut } from "lucide-react";
 import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { DeviceCardsImporter } from "@/components/dashboard/device-cards-importer";
 import { ExperiencePrompt } from "@/components/matching/experience-prompt";
 import { isMentor } from "@/lib/matching/constants";
 import { Logo } from "@/components/marketing/logo";
@@ -52,6 +53,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         </div>
       </div>
       {profile && profile.experience_years === null && <ExperiencePrompt initialField={profile.field} />}
+      <DeviceCardsImporter />
     </div>
   );
 }

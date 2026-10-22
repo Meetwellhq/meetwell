@@ -156,6 +156,14 @@ every migration.
   /admin/mentors flags "No reply in 7 days"; Refund calls Paystack's refund API, takes the mentor's share
   back and ends access. Renewal reminder 3 days before the end (daily reminders job). Admin revenue counts
   only Meetwell's share. All in `20261108000000_mentor_subscriptions.sql`.
+- **Contacts and sign-up through a card**: `/dashboard/contacts` (`20261114000000_contacts.sql`). A logged-in
+  member who opens a card keeps it (`save_contact`, from `CardKeeper` on `/p/[slug]`). Visitors keep cards on their
+  phone (`src/lib/contacts/device.ts`, localStorage) and the card's bottom bar becomes "Keep X's card · Join free" →
+  `/join?via=slug`. During the private beta a card counts as an invite: sign-up without a code works through a
+  published member's card, up to 20 per card (`card_invite_profile`, `card_signups`, checked in the
+  `enforce_access_code` trigger). Phone-saved cards ride along in sign-up data (`saved_cards`) and are imported by the
+  trigger; anything left is imported on the next dashboard visit (`DeviceCardsImporter`). Owners see members (with a
+  card) who saved them (`who_saved_me`). "Export all" downloads one .vcf (`/dashboard/contacts/export`).
 - **Outreach tracker**: `/admin/outreach` (`20261113000000_outreach.sql`, `src/lib/outreach.ts`). Rasheed adds
   people he finds on X one at a time or by pasting a list (one per line: handle or link, optional name and note;
   `parseOutreachList`); names are optional ("Hi there") and editable. Each person gets a single-use access code (60 days), a "Copy message"

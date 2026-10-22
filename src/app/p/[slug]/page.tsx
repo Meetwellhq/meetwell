@@ -4,7 +4,8 @@ import { ProfileView } from "@/components/profile/profile-view";
 import { ViewTracker } from "@/components/profile/tracking";
 import { isSupabaseConfigured } from "@/lib/config";
 import { getPublicProfile } from "@/lib/profiles/queries";
-import { createClient } from "@/lib/supabase/server";
+import type { Viewer } from "@/components/profile/card-keeper";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export async function generateMetadata({ params }: PageProps<"/p/[slug]">): Promise<Metadata> {
   const { slug } = await params;
@@ -34,13 +35,26 @@ export default async function PublicProfilePage({ params, searchParams }: PagePr
 
   const profile = await getPublicProfile(slug);
   if (!profile) notFound();
-  const { data: offerRows } = await (await createClient()).rpc("mentor_offer", { p_slug: profile.slug });
+  const supabase = await createClient();
+  const [{ data: offerRows }, user] = await Promise.all([supabase.rpc("mentor_offer", { p_slug: profile.slug }), getCurrentUser()]);
   const offer = ((offerRows ?? []) as { price_kobo: number; first_name: string }[])[0];
+  const source = src === "qr" ? "qr" : "link";
+  // Logged in: is this their own card? (Only owners can read their own profile row.)
+  let viewer: Viewer = "visitor";
+  if (user) {
+    const { data: own } = await supabase.from("profiles").select("slug").eq("user_id", user.id).maybeSingle();
+    viewer = own?.slug === profile.slug ? "owner" : "member";
+  }
 
   return (
     <main className="flex-1 px-4 py-6 sm:py-12">
-      <ViewTracker slug={profile.slug} source={src === "qr" ? "qr" : "link"} />
-      <ProfileView profile={profile} offer={offer ? { priceKobo: offer.price_kobo, firstName: offer.first_name } : null} />
+      <ViewTracker slug={profile.slug} source={source} />
+      <ProfileView
+        profile={profile}
+        offer={offer ? { priceKobo: offer.price_kobo, firstName: offer.first_name } : null}
+        viewer={viewer}
+        source={source}
+      />
     </main>
   );
 }

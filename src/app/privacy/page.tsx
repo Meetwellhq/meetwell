@@ -53,6 +53,12 @@ export default function PrivacyPage() {
           conversation.
         </p>
         <p className="mt-3">
+          <strong>Contacts:</strong> when you open someone&apos;s card while logged in, we keep it in your Contacts with
+          the date, whether you scanned their QR code, and any note you add. Before you have an account, the cards you
+          open are kept only on your own phone, in your browser, and reach us only if you sign up. If you keep
+          someone&apos;s card and you have a card of your own, they can see that you saved them.
+        </p>
+        <p className="mt-3">
           <strong>If you are a mentor:</strong> your application and its review, your price, what members paid you,
           your wallet balance and withdrawals, and where withdrawals go: your bank&apos;s name, the account name and the
           last 4 digits of the account number. The full account number is held by Paystack, not by us.
@@ -236,7 +242,9 @@ export default function PrivacyPage() {
       <section>
         <h2>10. Cookies</h2>
         <p>
-          We only use the cookies needed to keep you logged in. We don&apos;t use advertising or tracking cookies.
+          We only use the cookies needed to keep you logged in. We don&apos;t use advertising or tracking cookies. If
+          you open cards without an account, your browser keeps a short list of them on your phone so you can bring
+          them along when you sign up. You can clear it anytime by clearing your browser&apos;s site data.
         </p>
       </section>
 
