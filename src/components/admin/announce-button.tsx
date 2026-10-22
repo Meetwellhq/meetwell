@@ -12,7 +12,7 @@ export function AnnounceButton({ remaining }: { remaining: number }) {
     <form
       action={action}
       onSubmit={(e) => {
-        if (!state.sent && !confirm(`Send the Spark email to ${left} member${left === 1 ? "" : "s"}?`)) e.preventDefault();
+        if (!state.sent && !confirm(`Send the Spark email to ${left} user${left === 1 ? "" : "s"}?`)) e.preventDefault();
       }}
       className="flex flex-col items-end gap-1"
     >

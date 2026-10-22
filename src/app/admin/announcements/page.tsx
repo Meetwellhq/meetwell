@@ -15,7 +15,7 @@ export default async function AdminAnnouncementsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageTitle title="Announcements">
-        One-off emails from you to every member with a confirmed account. Each person gets each one once.
+        One-off emails from you to every user with a confirmed account. Each person gets each one once.
       </PageTitle>
       {error ? (
         <NotReady what="Announcements" />

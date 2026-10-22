@@ -67,9 +67,9 @@ export function AdminOverview({ m, rate }: { m: Metrics; rate: UsdRate | null })
 
   const sections = [
     { href: "/admin/waitlist", title: "Waiting list", text: `${n("waitlist_waiting")} waiting for an invite` },
-    { href: "/admin/members", title: "Members", text: `${n("members")} members, ${n("cards_published")} with a live card` },
-    { href: "/admin/announcements", title: "Announcements", text: "One-off emails to every member" },
-    { href: "/admin/payments", title: "Payments", text: `${n("paying_members")} paying members` },
+    { href: "/admin/users", title: "Users", text: `${n("members")} users, ${n("cards_published")} with a live card` },
+    { href: "/admin/announcements", title: "Announcements", text: "One-off emails to every user" },
+    { href: "/admin/payments", title: "Payments", text: `${n("paying_members")} paying users` },
   ];
 
   return (
@@ -87,10 +87,10 @@ export function AdminOverview({ m, rate }: { m: Metrics; rate: UsdRate | null })
             { label: "MRR", value: money(mrr), note: "Last 30 days of sales" },
             { label: "ARR", value: money(arr), note: "MRR × 12" },
             { label: "Total revenue", value: money(n("revenue_total_kobo")), note: `${naira(n("revenue_total_kobo"))} since launch` },
-            { label: "Paying members", value: n("paying_members"), note: `${n("paying_30d")} in the last 30 days` },
-            { label: "Revenue per paying member", value: money(arppu), note: "Since launch" },
+            { label: "Paying users", value: n("paying_members"), note: `${n("paying_30d")} in the last 30 days` },
+            { label: "Revenue per paying user", value: money(arppu), note: "Since launch" },
             { label: "Credits sold", value: n("credits_sold"), note: `${n("credits_used")} used` },
-            { label: "Paying share", value: pct(n("paying_members"), n("members")), note: "Of all members" },
+            { label: "Paying share", value: pct(n("paying_members"), n("members")), note: "Of all users" },
           ]}
         />
         <BarChart
@@ -99,7 +99,7 @@ export function AdminOverview({ m, rate }: { m: Metrics; rate: UsdRate | null })
           format={money}
         />
         <p className="text-xs text-ink-3">
-          Revenue is Meetwell&apos;s share: all credit sales and 20% of mentor subscriptions. Members pay in naira.{" "}
+          Revenue is Meetwell&apos;s share: all credit sales and 20% of mentor subscriptions. Users pay in naira.{" "}
           {rate ? (
             <>
               Dollar amounts use $1 = {naira(rate.ngnPerUsd * 100)}, updated daily (
@@ -119,10 +119,10 @@ export function AdminOverview({ m, rate }: { m: Metrics; rate: UsdRate | null })
       <Section title="Growth">
         <Stats
           items={[
-            { label: "Members", value: n("members"), note: "With an account" },
+            { label: "Users", value: n("members"), note: "With an account" },
             { label: "Joined this month", value: n("members_this_month"), note: versus(n("members_this_month"), n("members_last_month")) },
             { label: "Waiting list", value: n("waitlist"), note: `${n("waitlist_waiting")} waiting · ${n("waitlist_this_month")} new this month` },
-            { label: "Cards published", value: n("cards_published"), note: `${pct(n("cards_published"), n("members"))} of members` },
+            { label: "Cards published", value: n("cards_published"), note: `${pct(n("cards_published"), n("members"))} of users` },
             { label: "Active in 7 days", value: n("active_7d"), note: pct(n("active_7d"), n("members")) },
             { label: "Active in 30 days", value: n("active_30d"), note: pct(n("active_30d"), n("members")) },
             { label: "Email confirmed", value: n("confirmed"), note: pct(n("confirmed"), n("members")) },
@@ -130,7 +130,7 @@ export function AdminOverview({ m, rate }: { m: Metrics; rate: UsdRate | null })
           ]}
         />
         <BarChart
-          title="New members per week"
+          title="New users per week"
           points={(m.signups_by_week ?? []).map((p) => ({ label: lagos(p.start, { day: "numeric", month: "short" }), value: Number(p.count) }))}
           format={(v) => String(v)}
           labelEvery={3}
@@ -140,7 +140,7 @@ export function AdminOverview({ m, rate }: { m: Metrics; rate: UsdRate | null })
       <Section title="Spark">
         <Stats
           items={[
-            { label: "Spark switched on", value: n("spark_on"), note: pct(n("spark_on"), n("members")) + " of members" },
+            { label: "Spark switched on", value: n("spark_on"), note: pct(n("spark_on"), n("members")) + " of users" },
             { label: "Under 4 years", value: n("seekers"), note: "Get introductions" },
             { label: "4+ years (mentors)", value: n("mentors"), note: "Recommended to others" },
             { label: "Introductions this month", value: n("matches_this_month") },

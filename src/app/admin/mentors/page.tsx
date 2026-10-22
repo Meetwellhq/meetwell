@@ -143,7 +143,7 @@ export default async function AdminMentorsPage() {
         <h2 className="text-lg font-semibold text-ink">Mentors</h2>
         {ms.length === 0 ? (
           <div className="rounded-xl border border-border bg-surface">
-            <EmptyState title="No applications yet" description="Members with 4+ years can apply from their Mentoring page." />
+            <EmptyState title="No applications yet" description="Users with 4+ years can apply from their Mentoring page." />
           </div>
         ) : (
           <ul className="divide-y divide-border rounded-xl border border-border bg-surface">

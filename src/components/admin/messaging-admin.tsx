@@ -15,11 +15,11 @@ export function OpenConversationForm() {
       <div>
         <p className="font-medium text-ink">Open a test conversation</p>
         <p className="mt-0.5 text-sm text-ink-2">
-          Free, for testing before payments. The member writes first. Opening it again extends the time.
+          Free, for testing before payments. The user writes first. Opening it again extends the time.
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-[1fr_1fr_8rem]">
-        <Field label="Member email (under 4 years)">
+        <Field label="User email (under 4 years)">
           {({ id }) => <Input id={id} name="member" type="email" required />}
         </Field>
         <Field label="Mentor email (4+ years)">

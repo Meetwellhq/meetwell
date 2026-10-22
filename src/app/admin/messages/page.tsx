@@ -44,7 +44,7 @@ export default async function AdminMessagesPage() {
   if (conversations.error) {
     return (
       <div className="flex flex-col gap-6">
-        <PageTitle title="Messages">Conversations between members and mentors.</PageTitle>
+        <PageTitle title="Messages">Conversations between users and mentors.</PageTitle>
         <NotReady what="Messages" />
       </div>
     );
@@ -57,7 +57,7 @@ export default async function AdminMessagesPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageTitle title="Messages">
-        Conversations between members and mentors. You see who talks to whom and how much, never what they say,
+        Conversations between users and mentors. You see who talks to whom and how much, never what they say,
         except for messages someone reports.
       </PageTitle>
 

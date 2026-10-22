@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 const LINKS = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/waitlist", label: "Waiting list" },
-  { href: "/admin/members", label: "Members" },
+  { href: "/admin/users", label: "Users" },
   { href: "/admin/mentors", label: "Mentors" },
   { href: "/admin/messages", label: "Messages" },
   { href: "/admin/announcements", label: "Announcements" },
