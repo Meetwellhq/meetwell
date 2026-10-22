@@ -226,3 +226,17 @@ describe("reply reminder email", () => {
     expect(member.text).not.toContain("refund");
   });
 });
+
+describe("logo in emails", () => {
+  it("puts the Meetwell logo at the top of founder and message emails", async () => {
+    const { waitlistEmail, newMessageEmail } = await import("@/lib/founder-emails");
+    const logo = 'src="https://meetwell.me/email/logo.png"';
+    expect(waitlistEmail({ ...base, fullName: "Ada", unsubscribeToken: "11111111-2222-3333-4444-555555555555" }).html).toContain(logo);
+    expect(
+      newMessageEmail({
+        ...base, fullName: "Ada", senderName: "Tunde", senderTitle: null, senderAvatar: null,
+        preview: "Hi", conversationId: 1, offToken: "11111111-2222-3333-4444-555555555555",
+      }).html,
+    ).toContain(logo);
+  });
+});

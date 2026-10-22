@@ -159,6 +159,10 @@ every migration.
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `support@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).
+- **Logo in emails and inboxes**: every email starts with `emailLogo()` (`public/email/logo.png`, a PNG
+  because Gmail blocks SVG). Inbox sender picture uses BIMI: `public/bimi/meetwell.svg` (SVG Tiny PS) and a
+  `default._bimi` TXT record; DMARC must be `p=quarantine` or stricter. Yahoo/AOL show it for free; Gmail and
+  Apple need a paid VMC/CMC certificate (not bought yet).
 - **Announcements**: one-off emails from the founder to every confirmed member, sent from the
   admin area ("Send Spark email", in paced batches; click again for the rest). Each person gets each
   announcement once (`public.announcements_sent`, `20261102000000_announcements.sql`). Template:

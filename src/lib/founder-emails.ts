@@ -24,7 +24,22 @@ function firstNameOf(fullName: string | null) {
   return fullName?.trim().split(/\s+/)[0] || "there";
 }
 
-/** Shared layout: greeting, body (already HTML), founder sign-off with photo. */
+/**
+ * The Meetwell logo and name at the top of every email. A PNG at an absolute
+ * URL, because Gmail doesn't show SVGs or images attached to the email.
+ */
+export function emailLogo(siteUrl: string, appName: string) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+    <tr>
+      <td style="padding-right:10px;vertical-align:middle">
+        <img src="${siteUrl}/email/logo.png" width="32" height="32" alt="" style="display:block;width:32px;height:32px;border:0">
+      </td>
+      <td style="vertical-align:middle;font-size:19px;font-weight:700;color:#1f4d3f;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">${escapeHtml(appName)}</td>
+    </tr>
+  </table>`;
+}
+
+/** Shared layout: logo, greeting, body (already HTML), founder sign-off with photo. */
 function founderLayout({ firstName, bodyHtml, appName, siteUrl, photoUrl, footerHtml }: {
   firstName: string;
   bodyHtml: string;
@@ -36,7 +51,8 @@ function founderLayout({ firstName, bodyHtml, appName, siteUrl, photoUrl, footer
 }) {
   const siteLabel = siteUrl.replace(/^https?:\/\//, "");
   return `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1c1c1a;font-size:16px;line-height:1.65">
-  <p>Hi ${escapeHtml(firstName)},</p>
+  ${emailLogo(siteUrl, appName)}
+  <p style="margin-top:24px">Hi ${escapeHtml(firstName)},</p>
   ${bodyHtml}
   <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:28px;border-collapse:collapse">
     <tr>
@@ -450,7 +466,7 @@ export function newMessageEmail({
   const html = `<div style="background:#f6f6f4;padding:24px 12px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1c1c1a">
   <div style="display:none;max-height:0;overflow:hidden">${escapeHtml(preview)}</div>
   <div style="max-width:520px;margin:0 auto">
-    <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#1f4d3f">${escapeHtml(appName)}</p>
+    <div style="margin:0 0 16px">${emailLogo(siteUrl, appName)}</div>
     <div style="background:#ffffff;border:1px solid #e6e5e1;border-radius:12px;padding:24px">
       <p style="margin:0 0 20px;font-size:16px;line-height:1.5">${escapeHtml(headline)}</p>
       <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">
