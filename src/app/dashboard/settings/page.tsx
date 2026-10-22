@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PaymentHistory, type PaymentHistoryRow } from "@/components/dashboard/payment-history";
 import { DangerZone, PublishButton } from "@/components/dashboard/publish-controls";
 import { Card } from "@/components/ui/misc";
 import { getOwnProfile } from "@/lib/profiles/queries";
@@ -10,7 +11,12 @@ export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const [user, profile, emails] = await Promise.all([getCurrentUser(), getOwnProfile(), supabase.rpc("my_message_emails")]);
+  const [user, profile, emails, payments] = await Promise.all([
+    getCurrentUser(),
+    getOwnProfile(),
+    supabase.rpc("my_message_emails"),
+    supabase.rpc("my_payments"),
+  ]);
   const isLive = profile?.status === "published";
 
   return (
@@ -36,6 +42,15 @@ export default async function SettingsPage() {
           </p>
         </div>
         <MessageEmailsSwitch initial={emails.data !== false} />
+      </Card>
+
+      <Card id="payments" className="scroll-mt-28 p-5 sm:p-6">
+        <h2 className="font-semibold">Payment history</h2>
+        <p className="mt-1 text-sm text-ink-2">
+          Everything you&apos;ve paid for on Meetwell. Payments are made through Paystack, so we never see your card.
+          Questions about a payment? Write to us with the reference.
+        </p>
+        <PaymentHistory rows={(payments.data ?? []) as PaymentHistoryRow[]} />
       </Card>
 
       {profile && (

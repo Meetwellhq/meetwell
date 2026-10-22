@@ -1185,3 +1185,24 @@ describe("reply reminders", () => {
     await expect(as(JUNIOR, "select * from public.message_reminders_sent")).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("payment history", () => {
+  it("shows members only their own paid and refunded payments", async () => {
+    const JUNIOR = "55555555-5555-5555-5555-555555555555";
+    const ENGINEER = "77777777-7777-7777-7777-777777777777";
+    await expect(as(null, "select * from public.my_payments()")).rejects.toThrow(/permission denied/);
+    const mine = await as<{ kind: string; status: string; amount_kobo: number; mentor_name: string | null }>(
+      JUNIOR, "select kind, status, amount_kobo, mentor_name from public.my_payments()",
+    );
+    const [{ n }] = (await db.query<{ n: number }>(
+      "select count(*)::int as n from public.payments where user_id = $1 and status in ('success', 'refunded')", [JUNIOR],
+    )).rows;
+    expect(mine).toHaveLength(n);
+    expect(mine.map((p) => p.kind)).toEqual(expect.arrayContaining(["credits", "subscription"]));
+    expect(mine.find((p) => p.kind === "subscription")).toMatchObject({ status: "refunded", mentor_name: "Test Person" });
+    expect(mine.every((p) => ["success", "refunded"].includes(p.status))).toBe(true); // no failed or unfinished
+    const theirs = await as<{ reference: string }>(ENGINEER, "select reference from public.my_payments()");
+    const juniorRefs = new Set((await as<{ reference: string }>(JUNIOR, "select reference from public.my_payments()")).map((p) => p.reference));
+    expect(theirs.some((p) => juniorRefs.has(p.reference))).toBe(false);
+  });
+});

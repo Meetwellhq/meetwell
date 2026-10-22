@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { buyCredits } from "@/lib/payments/actions";
@@ -29,12 +30,20 @@ export function SparkCredits({ balance, packs, freeLeft }: { balance: number; pa
 
   return (
     <section className="rounded-xl border border-border bg-surface p-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <p className="font-medium text-ink">{freeLeft === 0 ? "Get more introductions" : "Want more introductions?"}</p>
-        <p className="text-sm text-ink-2">
-          {balance === 0 ? "No credits yet" : `You have ${balance} credit${balance === 1 ? "" : "s"}`}
+      <div className="flex items-center justify-between gap-4 rounded-lg bg-accent-soft px-4 py-3">
+        <div>
+          <p className="text-sm text-ink-2">Your credits</p>
+          <p className="text-2xl font-semibold tabular-nums text-ink">{balance}</p>
+        </div>
+        <p className="max-w-[14rem] text-right text-sm text-ink-2">
+          {balance === 0
+            ? "No credits yet."
+            : freeLeft > 0
+              ? "Used after your free introductions run out this month."
+              : `Spark is using these now. ${balance} more introduction${balance === 1 ? "" : "s"} to come.`}
         </p>
       </div>
+      <p className="mt-4 font-medium text-ink">{freeLeft === 0 ? "Get more introductions" : "Want more introductions?"}</p>
       <p className="mt-1 text-sm text-ink-2">
         Each credit gives you one extra introduction after your 5 free ones. Still one a day at most. Credits never
         expire.
@@ -59,7 +68,11 @@ export function SparkCredits({ balance, packs, freeLeft }: { balance: number; pa
         })}
       </div>
       <p className="mt-3 text-xs text-ink-3">
-        Payments are handled by Paystack. We never see your card details.
+        Payments are handled by Paystack. We never see your card details.{" "}
+        <Link href="/dashboard/settings#payments" className="underline">
+          See your payment history
+        </Link>
+        .
       </p>
     </section>
   );
