@@ -33,7 +33,7 @@ invites them from an admin page; they sign up with a personal access code.
 | Piece | What it is | Notes |
 | --- | --- | --- |
 | Code | Next.js 16 (App Router, Server Actions, `proxy.ts`), React 19, TypeScript, Tailwind 4 | GitHub: `Meetwellhq/meetwell` (public repo, "all rights reserved" licence) |
-| Hosting | Vercel, project `meetwell`, team "Meetwell" (Hobby plan) | Auto-deploys on push to `main`. Domain `meetwell.me` (DNS on Vercel) |
+| Hosting | Vercel, project `meetwell`, team "Meetwell" (Hobby plan; team ID `team_dSWwctnyg2mSiCL34Qbew1Ey`, slug `riskat-bolajoko-foundation`, for the Vercel MCP) | Auto-deploys on push to `main`. Domain `meetwell.me` (DNS on Vercel) |
 | Database, auth, storage | Supabase | RLS everywhere; public reads only through security-definer RPCs |
 | App emails | Resend (`noreply@meetwell.me`) | Via Supabase SMTP (auth emails) and the Resend API (founder emails) |
 | Mailbox | Zoho Mail: `info@meetwell.me`, aliases `hello@meetwell.me` and `support@meetwell.me` (support@ is the address shown on the site and in every email) | MX, SPF (`include:zohomail.com`) and DKIM (`zmail._domainkey`) on Vercel DNS |
