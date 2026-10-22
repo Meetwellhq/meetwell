@@ -4,6 +4,13 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
+## 22 October 2026: Contacts
+
+- Everyone whose card you scan or open is kept in your new Contacts page, with notes and search.
+- Save one person to your phone, or export everyone at once.
+- See who saved your card, and save them back.
+- Scanned a card but don't have an account? The person's card is your invite to join.
+
 ## 22 October 2026: Message a mentor, and Spark credits
 
 - Members with 4+ years can become mentors on Meetwell and set their own monthly price.
