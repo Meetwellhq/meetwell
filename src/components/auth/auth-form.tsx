@@ -24,9 +24,11 @@ type Props = {
   /** Hide the form once a success message is shown (e.g. "check your email"). */
   hideOnMessage?: boolean;
   footer?: ReactNode;
+  /** Sign-up: a required "I'm at least 18" tick box (also checked on the server). */
+  confirmAge?: boolean;
 };
 
-export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, footer }: Props) {
+export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, footer, confirmAge }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
 
   if (hideOnMessage && state.message) {
@@ -66,6 +68,27 @@ export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, f
           )}
         </Field>
       ))}
+      {confirmAge && (
+        <div>
+          <label className="flex cursor-pointer items-start gap-3 text-[15px] leading-snug text-ink-2">
+            <input
+              type="checkbox"
+              name="adult"
+              value="yes"
+              required
+              aria-invalid={state.fieldErrors?.adult ? true : undefined}
+              aria-describedby={state.fieldErrors?.adult ? "adult-error" : undefined}
+              className="mt-0.5 size-5 shrink-0 cursor-pointer rounded accent-accent"
+            />
+            <span>Tick here to confirm that you are at least 18 years old and the age of majority where you live.</span>
+          </label>
+          {state.fieldErrors?.adult && (
+            <p id="adult-error" className="mt-1.5 pl-8 text-sm text-danger">
+              {state.fieldErrors.adult}
+            </p>
+          )}
+        </div>
+      )}
       <Button type="submit" size="lg" loading={pending} className={`mt-2 ${AUTH_BUTTON}`}>
         {submitLabel}
       </Button>

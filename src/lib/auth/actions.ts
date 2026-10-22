@@ -80,7 +80,12 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
     return { error: "Too many attempts. Please wait a few minutes and try again.", email };
   }
   const parsed = credentialsSchema.safeParse({ email, password: formData.get("password") });
-  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), email };
+  const adult = formData.get("adult") === "yes";
+  if (!parsed.success || !adult) {
+    const errors = parsed.success ? {} : fieldErrors(parsed.error);
+    if (!adult) errors.adult = "You need to be 18 or older to use Meetwell.";
+    return { fieldErrors: errors, email };
+  }
 
   // Joining through someone's card: that card counts as the invite (20 per card,
   // checked again in the database), and cards saved on this phone come along.

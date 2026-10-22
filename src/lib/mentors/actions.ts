@@ -17,11 +17,11 @@ export async function applyAsMentor(): Promise<Result> {
   return { ok: true };
 }
 
-/** Price in naira (whole hundreds), and whether new members can subscribe. */
-export async function saveMentorOffer(priceNaira: number, accepting: boolean): Promise<Result> {
+/** Price in naira (whole hundreds) or free, and whether new members can message. */
+export async function saveMentorOffer(priceNaira: number, accepting: boolean, free = false): Promise<Result> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };
-  const kobo = Math.round(priceNaira / 100) * 100 * 100;
-  if (!(kobo >= 200000 && kobo <= 2000000)) return { error: "Choose a price between ₦2,000 and ₦20,000." };
+  const kobo = free ? 0 : Math.round(priceNaira / 100) * 100 * 100;
+  if (!free && !(kobo >= 200000 && kobo <= 2000000)) return { error: "Choose a price between ₦2,000 and ₦20,000." };
   const { error } = await (await createClient()).rpc("set_mentor_offer", { p_price_kobo: kobo, p_accepting: accepting });
   if (error) return { error: "Couldn't save. Please try again." };
   revalidatePath("/dashboard/mentor");
@@ -91,6 +91,22 @@ export async function requestWithdrawal(amountNaira: number): Promise<Result> {
 export type SubscribeState = { error?: string };
 
 /** Starts paying for 30 days of messages with a mentor, then sends the member to Paystack. */
+/** Start (or extend by 30 days) a free conversation with a mentor who takes free messages. */
+export async function startFreeConversation(_: SubscribeState, formData: FormData): Promise<SubscribeState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Please log in again." };
+  if (!rateLimit(`free-chat:${user.id}`, 10, 60_000)) return { error: "Please wait a moment and try again." };
+  const slug = String(formData.get("slug") ?? "");
+  const { data, error } = await (await createClient()).rpc("start_free_conversation", { p_slug: slug });
+  if (error || typeof data !== "number") {
+    if (error?.code === "42501") return { error: "Messaging mentors is for members earlier in their careers." };
+    if (error?.code === "22023") return { error: "This person isn't taking free messages right now." };
+    return { error: "Couldn't start the conversation. Please try again." };
+  }
+  revalidatePath("/dashboard", "layout");
+  redirect(`/dashboard/messages/${data}`);
+}
+
 export async function subscribeToMentor(_: SubscribeState, formData: FormData): Promise<SubscribeState> {
   const user = await getCurrentUser();
   if (!user) return { error: "Please log in again." };

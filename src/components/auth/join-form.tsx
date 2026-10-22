@@ -26,6 +26,7 @@ export function JoinForm({ viaCard }: { viaCard: string }) {
       )}
       <AuthForm
         action={signUp}
+        confirmAge
         submitLabel="Create my free card"
         hideOnMessage
         hidden={{ viaCard, savedCards: JSON.stringify(cards.map((c) => c.slug)) }}

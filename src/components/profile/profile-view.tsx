@@ -87,7 +87,7 @@ export function ProfileView({ profile, preview = false, offer = null, viewer = "
               className={buttonClass({ variant: "secondary", size: "lg", className: "mt-3 w-full" })}
             >
               <MessageCircle className="size-5" aria-hidden />
-              Message {offer.firstName} · {nairaShort(offer.priceKobo)}/month
+              Message {offer.firstName} · {offer.priceKobo === 0 ? "Free" : `${nairaShort(offer.priceKobo)}/month`}
             </Link>
           )}
         </div>

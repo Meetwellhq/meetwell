@@ -4,10 +4,11 @@ import { useActionState } from "react";
 import { AUTH_BUTTON } from "@/components/auth/auth-section";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/misc";
-import { subscribeToMentor } from "@/lib/mentors/actions";
+import { startFreeConversation, subscribeToMentor } from "@/lib/mentors/actions";
 
-export function SubscribeButton({ slug, label }: { slug: string; label: string }) {
-  const [state, action, pending] = useActionState(subscribeToMentor, {});
+/** Pays through Paystack, or, for a free mentor, opens the conversation straight away. */
+export function SubscribeButton({ slug, label, free = false }: { slug: string; label: string; free?: boolean }) {
+  const [state, action, pending] = useActionState(free ? startFreeConversation : subscribeToMentor, {});
   return (
     <form action={action} className="flex flex-col gap-3">
       {state.error && <Alert tone="danger">{state.error}</Alert>}

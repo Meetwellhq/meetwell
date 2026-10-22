@@ -75,6 +75,8 @@ every migration.
 - **Waiting-list updates**: people are told on sign-up they'll get occasional updates. Each
   waitlist row has a private `unsubscribe_token`; `/unsubscribe?t=…` sets `unsubscribed_at`
   (invites still go out). Any update email must include that link and skip unsubscribed people.
+- **Age check**: every sign-up form has a required "at least 18" tick box (`confirmAge` on `AuthForm`; `signUp` refuses
+  without it).
 - **Access codes**: `/access-code` (prefilled from `?code=`). A trigger on `auth.users`
   refuses new accounts without a valid code and uses it up. Codes live in
   `public.access_codes`. To reopen public sign-up later: make `public.invite_only()` return
@@ -146,7 +148,9 @@ every migration.
   from paid subscriptions.
 - **Mentors and paid messages (phase 4)**: members with 4+ years apply on `/dashboard/mentor`
   ("Mentoring" tab; checks: 4+ years, photo, 80%+, published, confirmed); Rasheed
-  approves in `/admin/mentors`. Approved mentors set a 30-day price (N2,000–N20,000) and their card shows
+  approves in `/admin/mentors`. Approved mentors choose Free or a 30-day price (N2,000–N20,000; free = `price_kobo` 0,
+  `20261117000000_free_mentoring.sql`: "Message X · Free" opens a 30-day conversation with `start_free_conversation`, no
+  payment, renewable for free). Paid mentors' card shows
   "Message {name} · price" → `/subscribe/[slug]` → Paystack. `confirm_payment()` opens/extends the
   conversation by 30 days and puts 80% in the mentor's wallet (`wallet_ledger`), available after 7 days.
   Withdrawals: N5,000 minimum to a Paystack-checked bank account (`payout_accounts` keeps only bank, name,

@@ -41,7 +41,8 @@ export function ApplyButton({ ready }: { ready: boolean }) {
 export function OfferForm({ priceKobo, accepting }: { priceKobo: number; accepting: boolean }) {
   const router = useRouter();
   const toast = useToast();
-  const [price, setPrice] = useState(String(priceKobo / 100));
+  const [free, setFree] = useState(priceKobo === 0);
+  const [price, setPrice] = useState(String(priceKobo === 0 ? 5000 : priceKobo / 100));
   const [on, setOn] = useState(accepting);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -51,34 +52,58 @@ export function OfferForm({ priceKobo, accepting }: { priceKobo: number; accepti
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-medium text-ink">Take paid messages</p>
-          <p className="mt-0.5 text-sm text-ink-2">When this is on, your card shows a Message button with your price.</p>
+          <p className="font-medium text-ink">Take messages</p>
+          <p className="mt-0.5 text-sm text-ink-2">When this is on, your card shows a Message button.</p>
         </div>
-        <Switch checked={on} onChange={setOn} label="Take paid messages" showState={false} />
+        <Switch checked={on} onChange={setOn} label="Take messages" showState={false} />
       </div>
-      <Field label="Price for 30 days (naira)" hint={`Between ₦2,000 and ₦20,000. You get 80%: ${naira(Math.round(value * 0.8))} per member.`} error={error ?? undefined}>
-        {({ id, describedBy, invalid }) => (
-          <Input
-            id={id}
-            type="number"
-            inputMode="numeric"
-            min={2000}
-            max={20000}
-            step={100}
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            aria-describedby={describedBy}
-            invalid={invalid}
-            className="max-w-48"
-          />
-        )}
-      </Field>
+      <div className="inline-flex w-fit rounded-full bg-surface-2 p-1" role="radiogroup" aria-label="Price">
+        {[
+          { value: true, label: "Free" },
+          { value: false, label: "Paid" },
+        ].map((o) => (
+          <button
+            key={o.label}
+            type="button"
+            role="radio"
+            aria-checked={free === o.value}
+            onClick={() => setFree(o.value)}
+            className={`rounded-full px-4 py-1.5 text-sm ${free === o.value ? "bg-surface font-medium text-ink shadow-sm" : "text-ink-2 hover:text-ink"}`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      {free ? (
+        <p className="text-sm text-ink-2">
+          Members can message you for free. A good way to start mentoring and build a reputation. You can switch to paid
+          anytime; open conversations keep their 30 days.
+        </p>
+      ) : (
+        <Field label="Price for 30 days (naira)" hint={`Between ₦2,000 and ₦20,000. You get 80%: ${naira(Math.round(value * 0.8))} per member.`} error={error ?? undefined}>
+          {({ id, describedBy, invalid }) => (
+            <Input
+              id={id}
+              type="number"
+              inputMode="numeric"
+              min={2000}
+              max={20000}
+              step={100}
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              aria-describedby={describedBy}
+              invalid={invalid}
+              className="max-w-48"
+            />
+          )}
+        </Field>
+      )}
       <div>
         <Button
           loading={pending}
           onClick={() =>
             start(async () => {
-              const res = await saveMentorOffer(value, on);
+              const res = await saveMentorOffer(value, on, free);
               setError(res.error ?? null);
               if (!res.error) {
                 toast("Saved.");

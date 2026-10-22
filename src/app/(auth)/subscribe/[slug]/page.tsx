@@ -36,6 +36,7 @@ export default async function SubscribePage({ params }: PageProps<"/subscribe/[s
   const first = offer?.first_name || card.fullName.split(" ")[0];
   const existing = ((convs ?? []) as ConversationRow[]).find((c) => c.role === "member" && c.other_slug === card.slug);
   const active = existing && new Date(existing.access_until) > new Date();
+  const free = offer?.price_kobo === 0;
 
   let blocker: React.ReactNode = null;
   if (!offer) blocker = <>{first} isn&apos;t taking new messages right now.</>;
@@ -51,11 +52,11 @@ export default async function SubscribePage({ params }: PageProps<"/subscribe/[s
       </>
     );
   else if (isMentor(me.experience_years)) blocker = <>Messaging mentors is for members earlier in their careers.</>;
-  else if (!paymentsEnabled()) blocker = <>Payments open soon. Please check back in a little while.</>;
+  else if (!free && !paymentsEnabled()) blocker = <>Payments open soon. Please check back in a little while.</>;
 
   return (
     <>
-      <AuthIntro title={`Message ${first} for 30 days`}>
+      <AuthIntro title={free ? `Message ${first} for free` : `Message ${first} for 30 days`}>
         Get private messages with someone a step ahead of you, for advice on your work and career.
       </AuthIntro>
 
@@ -69,7 +70,7 @@ export default async function SubscribePage({ params }: PageProps<"/subscribe/[s
         </div>
         {offer && (
           <p className="ml-auto shrink-0 text-right">
-            <span className="block text-xl font-semibold text-ink">{naira(offer.price_kobo)}</span>
+            <span className="block text-xl font-semibold text-ink">{free ? "Free" : naira(offer.price_kobo)}</span>
             <span className="text-xs text-ink-3">for 30 days</span>
           </p>
         )}
@@ -77,12 +78,19 @@ export default async function SubscribePage({ params }: PageProps<"/subscribe/[s
 
       <AuthSection>
         <ul className="flex flex-col gap-2.5 text-[15px] text-ink">
-          {[
-            `Private messages with ${first} for 30 days.`,
-            `If ${first} doesn't reply within 7 days, you get a full refund.`,
-            "Nothing renews on its own. We'll remind you before it ends.",
-            "Pay with Paystack: card, bank transfer or USSD.",
-          ].map((t) => (
+          {(free
+            ? [
+                `${first} takes messages for free.`,
+                `Private messages with ${first} for 30 days, and you can keep going for free after that.`,
+                "Be kind and to the point. Our community rules apply.",
+              ]
+            : [
+                `Private messages with ${first} for 30 days.`,
+                `If ${first} doesn't reply within 7 days, you get a full refund.`,
+                "Nothing renews on its own. We'll remind you before it ends.",
+                "Pay with Paystack: card, bank transfer or USSD.",
+              ]
+          ).map((t) => (
             <li key={t} className="flex gap-2.5">
               <Check className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
               {t}
@@ -98,16 +106,20 @@ export default async function SubscribePage({ params }: PageProps<"/subscribe/[s
             <Link href={`/dashboard/messages/${existing.id}`} className="underline">
               Open the conversation
             </Link>
-            . Paying again adds 30 more days.
+            . {free ? "Starting again adds 30 more days." : "Paying again adds 30 more days."}
           </Alert>
         )}
         {blocker ? (
           <Alert>{blocker}</Alert>
         ) : (
-          <SubscribeButton slug={card.slug} label={active ? `Add 30 days for ${naira(offer!.price_kobo)}` : `Pay ${naira(offer!.price_kobo)}`} />
+          <SubscribeButton
+            slug={card.slug}
+            free={free}
+            label={free ? (active ? "Add 30 more days" : `Start messaging ${first}`) : active ? `Add 30 days for ${naira(offer!.price_kobo)}` : `Pay ${naira(offer!.price_kobo)}`}
+          />
         )}
         <p className="text-center text-xs text-ink-3">
-          By paying you agree to our{" "}
+          {free ? "By messaging" : "By paying"} you agree to our{" "}
           <Link href="/terms" className="underline">
             Terms
           </Link>{" "}
@@ -115,7 +127,7 @@ export default async function SubscribePage({ params }: PageProps<"/subscribe/[s
           <Link href="/community-rules" className="underline">
             community rules
           </Link>
-          . We never see your card details.
+          .{!free && " We never see your card details."}
         </p>
       </AuthSection>
     </>

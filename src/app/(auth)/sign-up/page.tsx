@@ -18,6 +18,7 @@ export default function SignUpPage() {
       <AuthSection>
         <AuthForm
           action={signUp}
+          confirmAge
           submitLabel="Create account"
           hideOnMessage
           fields={[

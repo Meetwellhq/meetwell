@@ -157,7 +157,7 @@ export default async function AdminMentorsPage() {
                       {m.full_name || m.email} <Badge tone={st.tone}>{st.label}</Badge>
                     </p>
                     <p className="text-sm text-ink-2">
-                      {m.experience_years ?? "?"} years · {naira(m.price_kobo)}/30 days{m.accepting ? "" : " · not taking messages"} ·{" "}
+                      {m.experience_years ?? "?"} years · {m.price_kobo === 0 ? "Free" : `${naira(m.price_kobo)}/30 days`}{m.accepting ? "" : " · not taking messages"} ·{" "}
                       {m.active_subscribers} active
                     </p>
                     <p className="text-xs text-ink-3">

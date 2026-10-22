@@ -1356,3 +1356,38 @@ describe("log-in help", () => {
     expect(await as(null, "select public.account_exists('a@test') as e")).toEqual([{ e: false }]);
   });
 });
+
+describe("free messages with mentors", () => {
+  const SENIOR = "66666666-6666-6666-6666-666666666666"; // approved mentor (see mentor subscriptions)
+  const ENGINEER = "77777777-7777-7777-7777-777777777777"; // 3 years
+
+  it("lets a mentor go free, and members start a conversation without paying", async () => {
+    await expect(as(SENIOR, "select public.set_mentor_offer(150000, true)")).rejects.toThrow(/between/);
+    await as(SENIOR, "select public.set_mentor_offer(0, true)");
+    expect(await as(null, "select price_kobo from public.mentor_offer('senior')")).toEqual([{ price_kobo: 0 }]);
+
+    // No Paystack checkout for a free mentor.
+    await expect(as(ENGINEER, "select * from public.start_subscription_purchase('senior')")).rejects.toThrow(/paid messages/);
+
+    const [{ id }] = await as<{ id: number }>(ENGINEER, "select public.start_free_conversation('senior') as id");
+    const [conv] = (
+      await db.query<{ member_id: string; open: boolean }>(
+        "select member_id, access_until > now() + interval '29 days' as open from public.conversations where id = $1",
+        [id],
+      )
+    ).rows;
+    expect(conv).toEqual({ member_id: ENGINEER, open: true });
+    // Still no money moved.
+    expect(
+      (await db.query("select 1 from public.payments where user_id = $1 and amount_kobo = 0", [ENGINEER])).rows,
+    ).toEqual([]);
+
+    await expect(as(SENIOR, "select public.start_free_conversation('senior')")).rejects.toThrow(/That is you/);
+    await expect(as(null, "select public.start_free_conversation('senior')")).rejects.toThrow(/permission denied/);
+  });
+
+  it("stops free conversations once the mentor charges again", async () => {
+    await as(SENIOR, "select public.set_mentor_offer(500000, true)");
+    await expect(as(ENGINEER, "select public.start_free_conversation('senior')")).rejects.toThrow(/free messages/);
+  });
+});

@@ -22,6 +22,7 @@ export function AccessCodeFlow({ initialCode }: { initialCode?: string }) {
         </p>
         <AuthForm
           action={signUp}
+          confirmAge
           submitLabel="Create account"
           hideOnMessage
           hidden={{ accessCode: state.code }}
