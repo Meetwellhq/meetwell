@@ -230,6 +230,12 @@ does not remove that. Revoke from `anon` explicitly for anything visitors must n
 
 ## Open items
 
+- **Payments are live** (22 Oct 2026): Paystack Registered Business (Meet Well Limited), live key in Vercel,
+  webhook working (a real ₦2,500 purchase was confirmed by webhook, then refunded and marked `refunded`).
+  Before the first mentor withdrawal: Transfers on, transfer OTP off, money in the Paystack balance.
+  Refund records: set `payments.status = 'refunded'` and add a negative `credit_ledger` row (reason `refund`)
+  rather than deleting real payments.
+
 - Talk to the first invited users; invite the next batch from /admin.
 - Lawyer review of Terms and Privacy.
 - Optional: delete meetwell.me from ImprovMX (no longer used).
@@ -237,5 +243,4 @@ does not remove that. Revoke from `anon` explicitly for anything visitors must n
   user's own dashboard, paid plans (e.g. Paystack).
 - Optional: add `ANTHROPIC_API_KEY` in Vercel for Claude-written match reasons.
 - CAC done (Meet Well Limited): LICENSE and README now name the company as copyright holder. Still to do:
-  a written transfer of the code and brand from Rasheed to the company (lawyer), and
-  upgrade Paystack to a Registered Business when payments start.
+  a written transfer of the code and brand from Rasheed to the company (lawyer). Paystack is upgraded.
