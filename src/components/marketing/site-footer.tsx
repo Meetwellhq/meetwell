@@ -15,6 +15,7 @@ export function SiteFooter({ wide = false }: { wide?: boolean }) {
     { href: "/terms", label: "Terms of use" },
     { href: "/privacy", label: "Privacy notice" },
     { href: "/community-rules", label: "Community rules" },
+    { href: "/support", label: "Support" },
   ];
 
   return (
@@ -61,9 +62,6 @@ export function SiteFooter({ wide = false }: { wide?: boolean }) {
                 {l.label}
               </Link>
             ))}
-            <a href={`mailto:${SUPPORT_EMAIL}`} className={COLUMN_LINK}>
-              Support
-            </a>
           </nav>
         </div>
       </div>
