@@ -32,9 +32,10 @@ export type MemberRow = {
 export type PaymentRow = {
   email: string;
   reference: string;
-  credits: number;
+  /** Null for mentor subscriptions (they buy 30 days of messages, not credits). */
+  credits: number | null;
   amount_kobo: number;
-  status: "pending" | "success" | "failed";
+  status: "pending" | "success" | "failed" | "refunded";
   created_at: string;
   paid_at: string | null;
 };

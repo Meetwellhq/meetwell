@@ -10,7 +10,9 @@ const PAYMENT_BADGE = {
   success: { tone: "success", label: "Paid" },
   pending: { tone: "neutral", label: "Not finished" },
   failed: { tone: "warning", label: "Failed" },
+  refunded: { tone: "neutral", label: "Refunded" },
 } as const;
+const UNKNOWN = { tone: "neutral", label: "Unknown" } as const;
 
 export default async function AdminPaymentsPage() {
   const [{ data, error }, rate] = await Promise.all([(await createClient()).rpc("admin_list_payments"), getUsdRate()]);
@@ -20,7 +22,7 @@ export default async function AdminPaymentsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageTitle title="Payments">Spark credit purchases through Paystack. Refunds are done in the Paystack dashboard.</PageTitle>
+      <PageTitle title="Payments">Spark credits and mentor messages paid through Paystack. Mentor refunds are on the Mentors page; credit refunds in the Paystack dashboard.</PageTitle>
       {error ? (
         <NotReady what="Payments" />
       ) : (
@@ -34,7 +36,7 @@ export default async function AdminPaymentsPage() {
                 value: rate ? usdFromKobo(received, rate) : naira(received),
                 note: rate ? `${naira(received)} at $1 = ${naira(rate.ngnPerUsd * 100)}` : undefined,
               },
-              { label: "Credits sold", value: paid.reduce((n, p) => n + p.credits, 0) },
+              { label: "Credits sold", value: paid.reduce((n, p) => n + (p.credits ?? 0), 0) },
             ]}
           />
           {payments.length === 0 ? (
@@ -48,11 +50,11 @@ export default async function AdminPaymentsPage() {
                   <div className="min-w-0">
                     <p className="truncate font-medium text-ink">{p.email}</p>
                     <p className="truncate text-sm text-ink-2">
-                      {p.credits} credits · {naira(p.amount_kobo)} · {date(p.paid_at ?? p.created_at)}
+                      {p.credits ? `${p.credits} credits` : "Mentor messages"} · {naira(p.amount_kobo)} · {date(p.paid_at ?? p.created_at)}
                     </p>
                     <p className="truncate text-xs text-ink-3">{p.reference}</p>
                   </div>
-                  <Badge tone={PAYMENT_BADGE[p.status].tone}>{PAYMENT_BADGE[p.status].label}</Badge>
+                  <Badge tone={(PAYMENT_BADGE[p.status] ?? UNKNOWN).tone}>{(PAYMENT_BADGE[p.status] ?? UNKNOWN).label}</Badge>
                 </li>
               ))}
             </ul>
