@@ -77,3 +77,81 @@ export function StarterPreview() {
     </div>
   );
 }
+
+/** Static illustration of the Contacts page (example people, not real). */
+export function ContactsPreview() {
+  const people = [
+    { initials: "AO", name: "Amara Okafor", role: "Product Designer · Studio North", note: "Met at the fintech meetup" },
+    { initials: "TB", name: "Tunde Bello", role: "ML Engineer · Brightwave", note: "Wants to talk about data teams" },
+    { initials: "KE", name: "Kemi Eze", role: "Founder · Loop Health", note: null },
+  ];
+  return (
+    <div className="w-full max-w-md rounded-[1.25rem] border border-border bg-surface p-5" role="img" aria-label="Example contacts list">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-ink">Contacts</p>
+        <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">Export all</span>
+      </div>
+      <ul className="mt-4 divide-y divide-border">
+        {people.map((p) => (
+          <li key={p.name} className="flex items-start gap-3 py-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold text-accent">{p.initials}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-medium text-ink">{p.name}</span>
+              <span className="block truncate text-sm text-ink-2">{p.role}</span>
+              {p.note && <span className="mt-1 block text-xs text-ink-3">{p.note}</span>}
+            </span>
+            <span className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-xs text-ink-2">Save to phone</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Static illustration of a Spark introduction. */
+export function SparkPreview() {
+  return (
+    <div className="w-full max-w-md rounded-[1.25rem] border border-border bg-surface p-5" role="img" aria-label="Example Spark introduction">
+      <p className="text-xs font-medium uppercase tracking-wider text-accent">Spark · today&apos;s introduction</p>
+      <div className="mt-4 flex items-center gap-3.5">
+        <span className="grid size-14 place-items-center rounded-full bg-accent-soft text-lg font-semibold text-accent">IA</span>
+        <span>
+          <span className="block text-lg font-semibold leading-tight text-ink">Ifeoma Adeyemi</span>
+          <span className="block text-sm text-ink-2">Senior Product Designer · 8 years</span>
+        </span>
+      </div>
+      <p className="mt-4 rounded-xl bg-bg px-3.5 py-3 text-[15px] leading-relaxed text-ink">
+        You&apos;re both in product design, and Ifeoma has led the kind of design team you want to join.
+      </p>
+      <div className="mt-4 flex gap-2">
+        <span className="inline-flex h-9 items-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-ink">View card</span>
+        <span className="inline-flex h-9 items-center rounded-lg px-3 text-sm text-ink-2">5 free a month</span>
+      </div>
+    </div>
+  );
+}
+
+/** Static illustration of a mentor's paid messages and earnings. */
+export function MentorPreview() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-3" role="img" aria-label="Example mentor card and earnings">
+      <div className="rounded-[1.25rem] border border-border bg-surface p-5">
+        <div className="flex items-center gap-3.5">
+          <span className="grid size-12 place-items-center rounded-full bg-accent-soft font-semibold text-accent">CN</span>
+          <span>
+            <span className="block font-semibold text-ink">Chidi Nwosu</span>
+            <span className="block text-sm text-ink-2">Engineering Manager · 9 years</span>
+          </span>
+        </div>
+        <div className="mt-4 flex h-11 items-center justify-center rounded-lg border border-border-strong text-[15px] font-medium text-ink">
+          Message Chidi · ₦5,000/month
+        </div>
+      </div>
+      <div className="rounded-[1.25rem] border border-border bg-surface p-5">
+        <p className="text-sm text-ink-2">Your earnings</p>
+        <p className="mt-1 text-3xl font-semibold tabular-nums text-ink">₦32,000</p>
+        <p className="mt-1 text-xs text-ink-3">You keep 80% of every payment. Withdraw to your bank.</p>
+      </div>
+    </div>
+  );
+}

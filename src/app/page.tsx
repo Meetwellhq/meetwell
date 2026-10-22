@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  BookUser,
   Briefcase,
   Camera,
   Gift,
@@ -9,11 +10,13 @@ import {
   QrCode,
   Rocket,
   Smartphone,
+  Sparkles,
   Ticket,
   UserRoundPlus,
+  Wallet,
 } from "lucide-react";
 import { BetaBanner } from "@/components/marketing/beta-banner";
-import { StarterPreview } from "@/components/marketing/card-preview";
+import { ContactsPreview, MentorPreview, SparkPreview, StarterPreview } from "@/components/marketing/card-preview";
 import { HeroPhoto } from "@/components/marketing/hero-photo";
 import { Feature, HighlightsStrip, Panel, ScanVisual } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
@@ -41,6 +44,9 @@ const highlights = [
   { icon: UserRoundPlus, label: "One-tap save" },
   { icon: QrCode, label: "Permanent QR code" },
   { icon: MessageSquareText, label: "Ready-made messages" },
+  { icon: BookUser, label: "Contacts in one place" },
+  { icon: Sparkles, label: "AI introductions" },
+  { icon: Wallet, label: "Get paid to mentor" },
 ];
 
 const useCases = [
@@ -134,6 +140,64 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               </div>
             }
             visualClassName="bg-clay"
+          />
+        </Panel>
+
+        {/* Contacts */}
+        <Panel>
+          <Feature
+            title={<>Every card you scan, kept.</>}
+            body={
+              <p>
+                Everyone you meet lands in your Contacts, with a note on where you met. Save one to your phone, or
+                export them all. See who saved your card, and save them back.
+              </p>
+            }
+            action={<ButtonLink href={cta}>
+                {ctaLabel}
+                <ArrowRight className="size-4" aria-hidden />
+              </ButtonLink>}
+            visual={<ContactsPreview />}
+            visualClassName="bg-sage"
+          />
+        </Panel>
+
+        {/* Spark */}
+        <Panel>
+          <Feature
+            reverse
+            title={<>Meet people a few steps ahead.</>}
+            body={
+              <p>
+                Spark uses AI to introduce you to someone with more experience in your field, and tells you why
+                you should talk. Up to 5 free introductions a month.
+              </p>
+            }
+            action={<ButtonLink href={cta}>
+                {ctaLabel}
+                <ArrowRight className="size-4" aria-hidden />
+              </ButtonLink>}
+            visual={<SparkPreview />}
+            visualClassName="bg-clay"
+          />
+        </Panel>
+
+        {/* Mentoring */}
+        <Panel>
+          <Feature
+            title={<>Get paid for what you know.</>}
+            body={
+              <p>
+                With 4+ years of experience, you can become a mentor. Set your monthly price, answer messages from
+                people earlier in their careers, and keep 80% of every payment.
+              </p>
+            }
+            action={<ButtonLink href={cta}>
+                {ctaLabel}
+                <ArrowRight className="size-4" aria-hidden />
+              </ButtonLink>}
+            visual={<MentorPreview />}
+            visualClassName="bg-sage"
           />
         </Panel>
 

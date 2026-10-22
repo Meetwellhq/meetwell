@@ -2,6 +2,13 @@ export const APP_NAME = "Meetwell";
 export const APP_TAGLINE = "Meet someone. Make it a connection.";
 export const SUPPORT_EMAIL = "support@meetwell.me";
 /** The registered company behind Meetwell (CAC, Companies and Allied Matters Act 2020). */
+/** Meetwell's own social accounts, shown in the footer. Empty ones are hidden. */
+export const SOCIAL_LINKS: { platform: "linkedin" | "instagram" | "x"; label: string; url: string }[] = [
+  { platform: "linkedin", label: "LinkedIn", url: "" },
+  { platform: "instagram", label: "Instagram", url: "" },
+  { platform: "x", label: "X", url: "" },
+];
+
 export const COMPANY_NAME = "Meet Well Limited";
 export const COMPANY_RC = "RC 9952279";
 
