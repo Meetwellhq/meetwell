@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
-import { APP_NAME, COMPANY_NAME, COMPANY_RC, isSupabaseConfigured, SUPPORT_EMAIL } from "@/lib/config";
+import { APP_NAME, COMPANY_NAME, COMPANY_RC, INFO_EMAIL, isSupabaseConfigured, SUPPORT_EMAIL } from "@/lib/config";
 import { getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -27,7 +27,6 @@ const mail = (
 );
 
 // Reports about people and security go to the main inbox.
-const INFO_EMAIL = "info@meetwell.me";
 const infoMail = (
   <a href={`mailto:${INFO_EMAIL}`} className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-ink">
     {INFO_EMAIL}

@@ -18,6 +18,7 @@ import {
 import { BetaBanner } from "@/components/marketing/beta-banner";
 import { ContactsPreview, MentorPreview, SparkPreview, StarterPreview } from "@/components/marketing/card-preview";
 import { DemoVideo } from "@/components/marketing/demo-video";
+import { DemoVideoButton } from "@/components/marketing/demo-video-button";
 import { HeroPhoto } from "@/components/marketing/hero-photo";
 import { Feature, HighlightsStrip, Panel, ScanVisual } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
@@ -89,6 +90,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
                 {ctaLabel}
                 <ArrowRight className="size-4" aria-hidden />
               </ButtonLink>
+              <DemoVideoButton />
             </div>
           </div>
 

@@ -6,7 +6,7 @@ import { Panel } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink } from "@/components/ui/button";
-import { APP_NAME, COMPANY_NAME, COMPANY_RC, isSupabaseConfigured, JOIN_CTA, SOCIAL_LINKS, SUPPORT_EMAIL } from "@/lib/config";
+import { APP_NAME, COMPANY_NAME, COMPANY_RC, isSupabaseConfigured, INFO_EMAIL, JOIN_CTA, SOCIAL_LINKS, SUPPORT_EMAIL } from "@/lib/config";
 import { getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -135,8 +135,8 @@ export default async function AboutPage() {
               <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">Say hello</h2>
               <p className="mt-5 text-[17px] leading-relaxed text-ink-2">
                 Questions, ideas or feedback:{" "}
-                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-accent underline">
-                  {SUPPORT_EMAIL}
+                <a href={`mailto:${INFO_EMAIL}`} className="text-accent underline">
+                  {INFO_EMAIL}
                 </a>
               </p>
               {socials.length > 0 && (
