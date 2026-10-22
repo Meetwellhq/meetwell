@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { BetaBanner } from "@/components/marketing/beta-banner";
 import { ContactsPreview, MentorPreview, SparkPreview, StarterPreview } from "@/components/marketing/card-preview";
-import { DemoVideo } from "@/components/marketing/demo-video";
 import { DemoVideoButton } from "@/components/marketing/demo-video-button";
 import { HeroPhoto } from "@/components/marketing/hero-photo";
 import { Feature, HighlightsStrip, Panel, ScanVisual } from "@/components/marketing/landing";
@@ -103,25 +102,6 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             <HeroPhoto />
           </div>
           <div className="h-3 sm:h-10 lg:h-16" />
-        </Panel>
-
-        {/* Demo video */}
-        <Panel id="demo">
-          <Feature
-            title={<>See it in under a minute.</>}
-            body={
-              <p>
-                Scan a card, save the contact, send the first message, and meet people who can help your career. Turn
-                the sound on for the full walkthrough.
-              </p>
-            }
-            action={<ButtonLink href={cta}>
-                {ctaLabel}
-                <ArrowRight className="size-4" aria-hidden />
-              </ButtonLink>}
-            visual={<DemoVideo />}
-            visualClassName="bg-sand"
-          />
         </Panel>
 
         {/* Scan */}
