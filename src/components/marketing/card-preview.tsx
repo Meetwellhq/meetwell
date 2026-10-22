@@ -1,5 +1,6 @@
 import { Globe, Mail, Phone, UserRoundPlus } from "lucide-react";
 import { SocialIcon } from "@/components/icons/social-icon";
+import { MentorFlow } from "./mentor-flow";
 
 /** Illustrative example card for the landing page (not a real person). */
 export function CardPreview({ qrSvg }: { qrSvg: string }) {
@@ -131,27 +132,7 @@ export function SparkPreview() {
   );
 }
 
-/** Static illustration of a mentor's paid messages and earnings. */
+/** Paying to message a mentor, shown as a short loop (card, Paystack checkout, conversation). */
 export function MentorPreview() {
-  return (
-    <div className="flex w-full max-w-md flex-col gap-3" role="img" aria-label="Example mentor card and earnings">
-      <div className="rounded-[1.25rem] border border-border bg-surface p-5">
-        <div className="flex items-center gap-3.5">
-          <span className="grid size-12 place-items-center rounded-full bg-accent-soft font-semibold text-accent">CN</span>
-          <span>
-            <span className="block font-semibold text-ink">Chidi Nwosu</span>
-            <span className="block text-sm text-ink-2">Engineering Manager · 9 years</span>
-          </span>
-        </div>
-        <div className="mt-4 flex h-11 items-center justify-center rounded-lg border border-border-strong text-[15px] font-medium text-ink">
-          Message Chidi · ₦5,000/month
-        </div>
-      </div>
-      <div className="rounded-[1.25rem] border border-border bg-surface p-5">
-        <p className="text-sm text-ink-2">Your earnings</p>
-        <p className="mt-1 text-3xl font-semibold tabular-nums text-ink">₦32,000</p>
-        <p className="mt-1 text-xs text-ink-3">You keep 80% of every payment. Withdraw to your bank.</p>
-      </div>
-    </div>
-  );
+  return <MentorFlow />;
 }
