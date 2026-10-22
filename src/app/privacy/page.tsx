@@ -13,7 +13,7 @@ const mail = (
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy notice" updated="October 21, 2026">
+    <LegalPage title="Privacy notice" updated="October 22, 2026">
       <section>
         <p>
           This notice explains what personal data {APP_NAME} collects, why, and the rights you have. We follow the
@@ -21,7 +21,8 @@ export default function PrivacyPage() {
           Constitution of the Federal Republic of Nigeria 1999 (as amended).
         </p>
         <p className="mt-3">
-          {COMPANY_NAME} ({COMPANY_RC}), the company that runs {APP_NAME} from Lagos, Nigeria, is the data controller. For anything about your data, email {mail}.
+          {COMPANY_NAME} ({COMPANY_RC}), the company that runs {APP_NAME} from Lagos, Nigeria, is the data controller.
+          Our data protection contact can be reached at {mail} for anything about your data.
         </p>
       </section>
 
@@ -114,17 +115,25 @@ export default function PrivacyPage() {
             <strong>To recommend people for you to meet (Spark)</strong>, only if you turn it on. We
             compare your matching details, job title and bio with other members who also turned it on, and use AI to
             choose a match and explain why. When you&apos;re recommended to someone, they see your public card and the
-            reason, never your private matching details. You can turn Spark off anytime on your Spark page.
+            reason, never your private matching details. You can turn Spark off anytime on your Spark page. Spark&apos;s
+            suggestions don&apos;t have legal or similarly significant effects on you: you choose whether to reach out,
+            and you can ask us to review a suggestion by emailing {mail}.
           </li>
           <li>
             <strong>To deliver your messages and keep people safe</strong>, because it is needed for our agreement
             with you. We don&apos;t read your conversations. Our team only sees a message if someone reports it, along
-            with a few messages around it, so we can decide what to do. We email you about new messages unless you turn
-            that off in Settings or with the link in any of those emails.
+            with a few messages around it, so we can decide what to do. We email you when someone sends you their first
+            message in a conversation, and once if a message is waiting for your reply, unless you turn that off in
+            Settings or with the link in any of those emails. Those emails include a short preview of the message.
           </li>
           <li>
             <strong>To take payments and keep records of them</strong>, because it is needed for our agreement with
             you, and to meet tax and accounting law.
+          </li>
+          <li>
+            <strong>To pay mentors and prevent fraud</strong>: we check that a mentor&apos;s bank account is in their
+            own name (through Paystack) before paying out, because it is needed for our agreement with them and to
+            meet our legal duties.
           </li>
           <li><strong>To meet legal obligations</strong>, where Nigerian law requires it.</li>
         </ul>
@@ -158,7 +167,8 @@ export default function PrivacyPage() {
       <section>
         <h2>5. Data stored outside Nigeria</h2>
         <p>
-          These providers store data on servers outside Nigeria. Where that happens, we rely on the safeguards allowed
+          Most of these providers store data on servers outside Nigeria, mainly in the United States and the European
+          Union (Paystack processes payments in Nigeria). Where data leaves Nigeria, we rely on the safeguards allowed
           under Part VIII of the NDPA, such as the providers&apos; contractual data protection commitments, so your
           data stays protected to a standard the NDPA accepts.
         </p>
@@ -195,6 +205,8 @@ export default function PrivacyPage() {
           <li>object to, or ask us to limit, how we use it;</li>
           <li>ask for your data in a format you can take elsewhere;</li>
           <li>withdraw consent at any time, for example to unsubscribe from updates or leave the waiting list;</li>
+          <li>not be subject to a decision based only on automated processing that has legal or similarly
+            significant effects on you;</li>
           <li>complain to the Nigeria Data Protection Commission (NDPC).</li>
         </ul>
         <p className="mt-3">

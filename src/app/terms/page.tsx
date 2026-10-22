@@ -13,7 +13,7 @@ const mail = (
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of use" updated="October 21, 2026">
+    <LegalPage title="Terms of use" updated="October 22, 2026">
       <section>
         <p>
           These terms are an agreement between you and {COMPANY_NAME} ({COMPANY_RC}), the company that runs{" "}
@@ -114,8 +114,8 @@ export default function TermsPage() {
         <h2>7. Price, payments and refunds</h2>
         <ul>
           <li>
-            {APP_NAME} is free to use. Some extras cost money, such as Spark credits. We show the price in naira
-            before you pay, and you will never be charged without agreeing to it.
+            {APP_NAME} is free to use. Some extras cost money, such as Spark credits. We show the full price in naira
+            before you pay, including any VAT that applies, and you will never be charged without agreeing to it.
           </li>
           <li>
             <strong>Spark credits:</strong> each credit gives you one extra Spark introduction after your free ones
@@ -135,27 +135,63 @@ export default function TermsPage() {
           <li>
             <strong>Messaging a mentor:</strong> members earlier in their careers can pay a mentor&apos;s price for 30
             days of messages with them. It doesn&apos;t renew on its own; we remind you before it ends. If the mentor
-            doesn&apos;t reply within 7 days of your payment, we refund you in full. You pay for access to the
+            doesn&apos;t reply within 7 days of your payment, we refund you in full. If a mentor blocks you, or we pause
+            a mentor, we will refund you fairly for the time you couldn&apos;t use. You pay for access to the
             conversation, not for any particular advice or outcome.
           </li>
           <li>
-            <strong>Mentors:</strong> members with 4+ years of experience can apply, and we approve each one. Mentors
-            set their own price between ₦2,000 and ₦20,000. {APP_NAME} keeps 20% of each payment and covers the
-            payment fees; the other 80% goes into the mentor&apos;s wallet and can be withdrawn 7 days after the
-            payment, in amounts of ₦5,000 or more, to a bank account in their name. We approve each withdrawal. If a
-            member is refunded, the mentor&apos;s share of that payment comes back out of their wallet. Mentors are
-            independent, not employees of {APP_NAME}, and are responsible for their own taxes. We may pause a mentor
-            or hold payouts while we look into a report or a payment problem.
-          </li>
-          <li>
-            We may add, change or remove features. If a change takes away something important, we will try to give
-            you reasonable notice.
+            <strong>Advice from mentors:</strong> mentors share their own experience. It isn&apos;t professional
+            legal, financial, medical or other regulated advice, and {APP_NAME} doesn&apos;t check or guarantee it.
+            Use your own judgement.
           </li>
         </ul>
       </section>
 
       <section>
-        <h2>8. Our name and software</h2>
+        <h2>8. Mentors and their earnings</h2>
+        <ul>
+          <li>
+            Members with 4+ years of experience can apply to be mentors, and we approve each one. We may decline or
+            pause a mentor at any time, for example after reports.
+          </li>
+          <li>
+            Mentors set their own price between ₦2,000 and ₦20,000 for 30 days. {APP_NAME} keeps 20% of each payment
+            as our service fee and pays the payment provider&apos;s fees from it. The other 80% is the mentor&apos;s
+            earnings.
+          </li>
+          <li>
+            <strong>How we hold earnings:</strong> when a member pays, we collect the payment on the mentor&apos;s
+            behalf, as their agent for this purpose only, and record what we owe them in their earnings balance
+            (shown as &ldquo;Wallet&rdquo;). The balance is a record of money we owe you. It isn&apos;t a bank account,
+            deposit or stored-value product, it doesn&apos;t earn interest, and it can only be paid out to you.
+          </li>
+          <li>
+            Earnings can be withdrawn 7 days after each payment, in amounts of ₦5,000 or more, only to a Nigerian bank
+            account in the mentor&apos;s own name, checked through Paystack. We review each withdrawal and aim to pay
+            within 2 working days. We cover the transfer fee.
+          </li>
+          <li>
+            If a payment is refunded or reversed by the payer&apos;s bank, the mentor&apos;s share of it comes back out of
+            their balance, even if that leaves it below zero; we then take it from future earnings. We may hold
+            payouts while we look into a report, suspected fraud, or a legal request.
+          </li>
+          <li>
+            If a mentor closes their account, we pay out the available balance, less anything still owed for refunds,
+            to their checked bank account.
+          </li>
+          <li>
+            Mentors are independent, not employees or agents of {APP_NAME} beyond the payment collection above, and
+            are responsible for declaring and paying their own taxes on what they earn.
+          </li>
+        </ul>
+        <p className="mt-3">
+          We may add, change or remove features. If a change takes away something important, we will try to give you
+          reasonable notice.
+        </p>
+      </section>
+
+      <section>
+        <h2>9. Our name and software</h2>
         <p>
           The {APP_NAME} name, logo, design and software belong to us. These terms don&apos;t give you any right to use
           them, except to use the service as intended.
@@ -163,7 +199,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>9. Suspending or closing accounts</h2>
+        <h2>10. Suspending or closing accounts</h2>
         <ul>
           <li>You can unpublish your card or delete your account at any time from Settings.</li>
           <li>
@@ -175,7 +211,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>10. The service is provided as is</h2>
+        <h2>11. The service is provided as is</h2>
         <p>
           We work to keep {APP_NAME} available and secure, but during the beta it may have bugs or downtime. To the
           extent the law allows, we provide it &ldquo;as is&rdquo; and without promises that it will always be
@@ -185,7 +221,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>11. Limits on our liability</h2>
+        <h2>12. Limits on our liability</h2>
         <ul>
           <li>
             We are not liable for indirect or unforeseeable losses, such as lost business, lost opportunities or lost
@@ -203,7 +239,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>12. Your responsibility to us</h2>
+        <h2>13. Your responsibility to us</h2>
         <p>
           If someone brings a claim against us because of content you published or because you broke these terms, you
           agree to cover our reasonable costs of dealing with it, to the extent the law allows.
@@ -211,7 +247,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>13. Complaints and disputes</h2>
+        <h2>14. Complaints and disputes</h2>
         <ul>
           <li>Please contact us first at {mail}. We aim to reply within 7 days and resolve complaints within 30 days.</li>
           <li>
@@ -227,7 +263,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>14. Governing law</h2>
+        <h2>15. Governing law</h2>
         <p>
           These terms are governed by the laws of the Federal Republic of Nigeria, including the Constitution of the
           Federal Republic of Nigeria 1999 (as amended).
@@ -235,7 +271,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>15. Changes to these terms</h2>
+        <h2>16. Changes to these terms</h2>
         <p>
           We may update these terms as {APP_NAME} grows. For important changes, we will email you at least 14 days
           before they take effect. If you keep using {APP_NAME} after that, the new terms apply. If you don&apos;t
@@ -244,7 +280,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>16. General</h2>
+        <h2>17. General</h2>
         <ul>
           <li>These terms and the Privacy notice are the whole agreement between us about {APP_NAME}.</li>
           <li>If a court finds part of these terms invalid, the rest still applies.</li>
@@ -259,7 +295,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>17. Contact</h2>
+        <h2>18. Contact</h2>
         <p>Questions about these terms? Email {mail}.</p>
       </section>
     </LegalPage>
