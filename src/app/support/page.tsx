@@ -60,8 +60,8 @@ export default async function SupportPage() {
   return (
     <div className="flex min-h-full flex-col bg-white">
       <SiteHeader signedIn={signedIn} />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-20 sm:py-28">
-        <h1 className="font-display text-6xl leading-none tracking-tight text-ink sm:text-7xl">Support</h1>
+      <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-14 sm:py-20">
+        <h1 className="font-display text-4xl leading-none tracking-tight text-ink sm:text-5xl">Support</h1>
         <p className="mt-5 text-ink-3">Last updated 22 October 2026.</p>
 
         <Section title="Get in touch">
@@ -142,7 +142,7 @@ export default async function SupportPage() {
           </p>
         </Section>
       </main>
-      <SiteFooter wide light />
+      <SiteFooter wide />
     </div>
   );
 }

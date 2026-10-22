@@ -83,7 +83,7 @@ export default async function ChangelogPage() {
     <div className="flex min-h-full flex-col bg-white">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-14 sm:px-8 sm:py-20">
-        <h1 className="font-display text-5xl leading-none tracking-tight text-ink sm:text-6xl">Changelog</h1>
+        <h1 className="font-display text-4xl leading-none tracking-tight text-ink sm:text-5xl">Changelog</h1>
         <p className="mt-4 text-lg text-ink-2">What&apos;s new in {APP_NAME}, newest first.</p>
 
         <div className="mt-14 grid gap-12 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-20">
@@ -128,7 +128,7 @@ export default async function ChangelogPage() {
                   {r.date}
                   {i === 0 && <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">Latest</span>}
                 </p>
-                <h2 className="mt-3 font-display text-4xl leading-[1.05] tracking-tight text-ink">{r.title}</h2>
+                <h2 className="mt-3 font-display text-3xl leading-[1.05] tracking-tight text-ink">{r.title}</h2>
                 <div className="mt-6 flex flex-col gap-5">
                   <Blocks blocks={r.blocks} />
                 </div>

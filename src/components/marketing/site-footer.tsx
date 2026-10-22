@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SocialIcon } from "@/components/icons/social-icon";
-import { APP_NAME, COMPANY_NAME, COMPANY_RC, SOCIAL_LINKS, SUPPORT_EMAIL } from "@/lib/config";
+import { APP_NAME, COMPANY_NAME, COMPANY_RC, SOCIAL_LINKS } from "@/lib/config";
 import { FEATURES } from "@/lib/features";
 import { LogoMark } from "./logo";
 
@@ -8,9 +8,8 @@ const COLUMN_LINK = "text-[15px] text-ink-2 transition-colors hover:text-ink";
 
 /**
  * Footer: logo and socials on the left, Features and About columns on the right.
- * `light` drops the email line (the Support page lists it already).
  */
-export function SiteFooter({ wide = false, light = false }: { wide?: boolean; light?: boolean }) {
+export function SiteFooter({ wide = false }: { wide?: boolean }) {
   const socials = SOCIAL_LINKS.filter((s) => s.url);
   const about = [
     { href: "/about", label: "About" },
@@ -69,7 +68,7 @@ export function SiteFooter({ wide = false, light = false }: { wide?: boolean; li
         </div>
       </div>
       <div className={`mx-auto border-t border-border py-6 text-sm text-ink-3 ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
-        © {new Date().getFullYear()} {COMPANY_NAME} ({COMPANY_RC}). All rights reserved.{!light && <> · {SUPPORT_EMAIL}</>}
+        © {new Date().getFullYear()} {COMPANY_NAME} ({COMPANY_RC}). All rights reserved.
       </div>
     </footer>
   );
