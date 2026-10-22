@@ -10,8 +10,13 @@ export type WaitlistRow = {
   full_name: string | null;
   joined_at: string;
   invited_at: string | null;
+  /** An account exists with this email. */
   signed_up: boolean;
   reminders?: Reminder[];
+  /** Their account email is confirmed (only meaningful when signed up). */
+  confirmed?: boolean;
+  /** Their current code is used up or expired, so Resend sends a fresh one. */
+  code_used?: boolean;
 };
 
 export type MemberRow = {

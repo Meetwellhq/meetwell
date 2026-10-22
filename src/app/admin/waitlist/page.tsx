@@ -51,9 +51,14 @@ export default async function AdminWaitlistPage() {
                     )}
                   </div>
                   {r.signed_up ? (
-                    <Badge tone="success">Signed up</Badge>
+                    <Badge tone={r.confirmed === false ? "warning" : "success"}>
+                      {r.confirmed === false ? "Email not confirmed" : "Signed up"}
+                    </Badge>
                   ) : (
-                    <InviteButton email={r.email} fullName={r.full_name} invited={!!r.invited_at} />
+                    <div className="flex flex-col items-end gap-1">
+                      {r.code_used && <span className="text-xs text-warning">Code used up · Resend sends a new one</span>}
+                      <InviteButton email={r.email} fullName={r.full_name} invited={!!r.invited_at} />
+                    </div>
                   )}
                 </li>
               ))}

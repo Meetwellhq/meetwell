@@ -1391,3 +1391,24 @@ describe("free messages with mentors", () => {
     await expect(as(ENGINEER, "select public.start_free_conversation('senior')")).rejects.toThrow(/free messages/);
   });
 });
+
+describe("waiting list status", () => {
+  it("shows a used code with no account as not signed up, and Resend makes a fresh code", async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    await db.query("select public.join_waitlist('forwarded@test', 'Fola Forwarded')");
+    const [{ code }] = await as<{ code: string }>(ALICE, "select public.admin_invite('forwarded@test') as code");
+    // Someone else signs up with Fola's code.
+    await db.query("insert into auth.users (id, email, raw_user_meta_data) values (gen_random_uuid(), 'someone-else@test', $1)", [
+      { access_code: code },
+    ]);
+    const [row] = await as<{ signed_up: boolean; code_used: boolean; confirmed: boolean }>(
+      ALICE,
+      "select signed_up, code_used, confirmed from public.admin_list_waitlist() where email = 'forwarded@test'",
+    );
+    expect(row).toEqual({ signed_up: false, code_used: true, confirmed: false });
+    const [{ code: fresh }] = await as<{ code: string }>(ALICE, "select public.admin_invite('forwarded@test') as code");
+    expect(fresh).not.toBe(code);
+    const [after] = await as<{ code_used: boolean }>(ALICE, "select code_used from public.admin_list_waitlist() where email = 'forwarded@test'");
+    expect(after.code_used).toBe(false);
+  });
+});
