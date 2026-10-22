@@ -156,8 +156,9 @@ export default function PrivacyPage() {
           <li><strong>Vercel</strong>: website hosting;</li>
           <li><strong>Resend</strong>: sending emails;</li>
           <li>
-            <strong>Sentry</strong>: error reports, so we can fix crashes. A report says what went wrong and on which
-            page and browser. We switch off IP addresses, cookies and form contents;
+            <strong>Sentry</strong>: error reports and page-speed timings, so we can fix crashes and slow pages. A
+            report says what went wrong or how long a page took, on which page and browser. We switch off IP
+            addresses, cookies and form contents, and we don&apos;t record screens;
           </li>
           <li>
             <strong>Paystack</strong>: taking payments (Spark credits and messages with mentors), refunds, and paying

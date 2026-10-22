@@ -67,7 +67,8 @@ every migration.
 | `RESEND_API_KEY` | Vercel (production, sensitive) | Founder emails. Without it, emails are skipped (fine locally) |
 | `CRON_SECRET` | Vercel (production, sensitive) | Protects the daily reminders and matching jobs. Must equal `internal_settings.cron_secret` in Supabase |
 | `PAYSTACK_SECRET_KEY` | Vercel (production, sensitive) + `.env.local` for testing | Spark credits. Test key (`sk_test_…`) first; live key only with Rasheed's OK. Without it the credit packs are hidden. The webhook and return page also need `CRON_SECRET` |
-| `NEXT_PUBLIC_SENTRY_DSN` | Vercel (production) | Sentry error reports (`src/instrumentation.ts`, `src/instrumentation-client.ts`, settings in `src/lib/sentry.ts`: errors only, no IPs/cookies, no tracing or replay). Without it Sentry is off. Listed in the Privacy notice |
+| `NEXT_PUBLIC_SENTRY_DSN` | Vercel (production) | Sentry error reports (`src/instrumentation.ts`, `src/instrumentation-client.ts`, settings in `src/lib/sentry.ts`: errors plus 10% tracing, release = Vercel commit, no IPs/cookies, no replay or feedback widget). Without it Sentry is off. Listed in the Privacy notice. Org `meet-well`, project `meetwell` |
+| `SENTRY_AUTH_TOKEN` | Vercel (production, sensitive) | Lets the build upload source maps to Sentry (`withSentryConfig` in `next.config.ts`) so error reports show readable code. Optional |
 | `ANTHROPIC_API_KEY` | Vercel (production, sensitive) | Claude for AI Network Matching. Without it, matching falls back to rule-based picks and template reasons |
 
 ## Key features and where they live

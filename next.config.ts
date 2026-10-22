@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
 // Lets phones on the same Wi-Fi load the dev server when NEXT_PUBLIC_SITE_URL
@@ -29,4 +30,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry: uploads source maps so error reports show readable code. Needs
+// SENTRY_AUTH_TOKEN in Vercel (production, sensitive); without it the build skips
+// the upload and still works.
+export default withSentryConfig(nextConfig, {
+  org: "meet-well",
+  project: "meetwell",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+});
