@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Illustrated example person for marketing pictures (not a real member). -->
+  <rect width="200" height="200" fill="#cfe0d4"/>
+  <path d="M30 200c4-38 34-58 70-58s66 20 70 58z" fill="#1f4d3f"/>
+  <path d="M84 132h32v20c0 9-7 15-16 15s-16-6-16-15z" fill="#7a4a2e"/>
+  <path d="M80 150c6 8 13 12 20 12s14-4 20-12l12 6c-8 14-19 22-32 22s-24-8-32-22z" fill="#ffffff"/>
+  <ellipse cx="100" cy="96" rx="38" ry="44" fill="#8a5636"/>
+  <ellipse cx="62" cy="98" rx="7" ry="10" fill="#7a4a2e"/>
+  <ellipse cx="138" cy="98" rx="7" ry="10" fill="#7a4a2e"/>
+  <path d="M62 86c0-30 18-44 38-44s38 14 38 44c-6-12-14-18-22-20-10 6-26 8-40 6-6 3-11 8-14 14z" fill="#1b1b1a"/>
+  <ellipse cx="86" cy="98" rx="4" ry="4.5" fill="#1b1b1a"/>
+  <ellipse cx="114" cy="98" rx="4" ry="4.5" fill="#1b1b1a"/>
+  <path d="M79 88c4-3 9-3 13-1M108 87c4-2 9-2 13 1" stroke="#1b1b1a" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M97 102c-2 7-3 10 0 12 2 1 5 1 7 0" stroke="#6a3f25" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M88 120c7 6 17 6 24 0" stroke="#4a2a18" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M70 112c4 18 16 28 30 28s26-10 30-28c-6 10-16 14-30 14s-24-4-30-14z" fill="#1b1b1a" opacity=".85"/>
+</svg>

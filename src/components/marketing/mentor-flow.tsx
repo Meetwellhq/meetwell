@@ -1,8 +1,11 @@
 "use client";
 
-import { Check, CreditCard, Landmark, Lock, MessageCircle, Smartphone, UserRoundPlus } from "lucide-react";
+import { CalendarDays, Check, CreditCard, Globe, Landmark, Lock, Mail, MessageCircle, Phone, Smartphone, UserRoundPlus } from "lucide-react";
 import { useEffect, useState } from "react";
+import { SocialIcon } from "@/components/icons/social-icon";
+import { CompanyAvatar } from "@/components/profile/company-avatar";
 import { cn } from "@/lib/cn";
+import { nairaShort } from "@/lib/format";
 
 const STEPS = ["Message", "Pay", "Talk"] as const;
 
@@ -23,7 +26,7 @@ export function MentorFlow() {
 
   return (
     <div className="flex w-full max-w-sm flex-col items-center gap-4">
-      <div className="relative h-[23rem] w-full" aria-live="polite">
+      <div className="relative h-[34rem] w-full" aria-live="polite">
         <Frame show={step === 0}>
           <CardStep />
         </Frame>
@@ -71,21 +74,52 @@ function Frame({ show, children }: { show: boolean; children: React.ReactNode })
 
 /** The mentor's public card: Save contact, then the paid message button underneath. */
 function CardStep() {
+  const icons = [
+    <Mail key="m" className="size-[18px]" aria-hidden />,
+    <SocialIcon key="w" platform="whatsapp" className="size-[18px]" />,
+    <Phone key="p" className="size-[18px]" aria-hidden />,
+    <Globe key="g" className="size-[18px]" aria-hidden />,
+  ];
   return (
-    <div className="rounded-[1.25rem] border border-border bg-surface p-5 text-center">
-      <span className="mx-auto grid size-16 place-items-center rounded-full bg-accent-soft text-xl font-semibold text-accent">CN</span>
-      <p className="mt-3 text-lg font-semibold text-ink">Chidi Nwosu</p>
-      <p className="text-sm text-ink-2">Engineering Manager · Brightwave</p>
-      <p className="mt-1 text-xs text-ink-3">9 years · Joined 2026</p>
-      <div className="mt-5 flex h-11 items-center justify-center gap-2 rounded-lg bg-accent text-[15px] font-medium text-white">
-        <UserRoundPlus className="size-[18px]" aria-hidden />
-        Save contact
+    <div className="flex flex-col gap-2.5">
+      <div className="rounded-2xl border border-border bg-surface px-5 pb-5 pt-6 text-center">
+        <CompanyAvatar name="Chidi Nwosu" src="/demo/chidi.svg" organization="Brightwave" className="size-20 text-xl" badgeClassName="size-8" />
+        <p className="mt-3 text-xl font-semibold tracking-tight text-ink">Chidi Nwosu</p>
+        <p className="mt-0.5 text-sm text-ink-2">Engineering Manager · Brightwave</p>
+        <p className="mt-1 inline-flex items-center gap-1 text-xs text-ink-3">
+          <CalendarDays className="size-3" aria-hidden />
+          Joined 2026
+        </p>
+        <p className="mx-auto mt-2 max-w-xs text-[13px] leading-relaxed text-ink-2">
+          9 years building payment teams. I help engineers grow into leads.
+        </p>
+        <p className="mt-3">
+          <span className="inline-block rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">Open to mentoring</span>
+        </p>
+        <div className="mt-4 flex h-11 items-center justify-center gap-2 rounded-lg bg-accent text-[15px] font-medium text-white">
+          <UserRoundPlus className="size-[18px]" aria-hidden />
+          Save contact
+        </div>
+        <div className="mt-2.5 flex h-11 items-center justify-center gap-2 rounded-lg border border-border-strong bg-surface text-[15px] font-medium text-ink">
+          <MessageCircle className="size-[18px]" aria-hidden />
+          Message Chidi · {nairaShort(500_000)}/month
+        </div>
+        <div className="mt-3 flex justify-center gap-2.5">
+          {icons.map((icon, i) => (
+            <span key={i} className="grid size-10 place-items-center rounded-full border border-border text-ink">
+              {icon}
+            </span>
+          ))}
+        </div>
       </div>
-      <div className="mt-2.5 flex h-11 items-center justify-center gap-2 rounded-lg border-2 border-accent text-[15px] font-medium text-accent">
-        <MessageCircle className="size-[18px]" aria-hidden />
-        Message Chidi · ₦5,000/month
+      <div className="flex gap-2">
+        {(["linkedin", "x"] as const).map((p) => (
+          <span key={p} className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs text-ink-2">
+            <SocialIcon platform={p} className="size-4 text-ink" />
+            {p === "linkedin" ? "in/chidinwosu" : "@chidibuilds"}
+          </span>
+        ))}
       </div>
-      <p className="mt-2 text-xs text-ink-3">30 days of messages. Full refund if Chidi doesn&apos;t reply in 7 days.</p>
     </div>
   );
 }

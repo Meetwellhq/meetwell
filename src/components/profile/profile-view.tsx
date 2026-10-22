@@ -5,6 +5,7 @@ import { CompanyAvatar } from "./company-avatar";
 import { buttonClass } from "@/components/ui/button";
 import { LogoMark } from "@/components/marketing/logo";
 import { APP_NAME, SIGNUPS_OPEN } from "@/lib/config";
+import { nairaShort } from "@/lib/format";
 import { goalLabel, isOfferedGoal, socialLabel } from "@/lib/profiles/constants";
 import { contactActions, displayUrl, type ContactAction } from "@/lib/profiles/links";
 import type { PublicProfile } from "@/lib/profiles/types";
@@ -31,8 +32,6 @@ type Props = {
   source?: "qr" | "link";
 };
 
-const naira = (kobo: number) =>
-  new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(kobo / 100);
 
 /**
  * The visitor-facing card. Receives only the public projection of a profile,
@@ -88,7 +87,7 @@ export function ProfileView({ profile, preview = false, offer = null, viewer = "
               className={buttonClass({ variant: "secondary", size: "lg", className: "mt-3 w-full" })}
             >
               <MessageCircle className="size-5" aria-hidden />
-              Message {offer.firstName} · {naira(offer.priceKobo)}/month
+              Message {offer.firstName} · {nairaShort(offer.priceKobo)}/month
             </Link>
           )}
         </div>
