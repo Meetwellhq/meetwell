@@ -4,9 +4,9 @@ import { APP_NAME, COMPANY_NAME, COMPANY_RC, SOCIAL_LINKS, SUPPORT_EMAIL } from 
 import { FEATURES } from "@/lib/features";
 import { LogoMark } from "./logo";
 
-const COLUMN_LINK = "text-[15px] text-white/60 transition-colors hover:text-white";
+const COLUMN_LINK = "text-[15px] text-ink-2 transition-colors hover:text-ink";
 
-/** Dark footer: logo and socials on the left, Features and About columns on the right. */
+/** Footer: logo and socials on the left, Features and About columns on the right. */
 export function SiteFooter({ wide = false }: { wide?: boolean }) {
   const socials = SOCIAL_LINKS.filter((s) => s.url);
   const about = [
@@ -18,11 +18,11 @@ export function SiteFooter({ wide = false }: { wide?: boolean }) {
   ];
 
   return (
-    <footer className="bg-[#161312] text-white">
+    <footer className="border-t border-border bg-white text-ink">
       <div className={`mx-auto flex flex-col gap-12 py-14 sm:py-16 lg:flex-row lg:justify-between ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
         <div className="flex flex-col gap-6">
           <a href="/home" className="inline-flex items-center gap-2 font-semibold tracking-tight">
-            <LogoMark inverted />
+            <LogoMark />
             <span className="text-[19px]">{APP_NAME}</span>
           </a>
           {socials.length > 0 && (
@@ -35,7 +35,7 @@ export function SiteFooter({ wide = false }: { wide?: boolean }) {
                     rel="noopener noreferrer"
                     aria-label={`Meetwell on ${s.label}`}
                     title={s.label}
-                    className="grid size-9 place-items-center rounded-full border border-white/15 text-white/70 transition-colors hover:border-white/40 hover:text-white"
+                    className="grid size-9 place-items-center rounded-full border border-border text-ink-2 transition-colors hover:border-border-strong hover:text-ink"
                   >
                     <SocialIcon platform={s.platform} className="size-4" />
                   </a>
@@ -67,7 +67,7 @@ export function SiteFooter({ wide = false }: { wide?: boolean }) {
           </nav>
         </div>
       </div>
-      <div className={`mx-auto border-t border-white/10 py-6 text-sm text-white/45 ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
+      <div className={`mx-auto border-t border-border py-6 text-sm text-ink-3 ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
         © {new Date().getFullYear()} {COMPANY_NAME} ({COMPANY_RC}). All rights reserved. · {SUPPORT_EMAIL}
       </div>
     </footer>
