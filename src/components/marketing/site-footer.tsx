@@ -18,7 +18,7 @@ export function SiteFooter({ wide = false }: { wide?: boolean }) {
   ];
 
   return (
-    <footer className="border-t border-border bg-white text-ink">
+    <footer className="bg-surface-2 text-ink">
       <div className={`mx-auto flex flex-col gap-12 py-14 sm:py-16 lg:flex-row lg:justify-between ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
         <div className="flex flex-col gap-6">
           <a href="/home" className="inline-flex items-center gap-2 font-semibold tracking-tight">
@@ -26,7 +26,7 @@ export function SiteFooter({ wide = false }: { wide?: boolean }) {
             <span className="text-[19px]">{APP_NAME}</span>
           </a>
           {socials.length > 0 && (
-            <ul className="flex items-center gap-2" aria-label="Meetwell elsewhere">
+            <ul className="-ml-1.5 flex items-center gap-2" aria-label="Meetwell elsewhere">
               {socials.map((s) => (
                 <li key={s.platform}>
                   <a
@@ -35,9 +35,9 @@ export function SiteFooter({ wide = false }: { wide?: boolean }) {
                     rel="noopener noreferrer"
                     aria-label={`Meetwell on ${s.label}`}
                     title={s.label}
-                    className="grid size-9 place-items-center rounded-full border border-border text-ink-2 transition-colors hover:border-border-strong hover:text-ink"
+                    className="grid size-8 place-items-center text-ink-2 transition-colors hover:text-ink"
                   >
-                    <SocialIcon platform={s.platform} className="size-4" />
+                    <SocialIcon platform={s.platform} className="size-5" />
                   </a>
                 </li>
               ))}
@@ -67,7 +67,7 @@ export function SiteFooter({ wide = false }: { wide?: boolean }) {
           </nav>
         </div>
       </div>
-      <div className={`mx-auto border-t border-border py-6 text-sm text-ink-3 ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
+      <div className={`mx-auto border-t border-border-strong/60 py-6 text-sm text-ink-3 ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
         © {new Date().getFullYear()} {COMPANY_NAME} ({COMPANY_RC}). All rights reserved. · {SUPPORT_EMAIL}
       </div>
     </footer>
