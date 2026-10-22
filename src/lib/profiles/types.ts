@@ -17,6 +17,8 @@ export type PublicProfile = {
   contacts: { type: ContactType; value: string; label: string | null }[];
   socials: { platform: SocialPlatform; url: string }[];
   updatedAt: string;
+  /** The year the card was created ("Joined 2026"). Only the year is public. */
+  joinedYear?: number | null;
 };
 
 export type ProfileStatus = "draft" | "published" | "unpublished";
@@ -51,6 +53,7 @@ export type OwnProfile = {
   status: ProfileStatus;
   publishedAt: string | null;
   updatedAt: string;
+  createdAt?: string;
   contacts: OwnContactMethod[];
   socials: OwnSocialLink[];
 };
@@ -82,5 +85,12 @@ export function toPublicView(profile: OwnProfile): PublicProfile {
       .filter((s) => s.isPublic)
       .map(({ platform, url }) => ({ platform, url })),
     updatedAt: profile.updatedAt,
+    joinedYear: joinedYear(profile.createdAt),
   };
+}
+
+/** The Lagos-time year of a date, as shown in "Joined 2026". */
+export function joinedYear(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Lagos", year: "numeric" }).format(new Date(iso)));
 }

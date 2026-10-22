@@ -79,6 +79,9 @@ describe("public projection", () => {
     expect(json).not.toContain("x.com/hidden");
     expect(json).not.toContain("secret.example");
     expect(json).not.toContain(ALICE); // no user id
+    // Only the year they joined, not the exact date.
+    expect(p.joinedYear).toBe(new Date().getFullYear());
+    expect(Object.keys(p)).not.toContain("createdAt");
   });
 
   it("is case-insensitive on slug and null for unknown slugs", async () => {

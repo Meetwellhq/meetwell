@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Globe, Mail, MessageCircle, Phone, UserRoundPlus } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Globe, Mail, MessageCircle, Phone, UserRoundPlus } from "lucide-react";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { CompanyAvatar } from "./company-avatar";
 import { buttonClass } from "@/components/ui/button";
@@ -57,6 +57,12 @@ export function ProfileView({ profile, preview = false, offer = null, viewer = "
         <CompanyAvatar name={profile.fullName} src={profile.avatarUrl} organization={profile.organization} className="size-24 text-2xl" />
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-ink">{profile.fullName}</h1>
         {subtitle && <p className="mt-1 text-[15px] text-ink-2">{subtitle}</p>}
+        {profile.joinedYear && (
+          <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-ink-3">
+            <CalendarDays className="size-3.5" aria-hidden />
+            Joined {profile.joinedYear}
+          </p>
+        )}
         {profile.bio && <p className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-ink-2">{profile.bio}</p>}
 
         {goal && (

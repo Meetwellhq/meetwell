@@ -10,7 +10,7 @@ import { Alert, Card } from "@/components/ui/misc";
 import { useToast } from "@/components/ui/toast";
 import { saveExperience } from "@/lib/matching/actions";
 import { saveProfile } from "@/lib/profiles/actions";
-import type { OwnProfile } from "@/lib/profiles/types";
+import { joinedYear, type OwnProfile } from "@/lib/profiles/types";
 import { BasicsSection, ContactSection, GoalsSection, SocialSection } from "./sections";
 import { toFormValues, toInput, toPreview, type Errors, type FormValues } from "./types";
 
@@ -48,6 +48,8 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
   const [dirty, setDirty] = useState(false);
   const [pending, startTransition] = useTransition();
   const [showPreview, setShowPreview] = useState(false);
+  // New cards are joining now; existing ones show the year they were created.
+  const previewYear = joinedYear(initial?.createdAt ?? new Date().toISOString());
   const [experience, setExperience] = useState<Experience>(initialExperience ?? { field: "", experienceYears: "" });
   const [experienceErrors, setExperienceErrors] = useState<Errors>({});
   const [experienceDirty, setExperienceDirty] = useState(false);
@@ -150,7 +152,7 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
           {current.key === "goals" && <GoalsSection values={values} errors={errors} set={set} />}
           {current.key === "preview" && (
             <div className="rounded-3xl bg-surface-2 p-3 sm:p-6">
-              <ProfileView profile={toPreview(values)} preview />
+              <ProfileView profile={{ ...toPreview(values), joinedYear: previewYear }} preview />
             </div>
           )}
         </div>
@@ -226,7 +228,7 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
         <div className="sticky top-6">
           <p className="mb-3 text-sm font-medium text-ink-2">Live preview</p>
           <div className="max-h-[calc(100vh-5rem)] overflow-y-auto rounded-3xl bg-surface-2 p-3">
-            <ProfileView profile={toPreview(values)} preview />
+            <ProfileView profile={{ ...toPreview(values), joinedYear: previewYear }} preview />
           </div>
         </div>
       </aside>
@@ -236,7 +238,7 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
           <div className="mx-auto mb-4 flex max-w-md justify-end">
             <Button variant="secondary" size="sm" onClick={() => setShowPreview(false)}>Close preview</Button>
           </div>
-          <ProfileView profile={toPreview(values)} preview />
+          <ProfileView profile={{ ...toPreview(values), joinedYear: previewYear }} preview />
         </div>
       )}
 

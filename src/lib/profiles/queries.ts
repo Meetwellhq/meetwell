@@ -18,6 +18,7 @@ type ProfileRow = {
   status: OwnProfile["status"];
   published_at: string | null;
   updated_at: string;
+  created_at: string;
   contact_methods: {
     id: string;
     type: OwnProfile["contacts"][number]["type"];
@@ -37,7 +38,7 @@ type ProfileRow = {
 
 const OWN_PROFILE_SELECT = `
   id, slug, full_name, avatar_url, professional_title, organization, bio,
-  website_url, website_is_public, networking_goals, status, published_at, updated_at,
+  website_url, website_is_public, networking_goals, status, published_at, updated_at, created_at,
   contact_methods ( id, type, value, label, is_public, sort_order ),
   social_links ( id, platform, url, is_public, sort_order )
 `;
@@ -58,6 +59,7 @@ function mapOwnProfile(row: ProfileRow): OwnProfile {
     status: row.status,
     publishedAt: row.published_at,
     updatedAt: row.updated_at,
+    createdAt: row.created_at,
     contacts: [...row.contact_methods].sort(bySort).map((c) => ({
       id: c.id,
       type: c.type,
