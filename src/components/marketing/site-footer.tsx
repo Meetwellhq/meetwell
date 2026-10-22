@@ -8,7 +8,7 @@ const COLUMN_LINK = "text-[15px] text-ink-2 transition-colors hover:text-ink";
 
 /**
  * Footer: logo and socials on the left, Features and About columns on the right.
- * `light` drops the grey background and the email line (the Support page has both already).
+ * `light` drops the email line (the Support page lists it already).
  */
 export function SiteFooter({ wide = false, light = false }: { wide?: boolean; light?: boolean }) {
   const socials = SOCIAL_LINKS.filter((s) => s.url);
@@ -22,7 +22,7 @@ export function SiteFooter({ wide = false, light = false }: { wide?: boolean; li
   ];
 
   return (
-    <footer className={light ? "border-t border-border bg-white text-ink" : "bg-surface-2 text-ink"}>
+    <footer className="border-t border-border bg-white text-ink">
       <div className={`mx-auto flex flex-col gap-12 py-14 sm:py-16 lg:flex-row lg:justify-between ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
         <div className="flex flex-col gap-6">
           <a href="/home" className="inline-flex items-center gap-2 font-semibold tracking-tight">
@@ -68,7 +68,7 @@ export function SiteFooter({ wide = false, light = false }: { wide?: boolean; li
           </nav>
         </div>
       </div>
-      <div className={`mx-auto border-t ${light ? "border-border" : "border-border-strong/60"} py-6 text-sm text-ink-3 ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
+      <div className={`mx-auto border-t border-border py-6 text-sm text-ink-3 ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
         © {new Date().getFullYear()} {COMPANY_NAME} ({COMPANY_RC}). All rights reserved.{!light && <> · {SUPPORT_EMAIL}</>}
       </div>
     </footer>

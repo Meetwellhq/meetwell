@@ -4,7 +4,7 @@ import { Logo } from "./logo";
 
 export function LegalPage({ title, updated, intro, children }: { title: string; updated?: string; intro?: ReactNode; children: ReactNode }) {
   return (
-    <>
+    <div className="flex min-h-full flex-col bg-white">
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-3xl items-center px-4 sm:px-6">
           <Logo />
@@ -19,6 +19,6 @@ export function LegalPage({ title, updated, intro, children }: { title: string; 
         </div>
       </main>
       <SiteFooter />
-    </>
+    </div>
   );
 }
