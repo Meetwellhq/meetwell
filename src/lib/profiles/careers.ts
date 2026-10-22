@@ -31,6 +31,8 @@ export const TITLE_GROUPS = [
       "IT Support Specialist",
       "CTO",
       "Founder",
+      "Founder & CEO",
+      "Co-founder",
     ],
   },
 ] as const;
@@ -57,6 +59,7 @@ export const COMPANIES: Company[] = [
   { name: "Access Bank", aliases: ["Access Bank Plc", "Access Holdings"], logo: null },
   { name: "Dangote Group", aliases: ["Dangote", "Dangote Industries"], logo: null },
   { name: "Raenest", aliases: ["Raenest (formerly Geegpay)", "Geegpay"], logo: "/companies/raenest.png" },
+  { name: "Meetwell", aliases: ["Meet Well", "Meet Well Limited", "MeetWell"], logo: "/companies/meetwell.png" },
 ];
 
 const normalise = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
