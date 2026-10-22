@@ -70,3 +70,22 @@ export function parseChangelog(markdown: string): Release[] {
   flush();
   return releases;
 }
+
+/** "22 October 2026" → "October 2026" (the sidebar groups releases by month). */
+export function releaseMonth(date: string | null): string {
+  return date ? date.replace(/^\d{1,2}\s+/, "") : "Earlier";
+}
+
+/** "22 October 2026" → "22 Oct". */
+export function shortDate(date: string | null): string {
+  const m = date?.match(/^(\d{1,2}) (\w{3})\w* \d{4}$/);
+  return m ? `${m[1]} ${m[2]}` : (date ?? "");
+}
+
+/** A stable anchor for linking to one release, e.g. "22-october-2026-contacts". */
+export function releaseId(release: Pick<Release, "date" | "title">): string {
+  return `${release.date ?? ""} ${release.title}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}

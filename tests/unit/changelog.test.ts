@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { parseChangelog, parseInline } from "@/lib/changelog";
+import { parseChangelog, parseInline, releaseId, releaseMonth, shortDate } from "@/lib/changelog";
 
 describe("parseInline", () => {
   it("handles bold and links", () => {
@@ -40,5 +40,16 @@ describe("parseChangelog", () => {
     expect(releases.length).toBeGreaterThan(3);
     expect(releases.every((r) => r.date && r.blocks.length > 0)).toBe(true);
     expect(releases.at(-1)!.title).toBe("Meetwell is born");
+  });
+});
+
+describe("changelog sidebar helpers", () => {
+  it("groups by month, shortens dates and makes anchors", () => {
+    expect(releaseMonth("22 October 2026")).toBe("October 2026");
+    expect(releaseMonth(null)).toBe("Earlier");
+    expect(shortDate("2 September 2026")).toBe("2 Sep");
+    expect(releaseId({ date: "22 October 2026", title: "Message a mentor, and Spark credits" })).toBe(
+      "22-october-2026-message-a-mentor-and-spark-credits",
+    );
   });
 });
