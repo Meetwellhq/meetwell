@@ -25,7 +25,7 @@ async function isSignedIn() {
 
 const whatWeDo = [
   { icon: QrCode, title: "A card with its own QR code", body: "People scan it with their camera and save you in one tap. No app needed." },
-  { icon: MessageSquareText, title: "A first message, ready to send", body: "Visitors get a short note based on your card, so following up is easy." },
+  { icon: MessageSquareText, title: "Icebreaker", body: "Visitors get a ready-made first message based on your card, so following up is easy." },
   { icon: BookUser, title: "Contacts in one place", body: "Every card you scan is kept, with a note on where you met." },
   { icon: Sparkles, title: "Spark introductions", body: "AI introduces you to someone a few steps ahead in your field." },
   { icon: Wallet, title: "Paid mentoring", body: "People with 4+ years can set a monthly price and keep 80%." },

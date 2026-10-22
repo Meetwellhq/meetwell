@@ -1,5 +1,5 @@
 /** Meetwell's features, for the footer and the /features/[slug] pages. Product facts only. */
-export type FeatureSlug = "qr-card" | "first-message" | "contacts" | "spark" | "mentoring";
+export type FeatureSlug = "qr-card" | "icebreaker" | "contacts" | "spark" | "mentoring";
 
 export type FeaturePage = {
   slug: FeatureSlug;
@@ -30,11 +30,11 @@ export const FEATURES: FeaturePage[] = [
     ],
   },
   {
-    slug: "first-message",
-    name: "First messages",
+    slug: "icebreaker",
+    name: "Icebreaker",
     title: "Never stare at a blank message again.",
     intro:
-      "When someone opens your card, Meetwell writes them a short first message based on who you are, ready to edit and send.",
+      "When someone opens your card, Icebreaker writes them a short first message based on who you are, ready to edit and send.",
     steps: [
       { title: "They pick a reason", body: "Collaborate, learn from you, offer their services, or follow up after meeting." },
       { title: "A message appears", body: "It mentions your title and company, so it never feels like a template." },

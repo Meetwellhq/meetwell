@@ -40,7 +40,7 @@ async function Visual({ slug }: { slug: FeatureSlug }) {
   switch (slug) {
     case "qr-card":
       return <CardPreview qrSvg={await qrSvg(getSiteUrl(), { margin: 1 })} />;
-    case "first-message":
+    case "icebreaker":
       return (
         <div className="w-full max-w-md">
           <StarterPreview />
