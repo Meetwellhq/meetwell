@@ -10,10 +10,12 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "next typegen && tsc --noEmit",
-    "check:changelog": "node scripts/check-changelog.mjs"
+    "check:changelog": "node scripts/check-changelog.mjs",
+    "test:smoke": "playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.137.0",
+    "@sentry/nextjs": "11.4.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "lucide-react": "^1.59.0",
@@ -28,6 +30,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.10",
+    "@playwright/test": "1.64.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.19.2",
     "@types/qrcode": "^1.5.6",

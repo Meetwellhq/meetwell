@@ -47,6 +47,12 @@ writing Next.js code (see `AGENTS.md`).
 - `npm run dev` (local dev; often run as `npm run dev -- --port 3100`)
 - `npx tsc --noEmit`, `npm run lint`, `npm test` (Vitest: unit tests + PGlite database tests)
 - `npm run build` (production build)
+- `npm run test:smoke` (Playwright, read-only checks of the live site; `BASE_URL=http://localhost:3100` for local)
+
+**Automatic checks (GitHub Actions).** `.github/workflows/checks.yml` runs types, lint, all tests and a build on
+every push and pull request. `.github/workflows/smoke.yml` runs the Playwright checks (`e2e/smoke.spec.ts`) against
+meetwell.me after each successful Vercel production deploy (or by hand: Actions → Live site check → Run). They never
+sign up, pay or save anything. A failure shows as a red cross on the commit and GitHub emails the repo owner.
 
 Database tests (`tests/db/rls.test.ts`) run every migration in `supabase/migrations` against an
 in-process Postgres (`tests/db/supabase-stubs.sql` fakes the Supabase bits). Add a test with
@@ -61,6 +67,7 @@ every migration.
 | `RESEND_API_KEY` | Vercel (production, sensitive) | Founder emails. Without it, emails are skipped (fine locally) |
 | `CRON_SECRET` | Vercel (production, sensitive) | Protects the daily reminders and matching jobs. Must equal `internal_settings.cron_secret` in Supabase |
 | `PAYSTACK_SECRET_KEY` | Vercel (production, sensitive) + `.env.local` for testing | Spark credits. Test key (`sk_test_…`) first; live key only with Rasheed's OK. Without it the credit packs are hidden. The webhook and return page also need `CRON_SECRET` |
+| `NEXT_PUBLIC_SENTRY_DSN` | Vercel (production) | Sentry error reports (`src/instrumentation.ts`, `src/instrumentation-client.ts`, settings in `src/lib/sentry.ts`: errors only, no IPs/cookies, no tracing or replay). Without it Sentry is off. Listed in the Privacy notice |
 | `ANTHROPIC_API_KEY` | Vercel (production, sensitive) | Claude for AI Network Matching. Without it, matching falls back to rule-based picks and template reasons |
 
 ## Key features and where they live

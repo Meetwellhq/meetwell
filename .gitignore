@@ -45,3 +45,7 @@ next-env.d.ts
 
 # private notes, never pushed (the repo is public)
 /docs/private/
+
+# Playwright
+/test-results/
+/playwright-report/

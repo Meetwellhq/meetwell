@@ -156,6 +156,10 @@ export default function PrivacyPage() {
           <li><strong>Vercel</strong>: website hosting;</li>
           <li><strong>Resend</strong>: sending emails;</li>
           <li>
+            <strong>Sentry</strong>: error reports, so we can fix crashes. A report says what went wrong and on which
+            page and browser. We switch off IP addresses, cookies and form contents;
+          </li>
+          <li>
             <strong>Paystack</strong>: taking payments (Spark credits and messages with mentors), refunds, and paying
             mentors their earnings. Paystack receives your email address and the amount, you enter your payment details
             on Paystack&apos;s own page, and mentors&apos; bank details are checked and stored by Paystack;
