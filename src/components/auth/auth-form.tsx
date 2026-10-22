@@ -80,7 +80,10 @@ export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, f
               aria-describedby={state.fieldErrors?.adult ? "adult-error" : undefined}
               className="mt-0.5 size-5 shrink-0 cursor-pointer rounded accent-accent"
             />
-            <span>Tick here to confirm that you are at least 18 years old and the age of majority where you live.</span>
+            <span>
+              I&apos;m 18 or older.{" "}
+              <span className="text-ink-3">Meetwell is for adults only, so we don&apos;t collect data from anyone under 18.</span>
+            </span>
           </label>
           {state.fieldErrors?.adult && (
             <p id="adult-error" className="mt-1.5 pl-8 text-sm text-danger">
