@@ -1247,6 +1247,20 @@ describe("outreach tracker", () => {
     expect(joined.joined).toBe(true);
   });
 
+  it("allows a missing name and fixing it later", async () => {
+    await as(ALICE, "select public.admin_add_outreach(null, 'kemi_codes', null)");
+    const [row] = await as<{ id: number; first_name: string | null }>(
+      ALICE,
+      "select id, first_name from public.admin_list_outreach() where x_handle = 'kemi_codes'",
+    );
+    expect(row.first_name).toBeNull();
+    await expect(as(BOB, "select public.admin_set_outreach_name($1, 'Kemi')", [row.id])).rejects.toThrow(/Not allowed/);
+    await as(ALICE, "select public.admin_set_outreach_name($1, ' Kemi ')", [row.id]);
+    expect(await as(ALICE, "select first_name from public.admin_list_outreach() where id = $1", [row.id])).toEqual([
+      { first_name: "Kemi" },
+    ]);
+  });
+
   it("removes a person and their unused code", async () => {
     const [{ code }] = await as<{ code: string }>(ALICE, "select public.admin_add_outreach('Tolu', 'tolu_dev', null) as code");
     const [{ id }] = await as<{ id: number }>(ALICE, "select id from public.admin_list_outreach() where x_handle = 'tolu_dev'");

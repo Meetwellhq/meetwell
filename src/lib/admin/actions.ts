@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { sendInviteEmail, sendMentorApprovedEmail, sendSparkBetaEmail, sendWithdrawalSentEmail } from "../email";
 import { refundPayment, sendTransfer } from "../payments/paystack";
 import { createClient, getCurrentUser } from "../supabase/server";
-import { xHandle } from "../outreach";
+import { parseOutreachList, xHandle } from "../outreach";
 import { emailSchema } from "../validation";
 
 export type InviteState = { ok?: boolean; error?: string };
@@ -184,7 +184,6 @@ export async function adminAddOutreach(_: AdminFormState, formData: FormData): P
   const firstName = String(formData.get("firstName") ?? "").trim().slice(0, 40);
   const handle = xHandle(String(formData.get("handle") ?? ""));
   const note = String(formData.get("note") ?? "").trim().slice(0, 300);
-  if (!firstName) return { error: "Add their first name." };
   if (!handle) return { error: "That doesn't look like an X handle or profile link." };
 
   const supabase = await createClient();
@@ -195,7 +194,42 @@ export async function adminAddOutreach(_: AdminFormState, formData: FormData): P
     return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't add them." };
   }
   revalidatePath("/admin", "layout");
-  return { ok: `Added ${firstName} (@${handle}).` };
+  return { ok: `Added ${firstName || "them"} (@${handle}).` };
+}
+
+/** Add a pasted list (one person per line, up to 100). People already on the list are skipped. */
+export async function adminAddOutreachList(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { entries, bad } = parseOutreachList(String(formData.get("list") ?? "").slice(0, 20_000));
+  if (entries.length === 0) return { error: "No X handles or profile links found. Put one person on each line." };
+  if (entries.length > 100) return { error: `That's ${entries.length} people. Add up to 100 at a time.` };
+
+  const supabase = await createClient();
+  let added = 0;
+  let skipped = 0;
+  for (const e of entries) {
+    const { error } = await supabase.rpc("admin_add_outreach", { p_first_name: e.firstName, p_handle: e.handle, p_note: e.note });
+    if (!error) added++;
+    else if (error.code === "23505") skipped++;
+    else {
+      console.error("admin_add_outreach failed", error.code, error.message);
+      if (error.code === "42501") return { error: "You don't have access to this." };
+      skipped++;
+    }
+  }
+  revalidatePath("/admin", "layout");
+  const parts = [`Added ${added}.`];
+  if (skipped) parts.push(`${skipped} already on the list.`);
+  if (bad.length) parts.push(`${bad.length} line${bad.length === 1 ? "" : "s"} had no handle: ${bad.slice(0, 3).join("; ")}${bad.length > 3 ? "…" : ""}`);
+  return { ok: parts.join(" ") };
+}
+
+export async function adminSetOutreachName(id: number, firstName: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_set_outreach_name", { p_id: id, p_first_name: firstName.slice(0, 40) });
+  if (error) return { error: "Couldn't save the name." };
+  revalidatePath("/admin", "layout");
+  return {};
 }
 
 export async function adminSetOutreachStatus(id: number, status: OutreachStatus): Promise<{ error?: string }> {

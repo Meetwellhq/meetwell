@@ -1,12 +1,12 @@
 import { date, Stats } from "@/components/admin/admin-ui";
-import { AddOutreachForm, CopyMessageButton, OpenOnX, OutreachStatusPicker, RemoveOutreach } from "@/components/admin/outreach-admin";
+import { AddOutreach, CopyMessageButton, EditableName, OpenOnX, OutreachStatusPicker, RemoveOutreach } from "@/components/admin/outreach-admin";
 import { Badge, EmptyState } from "@/components/ui/misc";
 import type { OutreachStatus } from "@/lib/admin/actions";
 import { inviteLink, outreachMessage } from "@/lib/outreach";
 
 export type OutreachRow = {
   id: number;
-  first_name: string;
+  first_name: string | null;
   x_handle: string;
   note: string | null;
   access_code: string | null;
@@ -34,7 +34,7 @@ export function OutreachList({ rows, site }: { rows: OutreachRow[]; site: string
           { label: "Signed up", value: joined, note: pct(joined) },
         ]}
       />
-      <AddOutreachForm />
+      <AddOutreach />
 
       {rows.length === 0 ? (
         <div className="rounded-xl border border-border bg-surface">
@@ -49,7 +49,7 @@ export function OutreachList({ rows, site }: { rows: OutreachRow[]; site: string
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-ink">{r.first_name}</span>
+                      <EditableName id={r.id} name={r.first_name} />
                       <span className="text-sm text-ink-2">@{r.x_handle}</span>
                       {r.joined && <Badge tone="success">Signed up</Badge>}
                     </p>
@@ -60,7 +60,7 @@ export function OutreachList({ rows, site }: { rows: OutreachRow[]; site: string
                       {r.replied_at && <> · Replied {date(r.replied_at)}</>}
                     </p>
                   </div>
-                  <RemoveOutreach id={r.id} name={r.first_name} />
+                  <RemoveOutreach id={r.id} name={r.first_name ?? `@${r.x_handle}`} />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <CopyMessageButton message={outreachMessage(r.first_name, link)} />

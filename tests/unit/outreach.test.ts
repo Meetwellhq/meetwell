@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inviteLink, outreachMessage, xHandle } from "@/lib/outreach";
+import { inviteLink, outreachMessage, parseOutreachList, xHandle } from "@/lib/outreach";
 
 describe("outreach", () => {
   it("reads X handles from handles and profile links", () => {
@@ -18,5 +18,32 @@ describe("outreach", () => {
     expect(msg.startsWith("Hi Daniel,\n")).toBe(true);
     expect(msg).toContain(link);
     expect(msg).toContain("Meetwell");
+  });
+});
+
+describe("pasting a list", () => {
+  it("reads names, handles, links and notes in any order", () => {
+    const { entries, bad } = parseOutreachList(
+      [
+        "Daniel @danbuilds",
+        "https://x.com/Amaka_Designs Amaka",
+        "Tunde Bello, x.com/tunde_ml, ML engineer, at a bank",
+        "@kemi_codes",
+        "",
+        "@danbuilds again",
+        "just some words",
+      ].join("\n"),
+    );
+    expect(entries).toEqual([
+      { firstName: "Daniel", handle: "danbuilds", note: null },
+      { firstName: "Amaka", handle: "amaka_designs", note: null },
+      { firstName: "Tunde", handle: "tunde_ml", note: "ML engineer, at a bank" },
+      { firstName: null, handle: "kemi_codes", note: null },
+    ]);
+    expect(bad).toEqual(["just some words"]);
+  });
+
+  it("says hi there when there's no name", () => {
+    expect(outreachMessage(null, "https://meetwell.me").startsWith("Hi there,")).toBe(true);
   });
 });

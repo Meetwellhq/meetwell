@@ -6,7 +6,7 @@
 
 create table if not exists public.outreach_contacts (
   id bigint generated always as identity primary key,
-  first_name text not null check (char_length(btrim(first_name)) between 1 and 40),
+  first_name text check (first_name is null or char_length(btrim(first_name)) between 1 and 40),
   x_handle text not null unique check (x_handle ~ '^[a-z0-9_]{1,15}$'),
   note text check (note is null or char_length(note) <= 300),
   access_code text references public.access_codes (code) on delete set null,
@@ -75,7 +75,7 @@ begin
   values (v_code, 1, 'Outreach @' || v_handle, now() + interval '60 days');
 
   insert into public.outreach_contacts (first_name, x_handle, note, access_code)
-  values (btrim(p_first_name), v_handle, nullif(btrim(coalesce(p_note, '')), ''), v_code);
+  values (nullif(btrim(coalesce(p_first_name, '')), ''), v_handle, nullif(btrim(coalesce(p_note, '')), ''), v_code);
   return v_code;
 end;
 $$;
@@ -96,6 +96,24 @@ begin
          contacted_at = case when p_status = 'to_contact' then null else coalesce(contacted_at, now()) end,
          replied_at = case when p_status = 'replied' then coalesce(replied_at, now()) when p_status = 'to_contact' then null else replied_at end
    where id = p_id;
+  if not found then
+    raise exception 'Not found' using errcode = 'P0002';
+  end if;
+end;
+$$;
+
+-- Add or fix a first name (empty clears it; the message then says "Hi there").
+create or replace function public.admin_set_outreach_name(p_id bigint, p_first_name text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Not allowed' using errcode = '42501';
+  end if;
+  update public.outreach_contacts set first_name = nullif(btrim(coalesce(p_first_name, '')), '') where id = p_id;
   if not found then
     raise exception 'Not found' using errcode = 'P0002';
   end if;
@@ -124,7 +142,9 @@ revoke all on function public.admin_list_outreach() from public, anon;
 revoke all on function public.admin_add_outreach(text, text, text) from public, anon;
 revoke all on function public.admin_set_outreach_status(bigint, text) from public, anon;
 revoke all on function public.admin_delete_outreach(bigint) from public, anon;
+revoke all on function public.admin_set_outreach_name(bigint, text) from public, anon;
 grant execute on function public.admin_list_outreach() to authenticated;
 grant execute on function public.admin_add_outreach(text, text, text) to authenticated;
 grant execute on function public.admin_set_outreach_status(bigint, text) to authenticated;
 grant execute on function public.admin_delete_outreach(bigint) to authenticated;
+grant execute on function public.admin_set_outreach_name(bigint, text) to authenticated;

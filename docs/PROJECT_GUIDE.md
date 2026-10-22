@@ -157,7 +157,8 @@ every migration.
   back and ends access. Renewal reminder 3 days before the end (daily reminders job). Admin revenue counts
   only Meetwell's share. All in `20261108000000_mentor_subscriptions.sql`.
 - **Outreach tracker**: `/admin/outreach` (`20261113000000_outreach.sql`, `src/lib/outreach.ts`). Rasheed adds
-  people he finds on X (first name, handle, note); each gets a single-use access code (60 days), a "Copy message"
+  people he finds on X one at a time or by pasting a list (one per line: handle or link, optional name and note;
+  `parseOutreachList`); names are optional ("Hi there") and editable. Each person gets a single-use access code (60 days), a "Copy message"
   with their name and invite link, and a status (to contact, messaged, replied, not interested). "Signed up" comes
   from the code being used. Nothing is sent automatically: messages go out by hand on X. No scraping or bulk
   emailing to collected addresses (X rules, NDPA consent, Resend's rules).

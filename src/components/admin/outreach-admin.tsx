@@ -3,12 +3,111 @@
 import { Check, Copy, ExternalLink, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/field";
+import { Field, Input, Textarea } from "@/components/ui/field";
 import { useToast } from "@/components/ui/toast";
-import { adminAddOutreach, adminDeleteOutreach, adminSetOutreachStatus, type OutreachStatus } from "@/lib/admin/actions";
+import {
+  adminAddOutreach,
+  adminAddOutreachList,
+  adminDeleteOutreach,
+  adminSetOutreachName,
+  adminSetOutreachStatus,
+  type OutreachStatus,
+} from "@/lib/admin/actions";
 import { cn } from "@/lib/cn";
 
-export function AddOutreachForm() {
+/** Add one person, or paste a list of many. */
+export function AddOutreach() {
+  const [mode, setMode] = useState<"one" | "list">("one");
+  return (
+    <div className="rounded-xl border border-border bg-surface p-4">
+      <div className="mb-4 inline-flex rounded-full bg-surface-2 p-1" role="tablist" aria-label="Add people">
+        {(["one", "list"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={mode === m}
+            onClick={() => setMode(m)}
+            className={cn("rounded-full px-3 py-1 text-sm", mode === m ? "bg-surface font-medium text-ink shadow-sm" : "text-ink-2 hover:text-ink")}
+          >
+            {m === "one" ? "One person" : "Paste a list"}
+          </button>
+        ))}
+      </div>
+      {mode === "one" ? <AddOneForm /> : <PasteListForm />}
+    </div>
+  );
+}
+
+function PasteListForm() {
+  const [state, action, pending] = useActionState(adminAddOutreachList, {});
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (state.ok) form.current?.reset();
+  }, [state]);
+
+  return (
+    <form ref={form} action={action} className="flex flex-col gap-3">
+      <Field
+        label="One person per line"
+        hint="Each line needs an X handle or profile link. A name is optional: put it before or after. Add a note after a comma."
+      >
+        {({ id, describedBy }) => (
+          <Textarea
+            id={id}
+            aria-describedby={describedBy}
+            name="list"
+            rows={6}
+            required
+            className="font-mono text-sm"
+            placeholder={"Daniel @danbuilds\nhttps://x.com/amaka_designs Amaka\nTunde, x.com/tunde_ml, ML engineer at a bank\n@kemi_codes"}
+          />
+        )}
+      </Field>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="submit" loading={pending}>Add everyone</Button>
+        {(state.error || state.ok) && <p className={cn("text-sm", state.error ? "text-danger" : "text-success")}>{state.error ?? state.ok}</p>}
+      </div>
+    </form>
+  );
+}
+
+/** The first name, click to add or change it. */
+export function EditableName({ id, name }: { id: number; name: string | null }) {
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(name ?? "");
+  const [pending, start] = useTransition();
+  const save = () =>
+    start(async () => {
+      const res = await adminSetOutreachName(id, value);
+      if (res.error) toast(res.error, "error");
+      else setEditing(false);
+    });
+
+  if (!editing) {
+    return (
+      <button type="button" onClick={() => setEditing(true)} className="font-medium text-ink hover:underline" title="Edit name">
+        {name ?? <span className="font-normal text-accent">Add name</span>}
+      </button>
+    );
+  }
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        save();
+      }}
+      className="flex items-center gap-1.5"
+    >
+      <Input autoFocus aria-label="First name" value={value} maxLength={40} onChange={(e) => setValue(e.target.value)} className="h-8 w-32 text-sm" />
+      <Button type="submit" size="sm" loading={pending}>Save</Button>
+      <Button type="button" size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
+    </form>
+  );
+}
+
+function AddOneForm() {
   const [state, action, pending] = useActionState(adminAddOutreach, {});
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
@@ -16,9 +115,9 @@ export function AddOutreachForm() {
   }, [state]);
 
   return (
-    <form ref={form} action={action} className="grid gap-3 rounded-xl border border-border bg-surface p-4 sm:grid-cols-[1fr_1fr_1.4fr_auto] sm:items-end">
-      <Field label="First name">
-        {({ id }) => <Input id={id} name="firstName" maxLength={40} required placeholder="Daniel" />}
+    <form ref={form} action={action} className="grid gap-3 sm:grid-cols-[1fr_1fr_1.4fr_auto] sm:items-end">
+      <Field label="First name" optional>
+        {({ id }) => <Input id={id} name="firstName" maxLength={40} placeholder="Daniel" />}
       </Field>
       <Field label="X handle or profile link">
         {({ id }) => <Input id={id} name="handle" maxLength={120} required placeholder="@danbuilds" />}
