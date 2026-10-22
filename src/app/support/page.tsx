@@ -26,6 +26,14 @@ const mail = (
   </a>
 );
 
+// Reports about people and security go to the main inbox.
+const INFO_EMAIL = "info@meetwell.me";
+const infoMail = (
+  <a href={`mailto:${INFO_EMAIL}`} className="text-ink underline decoration-border-strong underline-offset-4 hover:decoration-ink">
+    {INFO_EMAIL}
+  </a>
+);
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mt-14">
@@ -117,13 +125,13 @@ export default async function SupportPage() {
         <Section title="Reporting someone">
           <p>
             In a conversation, use <span className="font-medium text-ink">Report</span> on any message, or block the
-            person. For anything urgent, or a card that pretends to be someone else, email {mail}.
+            person. For anything urgent, or a card that pretends to be someone else, email {infoMail}.
           </p>
         </Section>
 
         <Section title="Reporting a security issue">
           <p>
-            If you think you&apos;ve found a security problem, email {mail} with the details, and please give us a
+            If you think you&apos;ve found a security problem, email {infoMail} with the details, and please give us a
             chance to fix it before sharing it publicly. We&apos;ll confirm we got your report within 2 working days.
           </p>
         </Section>
