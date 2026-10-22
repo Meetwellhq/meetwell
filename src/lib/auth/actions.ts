@@ -146,6 +146,20 @@ export async function signIn(_: AuthFormState, formData: FormData): Promise<Auth
     if (error.code === "email_not_confirmed") {
       return { error: "Please confirm your email first — check your inbox for the link.", email };
     }
+    // Say which one is wrong, so people know whether to fix the email or the password.
+    const { data: exists } = await supabase.rpc("account_exists", { p_email: parsed.data.email });
+    if (exists === false) {
+      return {
+        fieldErrors: { email: "We couldn't find an account with that email. Check it for typos." },
+        email,
+      };
+    }
+    if (exists === true) {
+      return {
+        fieldErrors: { password: "That password isn't right. Try again, or reset it below." },
+        email,
+      };
+    }
     return { error: "That email and password don't match.", email };
   }
   redirect(safeNext(formData.get("next")));

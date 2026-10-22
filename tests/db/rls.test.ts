@@ -1347,3 +1347,12 @@ describe("contacts and sign-up through a card", () => {
     await expect(as(null, "select * from public.who_saved_me()")).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("log-in help", () => {
+  it("says whether an email has an account, ignoring case and spaces, never for admins", async () => {
+    expect(await as(null, "select public.account_exists(' Owner@Contacts.TEST ') as e")).toEqual([{ e: true }]);
+    expect(await as(null, "select public.account_exists('nobody@nowhere.test') as e")).toEqual([{ e: false }]);
+    // ALICE is an admin by now (see invites).
+    expect(await as(null, "select public.account_exists('a@test') as e")).toEqual([{ e: false }]);
+  });
+});
