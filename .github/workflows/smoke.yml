@@ -1,9 +1,16 @@
-# After Vercel finishes a production deploy, visit the live site like a member
-# would and check the main pages work (read-only: no sign-ups or payments).
+# Visit the live site like a member would and check the main pages work
+# (read-only: no sign-ups or payments). Runs after Checks finishes on main (by
+# then Vercel has usually deployed that push), once a day, and by hand.
+# Vercel doesn't report deploys to GitHub for this repo, so deployment_status never fires.
 name: Live site check
 
 on:
-  deployment_status:
+  workflow_run:
+    workflows: [Checks]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: "0 7 * * *"
   workflow_dispatch:
 
 permissions:
@@ -11,7 +18,7 @@ permissions:
 
 jobs:
   smoke:
-    if: github.event_name == 'workflow_dispatch' || (github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production')
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.event == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

@@ -51,7 +51,7 @@ writing Next.js code (see `AGENTS.md`).
 
 **Automatic checks (GitHub Actions).** `.github/workflows/checks.yml` runs types, lint, all tests and a build on
 every push and pull request. `.github/workflows/smoke.yml` runs the Playwright checks (`e2e/smoke.spec.ts`) against
-meetwell.me after each successful Vercel production deploy (or by hand: Actions → Live site check → Run). They never
+meetwell.me after Checks finishes on main, daily at 07:00 UTC, and by hand (Vercel does not report deploys to GitHub here). They never
 sign up, pay or save anything. A failure shows as a red cross on the commit and GitHub emails the repo owner.
 
 Database tests (`tests/db/rls.test.ts`) run every migration in `supabase/migrations` against an
