@@ -64,7 +64,7 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
   const others = FEATURES.filter((f) => f.slug !== feature.slug);
 
   return (
-    <div className="flex min-h-full flex-col bg-white">
+    <div className="flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
         <Panel>
@@ -90,7 +90,7 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
           <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">How it works</h2>
           <ol className="mt-10 grid gap-3 md:grid-cols-3">
             {feature.steps.map((s, i) => (
-              <li key={s.title} className="rounded-[1rem] border border-border bg-white p-6">
+              <li key={s.title} className="rounded-[1rem] border border-border bg-surface p-6">
                 <span className="grid size-9 place-items-center rounded-full bg-accent text-sm font-semibold text-white">{i + 1}</span>
                 <h3 className="mt-5 font-semibold text-ink">{s.title}</h3>
                 <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{s.body}</p>
@@ -120,7 +120,7 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
               <li key={f.slug}>
                 <Link
                   href={`/features/${f.slug}`}
-                  className="flex h-full flex-col rounded-[1rem] border border-border bg-white p-6 transition-colors hover:border-border-strong"
+                  className="flex h-full flex-col rounded-[1rem] border border-border bg-surface p-6 transition-colors hover:border-border-strong"
                 >
                   <span className="font-semibold text-ink">{f.name}</span>
                   <span className="mt-2 flex-1 text-[15px] leading-relaxed text-ink-2">{f.title}</span>

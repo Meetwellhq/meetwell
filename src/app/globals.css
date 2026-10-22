@@ -24,6 +24,86 @@
   --cream: #fbf8f2;
   --clay: #d9c7ab;
   --sage: #cfe0d4;
+  /* Badges, alerts and charts. */
+  --warning-soft: #fffaeb;
+  --warning: #93370d;
+  --danger-line: #fecdca;
+  --success-line: #abefc6;
+  --chart-1: #1f4d3f;
+  --chart-2: #4f9474;
+  --chart-3: #a3d1b8;
+  --meter-low: #c58a2b;
+}
+
+/*
+ * Dark mode: follows the device unless the visitor picked a theme
+ * (data-theme on <html>, set by ThemeToggle and the script in the root layout).
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121513;
+    --surface: #1a1e1b;
+    --surface-2: #232823;
+    --border: #2c322d;
+    --border-strong: #3d453e;
+    --ink: #eef1ec;
+    --ink-2: #b9c1ba;
+    --ink-3: #8c958d;
+    --accent: #3d8c6d;
+    --accent-hover: #4a9c7c;
+    --accent-ink: #ffffff;
+    --accent-soft: #1c3229;
+    --danger: #f97066;
+    --danger-soft: #3a1a17;
+    --success: #47cd89;
+    --success-soft: #12301f;
+    --focus: #6cc49d;
+    --sand: #161a17;
+    --cream: #1a1e1b;
+    --clay: #2c2820;
+    --sage: #1c2c23;
+    --warning-soft: #33270e;
+    --warning: #fdb022;
+    --danger-line: #5c2a24;
+    --success-line: #1f4a33;
+    --chart-1: #6cc49d;
+    --chart-2: #3d8c6d;
+    --chart-3: #24533f;
+    --meter-low: #e0a54a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121513;
+  --surface: #1a1e1b;
+  --surface-2: #232823;
+  --border: #2c322d;
+  --border-strong: #3d453e;
+  --ink: #eef1ec;
+  --ink-2: #b9c1ba;
+  --ink-3: #8c958d;
+  --accent: #3d8c6d;
+  --accent-hover: #4a9c7c;
+  --accent-ink: #ffffff;
+  --accent-soft: #1c3229;
+  --danger: #f97066;
+  --danger-soft: #3a1a17;
+  --success: #47cd89;
+  --success-soft: #12301f;
+  --focus: #6cc49d;
+  --sand: #161a17;
+  --cream: #1a1e1b;
+  --clay: #2c2820;
+  --sage: #1c2c23;
+  --warning-soft: #33270e;
+  --warning: #fdb022;
+  --danger-line: #5c2a24;
+  --success-line: #1f4a33;
+  --chart-1: #6cc49d;
+  --chart-2: #3d8c6d;
+  --chart-3: #24533f;
+  --meter-low: #e0a54a;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -47,6 +127,11 @@
   --color-cream: var(--cream);
   --color-clay: var(--clay);
   --color-sage: var(--sage);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger-line: var(--danger-line);
+  --color-success-line: var(--success-line);
+  --color-meter-low: var(--meter-low);
   --animate-marquee: marquee 40s linear infinite;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;

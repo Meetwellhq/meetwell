@@ -47,13 +47,13 @@ export function DemoVideoButton({ className }: { className?: string }) {
             controls
             playsInline
             preload="none"
-            className="aspect-[9/16] h-[min(85dvh,52rem)] w-auto max-w-[calc(100vw-2rem)] rounded-3xl bg-ink object-contain shadow-2xl"
+            className="aspect-[9/16] h-[min(85dvh,52rem)] w-auto max-w-[calc(100vw-2rem)] rounded-3xl bg-[#141413] object-contain shadow-2xl"
           />
           <button
             type="button"
             onClick={close}
             aria-label="Close video"
-            className="absolute -right-2 -top-2 grid size-10 place-items-center rounded-full bg-white text-ink shadow-lg hover:bg-surface-2 sm:-right-4 sm:-top-4"
+            className="absolute -right-2 -top-2 grid size-10 place-items-center rounded-full bg-surface text-ink shadow-lg hover:bg-surface-2 sm:-right-4 sm:-top-4"
           >
             <X className="size-5" aria-hidden />
           </button>

@@ -64,7 +64,7 @@ export function CardKeeper({
             {kept === 1 ? `Keep ${firstName}'s card` : `Keep your ${kept} saved cards`}
           </span>
         </span>
-        <span className="shrink-0 rounded-full bg-white px-3 py-1 text-[13px] font-semibold text-accent">Join free</span>
+        <span className="shrink-0 rounded-full bg-surface px-3 py-1 text-[13px] font-semibold text-accent">Join free</span>
       </Link>
     );
   }

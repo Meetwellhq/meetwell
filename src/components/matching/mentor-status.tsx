@@ -52,11 +52,11 @@ export function MentorStatus({
       </ul>
 
       <dl className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-lg bg-white p-3">
+        <div className="rounded-lg bg-surface p-3">
           <dt className="text-sm text-ink-2">Introduced to you this month</dt>
           <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{introduced.this_month}</dd>
         </div>
-        <div className="rounded-lg bg-white p-3">
+        <div className="rounded-lg bg-surface p-3">
           <dt className="text-sm text-ink-2">In total</dt>
           <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{introduced.total}</dd>
         </div>

@@ -62,9 +62,9 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const t = stats.byType;
   // Three tones of the brand green; the legend names each.
   const sources: Slice[] = [
-    { label: "QR scans", value: stats.viewsBySource.qr, color: "#1f4d3f" },
-    { label: "Shared link", value: stats.viewsBySource.link, color: "#4f9474" },
-    { label: "Opened directly", value: stats.viewsBySource.direct, color: "#a3d1b8" },
+    { label: "QR scans", value: stats.viewsBySource.qr, color: "var(--chart-1)" },
+    { label: "Shared link", value: stats.viewsBySource.link, color: "var(--chart-2)" },
+    { label: "Opened directly", value: stats.viewsBySource.direct, color: "var(--chart-3)" },
   ];
   const actions = [
     { label: "Saved contact", value: t.save_contact },

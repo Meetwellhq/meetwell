@@ -10,7 +10,7 @@ const tones: Record<BadgeTone, string> = {
   neutral: "bg-surface-2 text-ink-2",
   accent: "bg-accent-soft text-accent",
   success: "bg-success-soft text-success",
-  warning: "bg-[#fffaeb] text-[#93370d]",
+  warning: "bg-warning-soft text-warning",
   danger: "bg-danger-soft text-danger",
 };
 
@@ -55,8 +55,8 @@ export function Alert({
 }) {
   const styles = {
     neutral: "border-border bg-surface-2 text-ink-2",
-    danger: "border-[#fecdca] bg-danger-soft text-danger",
-    success: "border-[#abefc6] bg-success-soft text-success",
+    danger: "border-danger-line bg-danger-soft text-danger",
+    success: "border-success-line bg-success-soft text-success",
   }[tone];
   return (
     <div role={tone === "danger" ? "alert" : "status"} className={cn("rounded-xl border px-4 py-3 text-sm", styles, className)}>

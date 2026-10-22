@@ -31,7 +31,7 @@ export function Switch({ checked, onChange, label, showState = true, disabled }:
       >
         <span
           className={cn(
-            "inline-block size-5 rounded-full bg-white shadow-sm transition-transform",
+            "inline-block size-5 rounded-full bg-surface shadow-sm transition-transform",
             checked ? "translate-x-[18px]" : "translate-x-0.5",
           )}
         />

@@ -35,7 +35,7 @@ function PhoneFrame({ children, className, rotate }: { children: ReactNode; clas
   return (
     <div className={className} style={{ transform: `rotate(${rotate}deg)` }}>
       <div className="rounded-[2rem] bg-[#141413] p-[7px] shadow-[0_24px_48px_-16px_rgb(0_0_0/0.45)]">
-        <div className="relative aspect-[9/19] overflow-hidden rounded-[1.6rem] bg-white">
+        <div className="relative aspect-[9/19] overflow-hidden rounded-[1.6rem] bg-surface">
           <div className="absolute left-1/2 top-2 z-10 h-4 w-16 -translate-x-1/2 rounded-full bg-[#141413]" />
           {children}
         </div>
@@ -65,7 +65,7 @@ export function ScannerScreen({ qrSvg }: { qrSvg: string }) {
   return (
     <div className="relative flex h-full flex-col bg-gradient-to-b from-[#3a3a37] via-[#2a2a28] to-[#1e1e1d] px-3 pb-3 pt-8">
       {/* QR link banner, like the camera app shows */}
-      <div className="flex items-center gap-2 rounded-xl bg-white/95 px-2.5 py-2 shadow-lg">
+      <div className="flex items-center gap-2 rounded-xl bg-surface/95 px-2.5 py-2 shadow-lg">
         <LogoMark className="size-5 shrink-0" />
         <div className="min-w-0 text-left">
           <p className="text-[9px] font-semibold leading-tight text-ink">meetwell.me</p>
@@ -79,11 +79,11 @@ export function ScannerScreen({ qrSvg }: { qrSvg: string }) {
         <span className="absolute -right-2 -top-2 size-5 rounded-tr-lg border-r-[3px] border-t-[3px] border-[#ffd60a]" />
         <span className="absolute -bottom-2 -left-2 size-5 rounded-bl-lg border-b-[3px] border-l-[3px] border-[#ffd60a]" />
         <span className="absolute -bottom-2 -right-2 size-5 rounded-br-lg border-b-[3px] border-r-[3px] border-[#ffd60a]" />
-        <div className="rounded-md bg-white p-1.5 opacity-90 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: qrSvg }} />
+        <div className="rounded-md bg-surface p-1.5 opacity-90 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: qrSvg }} />
       </div>
 
       {/* save sheet */}
-      <div className="mt-auto rounded-2xl bg-white p-2.5 text-left shadow-xl">
+      <div className="mt-auto rounded-2xl bg-surface p-2.5 text-left shadow-xl">
         <div className="flex items-center gap-2">
           <div className="grid size-7 shrink-0 place-items-center rounded-full bg-accent-soft text-[10px] font-semibold text-accent">AO</div>
           <div className="min-w-0">

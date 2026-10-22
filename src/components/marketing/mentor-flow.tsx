@@ -37,7 +37,7 @@ export function MentorFlow() {
           <ChatStep />
         </Frame>
       </div>
-      <div className="flex items-center gap-2 rounded-full bg-white/70 p-1" role="tablist" aria-label="Steps">
+      <div className="flex items-center gap-2 rounded-full bg-surface/70 p-1" role="tablist" aria-label="Steps">
         {STEPS.map((label, i) => (
           <button
             key={label}

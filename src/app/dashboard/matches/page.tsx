@@ -147,7 +147,7 @@ export default async function MatchesPage({ searchParams }: PageProps<"/dashboar
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2" aria-hidden>
                 <div
-                  className={completeness.ready ? "h-full rounded-full bg-accent" : "h-full rounded-full bg-[#c58a2b]"}
+                  className={completeness.ready ? "h-full rounded-full bg-accent" : "h-full rounded-full bg-meter-low"}
                   style={{ width: `${completeness.percent}%` }}
                 />
               </div>

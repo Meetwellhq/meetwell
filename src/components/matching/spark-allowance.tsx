@@ -16,7 +16,7 @@ export function SparkAllowance({ used, credits = 0 }: { used: number; credits?: 
       </div>
       <div className="mt-3 flex gap-1.5" aria-hidden>
         {Array.from({ length: SPARK_FREE_PER_MONTH }, (_, i) => (
-          <span key={i} className={i < usedThisMonth ? "h-2 flex-1 rounded-full bg-accent" : "h-2 flex-1 rounded-full bg-white"} />
+          <span key={i} className={i < usedThisMonth ? "h-2 flex-1 rounded-full bg-accent" : "h-2 flex-1 rounded-full bg-surface"} />
         ))}
       </div>
       {left === 0 && (

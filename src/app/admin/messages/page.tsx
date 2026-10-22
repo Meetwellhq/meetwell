@@ -97,7 +97,7 @@ export default async function AdminMessagesPage() {
                   {(r.context ?? []).map((m, i) => (
                     <p
                       key={i}
-                      className={`whitespace-pre-wrap break-words text-sm ${m.reported ? "rounded-md bg-white p-2 font-medium text-ink ring-1 ring-danger/40" : "text-ink-2"}`}
+                      className={`whitespace-pre-wrap break-words text-sm ${m.reported ? "rounded-md bg-surface p-2 font-medium text-ink ring-1 ring-danger/40" : "text-ink-2"}`}
                     >
                       <span className="text-xs text-ink-3">{m.by_reported ? r.reported_email : r.reporter_email}: </span>
                       {m.body}

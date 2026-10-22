@@ -30,7 +30,7 @@ export function CompanyAvatar({
           title={company?.name ?? organization}
           className={cn(
             // The after: layer is a 1px white inner stroke drawn on top of the logo.
-            "absolute -bottom-0.5 -right-0.5 grid place-items-center overflow-hidden rounded-full border-2 border-surface bg-white shadow-sm after:pointer-events-none after:absolute after:inset-0 after:rounded-full after:ring-1 after:ring-inset after:ring-white after:content-['']",
+            "absolute -bottom-0.5 -right-0.5 grid place-items-center overflow-hidden rounded-full border-2 border-surface bg-surface shadow-sm after:pointer-events-none after:absolute after:inset-0 after:rounded-full after:ring-1 after:ring-inset after:ring-white after:content-['']",
             badgeClassName,
           )}
         >

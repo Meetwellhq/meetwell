@@ -28,7 +28,7 @@ function UnreadBadge({ n, active }: { n: number; active: boolean }) {
     <span
       className={cn(
         "ml-auto rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
-        active ? "bg-white/20 text-white" : "bg-accent text-white",
+        active ? "bg-surface/20 text-white" : "bg-accent text-white",
       )}
     >
       {n > 99 ? "99+" : n}

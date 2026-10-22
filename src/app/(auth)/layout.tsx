@@ -11,7 +11,7 @@ const COLUMN = "mx-auto w-full max-w-[36rem] border-x border-border";
  */
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="flex flex-1 flex-col bg-white">
+    <div className="flex flex-1 flex-col bg-surface">
       <div className="h-11 shrink-0 border-b border-border">
         <div className={`${COLUMN} h-full`} />
       </div>

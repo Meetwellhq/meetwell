@@ -80,7 +80,7 @@ export default async function ChangelogPage() {
   const months = byMonth(releases);
 
   return (
-    <div className="flex min-h-full flex-col bg-white">
+    <div className="flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-14 sm:px-8 sm:py-20">
         <h1 className="font-display text-4xl leading-none tracking-tight text-ink sm:text-5xl">Changelog</h1>

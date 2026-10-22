@@ -38,7 +38,7 @@ export default async function AboutPage() {
   const socials = SOCIAL_LINKS.filter((s) => s.url);
 
   return (
-    <div className="flex min-h-full flex-col bg-white">
+    <div className="flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
         {/* Intro */}
@@ -79,7 +79,7 @@ export default async function AboutPage() {
           <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">What {APP_NAME} does</h2>
           <ul className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {whatWeDo.map((w) => (
-              <li key={w.title} className="rounded-[1rem] border border-border bg-white p-6">
+              <li key={w.title} className="rounded-[1rem] border border-border bg-surface p-6">
                 <span className="grid size-10 place-items-center rounded-full bg-accent-soft text-accent">
                   <w.icon className="size-5" aria-hidden />
                 </span>

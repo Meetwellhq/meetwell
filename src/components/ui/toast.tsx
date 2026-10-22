@@ -30,7 +30,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             role={t.tone === "error" ? "alert" : "status"}
-            className="pointer-events-auto flex max-w-md animate-toast-in items-center gap-2.5 rounded-full bg-ink px-4 py-2.5 text-sm text-white shadow-lg"
+            className="pointer-events-auto flex max-w-md animate-toast-in items-center gap-2.5 rounded-full bg-[#1b1f1c] px-4 py-2.5 text-sm text-white shadow-lg ring-1 ring-white/10"
           >
             {t.tone === "success" && <CheckCircle2 className="size-4 shrink-0 text-[#75e0a7]" aria-hidden />}
             {t.tone === "error" && <XCircle className="size-4 shrink-0 text-[#fda29b]" aria-hidden />}

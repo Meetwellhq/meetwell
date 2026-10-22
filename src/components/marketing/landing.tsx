@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 /** A rounded cream "sheet" sitting on the sand page background. */
 export function Panel({ id, className, children }: { id?: string; className?: string; children: ReactNode }) {
   return (
-    <section id={id} className={cn("scroll-mt-20 rounded-[1.5rem] bg-white px-5 py-14 sm:px-10 sm:py-20 lg:px-16", className)}>
+    <section id={id} className={cn("scroll-mt-20 rounded-[1.5rem] bg-surface px-5 py-14 sm:px-10 sm:py-20 lg:px-16", className)}>
       {children}
     </section>
   );
@@ -76,9 +76,9 @@ export function HighlightsStrip({ items }: { items: { icon: LucideIcon; label: s
 export function ScanVisual({ qrSvg }: { qrSvg: string }) {
   return (
     <div className="relative w-56 sm:w-64">
-      <div className="rounded-[2.25rem] border-[6px] border-ink bg-ink p-1.5 shadow-2xl">
+      <div className="rounded-[2.25rem] border-[6px] border-[#141413] bg-[#141413] p-1.5 shadow-2xl">
         <div className="rounded-[1.75rem] bg-[#1b1b1a] px-5 pb-8 pt-10">
-          <div className="relative rounded-2xl bg-white p-3">
+          <div className="relative rounded-2xl bg-surface p-3">
             {/* viewfinder corners */}
             <span className="absolute -left-2 -top-2 size-6 rounded-tl-xl border-l-4 border-t-4 border-[#75e0a7]" />
             <span className="absolute -right-2 -top-2 size-6 rounded-tr-xl border-r-4 border-t-4 border-[#75e0a7]" />
@@ -86,7 +86,7 @@ export function ScanVisual({ qrSvg }: { qrSvg: string }) {
             <span className="absolute -bottom-2 -right-2 size-6 rounded-br-xl border-b-4 border-r-4 border-[#75e0a7]" />
             <div className="[&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: qrSvg }} />
           </div>
-          <p className="mt-6 flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-3 py-2 text-[11px] font-medium text-white">
+          <p className="mt-6 flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-surface/10 px-3 py-2 text-[11px] font-medium text-white">
             <ScanLine className="size-4" aria-hidden />
             Open card on meetwell.me
           </p>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PaymentHistory, type PaymentHistoryRow } from "@/components/dashboard/payment-history";
 import { DangerZone, PublishButton } from "@/components/dashboard/publish-controls";
 import { Card } from "@/components/ui/misc";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { getOwnProfile } from "@/lib/profiles/queries";
 import { MessageEmailsSwitch } from "@/components/messaging/message-emails-switch";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
@@ -44,6 +45,14 @@ export default async function SettingsPage() {
         <MessageEmailsSwitch initial={emails.data !== false} />
       </Card>
 
+      <Card className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
+        <div>
+          <h2 className="font-semibold">Appearance</h2>
+          <p className="mt-1 text-sm text-ink-2">Choose light or dark, or match your phone or computer.</p>
+        </div>
+        <ThemeToggle />
+      </Card>
+
       <Card id="payments" className="scroll-mt-28 p-5 sm:p-6">
         <h2 className="font-semibold">Payment history</h2>
         <p className="mt-1 text-sm text-ink-2">
@@ -65,7 +74,7 @@ export default async function SettingsPage() {
         </Card>
       )}
 
-      <Card className="border-[#fecdca] p-5 sm:p-6">
+      <Card className="border-danger-line p-5 sm:p-6">
         <h2 className="mb-4 font-semibold text-danger">Danger zone</h2>
         <DangerZone />
       </Card>
