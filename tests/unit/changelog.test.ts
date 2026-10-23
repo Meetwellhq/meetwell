@@ -35,6 +35,12 @@ describe("parseChangelog", () => {
     ]);
   });
 
+  it("reads a picture on its own line, only from this site", () => {
+    const [r] = parseChangelog("## 1 May 2026: Pics\n\n![A phone](/changelog/a.webp)\n\n![Elsewhere](https://x.com/a.png)\n");
+    expect(r.blocks[0]).toEqual({ type: "image", src: "/changelog/a.webp", alt: "A phone" });
+    expect(r.blocks[1].type).toBe("paragraph");
+  });
+
   it("reads the real CHANGELOG.md, every release dated, newest first", () => {
     const releases = parseChangelog(readFileSync("CHANGELOG.md", "utf8"));
     expect(releases.length).toBeGreaterThan(3);

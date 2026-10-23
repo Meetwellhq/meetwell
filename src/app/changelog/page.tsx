@@ -47,6 +47,15 @@ function Blocks({ blocks }: { blocks: Block[] }) {
       <p key={i} className="text-[17px] leading-relaxed text-ink-2">
         <Text parts={block.content} />
       </p>
+    ) : block.type === "image" ? (
+      // eslint-disable-next-line @next/next/no-img-element -- plain images from /public, sized by CSS
+      <img
+        key={i}
+        src={block.src}
+        alt={block.alt}
+        loading="lazy"
+        className="w-full rounded-2xl border border-border bg-surface-2"
+      />
     ) : (
       <ul key={i} className="flex flex-col gap-4 border-l border-border pl-6">
         {block.items.map((item, j) => (

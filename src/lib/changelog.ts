@@ -3,7 +3,7 @@
  * /changelog page always shows the same file the repo keeps. Pure, so it can
  * be unit-tested: "## " starts a release, "- " a bullet (indented lines
  * continue it), a line that is only **bold** is a subheading, anything else is
- * a paragraph. Inline: **bold** and [text](url). Everything before the first
+ * a paragraph, and a line that is only ![alt](/path) is a picture. Inline: **bold** and [text](url). Everything before the first
  * release, and "---" lines, are skipped.
  */
 
@@ -11,7 +11,8 @@ export type Inline = { text: string; bold?: boolean; href?: string };
 export type Block =
   | { type: "subheading"; text: string }
   | { type: "paragraph"; content: Inline[] }
-  | { type: "list"; items: Inline[][] };
+  | { type: "list"; items: Inline[][] }
+  | { type: "image"; src: string; alt: string };
 export type Release = { date: string | null; title: string; blocks: Block[] };
 
 export function parseInline(text: string): Inline[] {
@@ -26,6 +27,8 @@ export function parseInline(text: string): Inline[] {
   if (last < text.length) out.push({ text: text.slice(last) });
   return out;
 }
+
+const IMAGE = /^!\[([^\]]*)\]\((\/[^)\s]+)\)$/;
 
 export function parseChangelog(markdown: string): Release[] {
   const releases: Release[] = [];
@@ -57,6 +60,11 @@ export function parseChangelog(markdown: string): Release[] {
       continue;
     } else if (line.trim() === "" || line.trim() === "---") {
       flush();
+    } else if (IMAGE.test(line.trim())) {
+      // A picture on its own line. Only images on this site (paths starting with "/").
+      flush();
+      const [, alt, src] = line.trim().match(IMAGE)!;
+      current.blocks.push({ type: "image", src, alt });
     } else if (line.startsWith("- ")) {
       if (paragraph.length) flush();
       (list ??= []).push(line.slice(2).trim());
