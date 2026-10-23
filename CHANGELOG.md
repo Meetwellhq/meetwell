@@ -4,6 +4,12 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
+## 23 October 2026: A new look on your phone
+
+- A menu at the bottom of the screen, like the apps you already use: Overview, Contacts, Spark, Messages and Profile.
+- Mentors get Mentoring in the menu, one tap from their price, subscribers and earnings.
+- Your card, QR code and settings now live together under Profile.
+
 ## 23 October 2026: Meetwell on your home screen
 
 - Add Meetwell to your phone's home screen and open it like an app.
