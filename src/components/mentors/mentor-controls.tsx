@@ -156,8 +156,9 @@ export function PayoutAccountForm({ banks, hasAccount }: { banks: Bank[]; hasAcc
               }}
             >
               <option value="">Choose your bank…</option>
+              {/* Paystack lists a few banks under the same code, so the name makes each key unique. */}
               {banks.map((b) => (
-                <option key={b.code} value={b.code}>
+                <option key={`${b.code}-${b.name}`} value={b.code}>
                   {b.name}
                 </option>
               ))}

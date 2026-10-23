@@ -40,20 +40,31 @@ function UnreadBadge({ n, active }: { n: number; active: boolean }) {
 }
 
 /** Pages reached from the Profile tab on phones (the Profile hub lists them). */
-const PROFILE_PAGES = ["/dashboard/me", "/dashboard/profile", "/dashboard/qr", "/dashboard/settings", "/dashboard/mentor", "/dashboard/partner"];
+const PROFILE_PAGES = ["/dashboard/me", "/dashboard/profile", "/dashboard/qr", "/dashboard/settings", "/dashboard/partner"];
 
 /**
  * Phones: a bar fixed to the bottom with Overview, Contacts, Spark, Messages
- * and Profile. Everything else (Edit card, QR code, Settings, Mentoring,
- * Partner) is inside Profile. Hidden on Edit card, which has its own Save bar there.
+ * (and Mentoring for mentors) and Profile. Everything else (Edit card, QR code,
+ * Settings, Partner) is inside Profile. Hidden on Edit card, which has its own Save bar there.
  */
-function BottomNav({ pathname, unread, avatar }: { pathname: string; unread: number; avatar: { name: string; src: string | null } }) {
+function BottomNav({
+  pathname,
+  unread,
+  avatar,
+  mentor,
+}: {
+  pathname: string;
+  unread: number;
+  avatar: { name: string; src: string | null };
+  mentor: boolean;
+}) {
   if (pathname.startsWith("/dashboard/profile")) return null;
   const tabs = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/contacts", label: "Contacts", icon: BookUser },
     { href: "/dashboard/matches", label: "Spark", icon: Sparkles },
     { href: "/dashboard/messages", label: "Messages", icon: MessagesSquare, unread: true },
+    ...(mentor ? [{ href: "/dashboard/mentor", label: "Mentoring", icon: BadgeCheck }] : []),
   ];
   const profileActive = PROFILE_PAGES.some((p) => pathname.startsWith(p));
 
@@ -62,7 +73,7 @@ function BottomNav({ pathname, unread, avatar }: { pathname: string; unread: num
       aria-label="Dashboard"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-5">
+      <ul className={cn("mx-auto grid max-w-md", mentor ? "grid-cols-6" : "grid-cols-5")}>
         {tabs.map((tab) => {
           const active = isActive(pathname, tab.href);
           return (
@@ -152,7 +163,7 @@ export function DashboardNav({
 
   return (
     <>
-      <BottomNav pathname={pathname} unread={unread} avatar={avatar} />
+      <BottomNav pathname={pathname} unread={unread} avatar={avatar} mentor={mentor} />
 
       {/* Large screens: the sidebar. */}
       <aside className="hidden lg:block">

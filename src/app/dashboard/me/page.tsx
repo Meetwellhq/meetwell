@@ -1,5 +1,4 @@
 import {
-  BadgeCheck,
   ChevronRight,
   ExternalLink,
   Handshake,
@@ -16,7 +15,6 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/misc";
 import { signOut } from "@/lib/auth/actions";
 import { publicProfilePath } from "@/lib/config";
-import { isMentor } from "@/lib/matching/constants";
 import { getOwnProfile } from "@/lib/profiles/queries";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
@@ -56,16 +54,13 @@ function Group({ title, rows }: { title: string; rows: Row[] }) {
 
 /**
  * The Profile tab on phones: your card at the top, then Edit card, QR code,
- * Settings (and Mentoring or Partner when they apply), and Log out.
+ * Settings (and Partner for partner teams), and Log out. Mentoring has its own tab.
  */
 export default async function ProfileHubPage() {
   const [user, profile] = await Promise.all([getCurrentUser(), getOwnProfile()]);
   if (!profile) redirect("/onboarding");
   const supabase = await createClient();
-  const [{ data: years }, { data: partners }] = await Promise.all([
-    supabase.from("profiles").select("experience_years").eq("id", profile.id).maybeSingle(),
-    supabase.rpc("my_partners"),
-  ]);
+  const { data: partners } = await supabase.rpc("my_partners");
   const live = profile.status === "published";
   const subtitle = [profile.title, profile.organization].filter(Boolean).join(" · ");
 
@@ -75,7 +70,6 @@ export default async function ProfileHubPage() {
     ...(live ? [{ href: publicProfilePath(profile.slug), label: "View my card", icon: ExternalLink, external: true }] : []),
   ];
   const more: Row[] = [
-    ...(isMentor(years?.experience_years) ? [{ href: "/dashboard/mentor", label: "Mentoring", icon: BadgeCheck }] : []),
     ...((partners ?? []).length > 0 ? [{ href: "/dashboard/partner", label: "Partner", icon: Handshake }] : []),
     { href: "/dashboard/settings", label: "Settings", icon: Settings, note: "Account, emails, appearance, payments" },
   ];
