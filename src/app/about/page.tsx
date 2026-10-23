@@ -94,7 +94,7 @@ export default async function AboutPage() {
         <Panel>
           <div className="grid items-center gap-10 lg:grid-cols-[auto_1fr] lg:gap-16">
             <Image
-              src="/founder/rasheed.jpg"
+              src="/founder/rasheed-about.webp"
               alt="Rasheed Idris, founder of Meetwell"
               width={240}
               height={240}
