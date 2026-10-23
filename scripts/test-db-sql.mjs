@@ -15,6 +15,12 @@ const parts = [
   "-- Meetwell TEST database setup. Never run this on the live project.",
   `-- ${files.length} migrations, built ${new Date().toISOString().slice(0, 10)}.`,
   "begin;",
+  // Safety lock: it was once pasted into the live project, which swapped live's cron secret for the test one.
+  "do $guard$ begin",
+  "  if exists (select 1 from auth.users) then",
+  "    raise exception 'This database already has accounts. This file is only for an empty TEST project. Nothing was changed.';",
+  "  end if;",
+  "end $guard$;",
   ...files.map((f) => `\n-- ===== ${f} =====\n${readFileSync(join(dir, f), "utf8")}`),
   "\n-- ===== Test-only settings =====",
   `insert into public.internal_settings (key, value) values ('cron_secret', '${secret}')`,
