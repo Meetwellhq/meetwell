@@ -287,6 +287,9 @@ does not remove that. Revoke from `anon` explicitly for anything visitors must n
   Refund records: set `payments.status = 'refunded'` and add a negative `credit_ledger` row (reason `refund`)
   rather than deleting real payments.
 
+- **Next week (from 26 Oct 2026): build event pages** (partners step 3). One page per partner event with every
+  speaker's card, QR codes for badges and slides, and mentor payments that start from the event page credited to the
+  partner (10%, same rules), so speakers already on Meetwell count too. Promised to ThinkUX in the partnership pitch.
 - Talk to the first invited users; invite the next batch from /admin.
 - Lawyer review of Terms and Privacy.
 - Optional: delete meetwell.me from ImprovMX (no longer used).
