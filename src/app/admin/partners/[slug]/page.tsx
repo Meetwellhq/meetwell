@@ -2,8 +2,8 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { date, NotReady, PageTitle } from "@/components/admin/admin-ui";
-import { PartnerSummary, type PartnerRow } from "@/components/admin/partners-admin";
+import { date, naira, NotReady, PageTitle, Stats } from "@/components/admin/admin-ui";
+import { PartnerSummary, RecordPayout, type PartnerMoney, type PartnerRow } from "@/components/admin/partners-admin";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/misc";
 import { getSiteUrl } from "@/lib/config";
@@ -23,7 +23,9 @@ type Person = {
   organization: string | null;
 };
 
-/** One partner: its link, numbers and team, then everyone who joined through it. */
+type LedgerRow = { created_at: string; kind: "earning" | "refund" | "payout"; amount_kobo: number; mentor_name: string | null; note: string | null };
+
+/** One partner: its link, numbers and team, its earnings, then everyone who joined through it. */
 export default async function AdminPartnerPage({ params }: PageProps<"/admin/partners/[slug]">) {
   const { slug } = await params;
   const supabase = await createClient();
@@ -32,8 +34,14 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
   const partner = ((data ?? []) as PartnerRow[]).find((p) => p.slug === slug);
   if (!partner) notFound();
 
-  const { data: rows } = await supabase.rpc("admin_partner_people", { p_partner: partner.id });
+  const [{ data: rows }, { data: moneyRows }, { data: ledgerRows }] = await Promise.all([
+    supabase.rpc("admin_partner_people", { p_partner: partner.id }),
+    supabase.rpc("admin_partner_money", { p_partner: partner.id }),
+    supabase.rpc("admin_partner_ledger", { p_partner: partner.id }),
+  ]);
   const people = (rows ?? []) as Person[];
+  const money = ((moneyRows ?? []) as PartnerMoney[])[0] ?? { earned_kobo: 0, paid_kobo: 0, available_kobo: 0, pending_kobo: 0 };
+  const ledger = (ledgerRows ?? []) as LedgerRow[];
   const mentors = people.filter((p) => p.mentor);
   const others = people.filter((p) => !p.mentor);
 
@@ -47,6 +55,46 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
       </PageTitle>
 
       <PartnerSummary partner={partner} site={getSiteUrl()} />
+
+      <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
+        <div>
+          <h2 className="font-medium text-ink">Their earnings</h2>
+          <p className="text-sm text-ink-2">
+            10% of what their mentors are paid, for each mentor&apos;s first 12 months. It comes out of Meetwell&apos;s 20%.
+          </p>
+        </div>
+        <Stats
+          items={[
+            { label: "Earned", value: naira(money.earned_kobo), note: "After refunds" },
+            { label: "Paid to them", value: naira(money.paid_kobo) },
+            { label: "Ready to pay", value: naira(money.available_kobo) },
+            { label: "In the 7-day window", value: naira(money.pending_kobo), note: "Ready after 7 days" },
+          ]}
+        />
+        <RecordPayout partnerId={partner.id} availableKobo={money.available_kobo} />
+        {ledger.length > 0 && (
+          <ul className="divide-y divide-border border-t border-border">
+            {ledger.map((l, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <span className="min-w-0">
+                  <span className="text-ink">
+                    {l.kind === "earning"
+                      ? `10% of a payment to ${l.mentor_name ?? "a mentor"}`
+                      : l.kind === "refund"
+                        ? `Refund of a payment to ${l.mentor_name ?? "a mentor"}`
+                        : `Paid to ${partner.name}${l.note ? `: ${l.note}` : ""}`}
+                  </span>
+                  <span className="block text-xs text-ink-3">{date(l.created_at)}</span>
+                </span>
+                <span className={`shrink-0 tabular-nums ${l.amount_kobo < 0 ? "text-ink-2" : "font-medium text-ink"}`}>
+                  {l.amount_kobo < 0 ? "−" : "+"}
+                  {naira(Math.abs(l.amount_kobo))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <PeopleSection title="Mentors they invited" people={mentors} empty="None of their people are mentors yet." />
       <PeopleSection title="Everyone else who joined" people={others} empty="Nobody else yet." />

@@ -181,8 +181,11 @@ every migration.
   records the account in `partner_signups` for good (checked in `enforce_access_code`). Rasheed gives the partner's
   team access by email (`admin_add_partner_member`; they need an account); they get a "Partner" tab
   (`/dashboard/partner`, `my_partners`, `partner_people`) showing who joined: public card details only once
-  published, plus a Mentor badge. Step 2 (not built): the partner's 10% of mentor payments, taken from Meetwell's
-  20% (mentors keep 80%); how long it lasts is still to decide.
+  published, plus a Mentor badge. Step 2 (`20261121000000_partner_earnings.sql`): a trigger on `payments` gives the
+  partner 10% of each subscription payment to a mentor who joined through it, for 12 months from that mentor's sign-up,
+  taken from Meetwell's 20% (mentors keep 80%); a refund takes it back (`partner_ledger`). Ready to pay after 7 days.
+  Rasheed pays partners by bank transfer and records it on the partner's admin page (`admin_record_partner_payout`).
+  Admin revenue (`admin_metrics`) leaves the partner's share out. Partners see totals only (`my_partner_money`).
 - **Outreach tracker**: `/admin/outreach` (`20261113000000_outreach.sql`, `src/lib/outreach.ts`). Rasheed adds
   people he finds on X one at a time or by pasting a list (one per line: handle or link, optional name and note;
   `parseOutreachList`); names are optional ("Hi there") and editable. Each person gets a single-use access code (60 days), a "Copy message"

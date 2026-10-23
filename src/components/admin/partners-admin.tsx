@@ -7,7 +7,12 @@ import { Badge } from "@/components/ui/misc";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { useToast } from "@/components/ui/toast";
-import { adminAddPartnerMember, adminCreatePartner, adminSetPartnerActive } from "@/lib/admin/actions";
+import {
+  adminAddPartnerMember,
+  adminCreatePartner,
+  adminRecordPartnerPayout,
+  adminSetPartnerActive,
+} from "@/lib/admin/actions";
 import { cn } from "@/lib/cn";
 
 export type PartnerRow = {
@@ -189,5 +194,41 @@ export function PartnerSummary({ partner, site }: { partner: PartnerRow; site: s
         <AddTeamMember partnerId={partner.id} />
       </div>
     </div>
+  );
+}
+
+export type PartnerMoney = { earned_kobo: number; paid_kobo: number; available_kobo: number; pending_kobo: number };
+
+/** Record a payout after paying the partner by bank transfer. */
+export function RecordPayout({ partnerId, availableKobo }: { partnerId: string; availableKobo: number }) {
+  const [state, action, pending] = useActionState(adminRecordPartnerPayout.bind(null, partnerId), {});
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (state.ok) form.current?.reset();
+  }, [state]);
+  if (availableKobo <= 0 && !state.ok) {
+    return <p className="text-sm text-ink-2">Nothing is ready to pay yet.</p>;
+  }
+  return (
+    <form ref={form} action={action} className="flex flex-col gap-2">
+      <p className="text-sm text-ink-2">
+        Paid them by bank transfer? Record it here so their page stays right.
+      </p>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          name="amount"
+          inputMode="decimal"
+          required
+          placeholder={`Amount in naira, up to ${(availableKobo / 100).toLocaleString("en-NG")}`}
+          aria-label="Amount paid in naira"
+          className="h-9 text-sm sm:max-w-[16rem]"
+        />
+        <Input name="note" maxLength={200} placeholder="Note, e.g. October transfer" aria-label="Note" className="h-9 text-sm" />
+        <Button type="submit" size="sm" variant="secondary" loading={pending}>Record payout</Button>
+      </div>
+      {(state.error || state.ok) && (
+        <p className={cn("text-xs", state.error ? "text-danger" : "text-success")}>{state.error ?? state.ok}</p>
+      )}
+    </form>
   );
 }

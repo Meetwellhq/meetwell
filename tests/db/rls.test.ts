@@ -1497,4 +1497,58 @@ describe("partners", () => {
       { email: "speaker@partner.test", mentor: true, published: true },
     ]);
   });
+
+  it("gives the partner 10% of its mentors' payments for 12 months, and takes it back on a refund", async () => {
+    const pay = async (ref: string, amount: number) => {
+      await db.query(
+        `insert into public.payments (reference, user_id, amount_kobo, currency, status, kind, mentor_id, days, mentor_share_kobo)
+         values ($1, $2, $3, 'NGN', 'pending', 'subscription', $4, 30, $5)`,
+        [ref, DRAFTER, amount, SPEAKER, Math.round(amount * 0.8)],
+      );
+      await db.query("update public.payments set status = 'success', paid_at = now() where reference = $1", [ref]);
+    };
+    const money = async () =>
+      (await as<{ earned_kobo: number; paid_kobo: number; available_kobo: number; pending_kobo: number }>(
+        ALICE,
+        "select * from public.admin_partner_money($1)",
+        [partner],
+      ))[0];
+
+    await pay("mw_partner_1", 500000);
+    await db.query("update public.payments set status = 'success' where reference = 'mw_partner_1'"); // no change: no second share
+    expect(await money()).toEqual({ earned_kobo: 50000, paid_kobo: 0, available_kobo: 0, pending_kobo: 50000 });
+
+    // Meetwell keeps 10% of this payment: 20% minus the partner's 10%.
+    const [{ m }] = await as<{ m: { revenue_total_kobo: number } }>(ALICE, "select public.admin_metrics() as m");
+    const before = Number(m.revenue_total_kobo);
+    await pay("mw_partner_2", 200000);
+    const [{ m: after }] = await as<{ m: { revenue_total_kobo: number } }>(ALICE, "select public.admin_metrics() as m");
+    expect(Number(after.revenue_total_kobo) - before).toBe(20000);
+
+    // A refund takes the partner's share back.
+    await as(ALICE, "select public.admin_mark_refunded('mw_partner_2')");
+    expect((await money()).earned_kobo).toBe(50000);
+
+    // Ready to pay after 7 days; payouts can't go over that.
+    await db.query("update public.partner_ledger set available_at = now() - interval '1 day' where kind = 'earning'");
+    expect(await money()).toEqual({ earned_kobo: 50000, paid_kobo: 0, available_kobo: 50000, pending_kobo: 0 });
+    await expect(as(ALICE, "select public.admin_record_partner_payout($1, 60000, 'too much')", [partner])).rejects.toThrow(/More than is ready/);
+    await expect(as(BOB, "select public.admin_record_partner_payout($1, 100, 'x')", [partner])).rejects.toThrow(/Not allowed/);
+    await as(ALICE, "select public.admin_record_partner_payout($1, 50000, 'Bank transfer, October')", [partner]);
+    expect(await money()).toEqual({ earned_kobo: 50000, paid_kobo: 50000, available_kobo: 0, pending_kobo: 0 });
+
+    // After the mentor's first 12 months, the partner earns nothing more.
+    await db.query("update public.partner_signups set created_at = now() - interval '13 months' where user_id = $1", [SPEAKER]);
+    await pay("mw_partner_3", 500000);
+    expect((await money()).earned_kobo).toBe(50000);
+
+    // The partner's team sees totals only; outsiders see nothing.
+    const [mine] = await as<{ earned_kobo: number }>(TEAM, "select earned_kobo from public.my_partner_money($1)", [partner]);
+    expect(mine.earned_kobo).toBe(50000);
+    await expect(as(BOB, "select * from public.my_partner_money($1)", [partner])).rejects.toThrow(/Not allowed/);
+    await expect(as(TEAM, "select * from public.admin_partner_ledger($1)", [partner])).rejects.toThrow(/Not allowed/);
+    await expect(as(TEAM, "select * from public.partner_ledger")).rejects.toThrow(/permission denied/);
+    const ledger = await as<{ kind: string; amount_kobo: number }>(ALICE, "select kind, amount_kobo from public.admin_partner_ledger($1)", [partner]);
+    expect(ledger.map((l) => l.kind).sort()).toEqual(["earning", "earning", "payout", "refund"]);
+  });
 });

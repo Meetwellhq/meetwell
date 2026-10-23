@@ -315,3 +315,23 @@ export async function adminSetPartnerActive(partnerId: string, active: boolean):
   revalidatePath("/admin", "layout");
   return {};
 }
+
+/** After paying a partner by bank transfer, record it (in naira). Up to what's ready to pay. */
+export async function adminRecordPartnerPayout(partnerId: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const naira = Number(String(formData.get("amount") ?? "").replace(/[^0-9.]/g, ""));
+  const note = String(formData.get("note") ?? "").trim().slice(0, 200);
+  if (!Number.isFinite(naira) || naira <= 0) return { error: "Enter the amount you paid, in naira." };
+
+  const { error } = await (await createClient()).rpc("admin_record_partner_payout", {
+    p_partner: partnerId,
+    p_amount_kobo: Math.round(naira * 100),
+    p_note: note,
+  });
+  if (error) {
+    if (error.message.includes("More than is ready")) return { error: "That's more than is ready to pay." };
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't record the payout." };
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: "Payout recorded." };
+}

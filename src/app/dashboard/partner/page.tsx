@@ -21,6 +21,11 @@ type Person = {
   organization: string | null;
 };
 
+type Money = { earned_kobo: number; paid_kobo: number; available_kobo: number; pending_kobo: number };
+const NO_MONEY: Money = { earned_kobo: 0, paid_kobo: 0, available_kobo: 0, pending_kobo: 0 };
+const naira = (kobo: number) =>
+  new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(kobo / 100);
+
 const joined = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 /**
@@ -33,9 +38,17 @@ export default async function PartnerPage() {
   const partners = (data ?? []) as Partner[];
   if (partners.length === 0) notFound();
 
-  const people = await Promise.all(
-    partners.map(async (p) => ((await supabase.rpc("partner_people", { p_partner: p.id })).data ?? []) as Person[]),
-  );
+  const [people, money] = await Promise.all([
+    Promise.all(
+      partners.map(async (p) => ((await supabase.rpc("partner_people", { p_partner: p.id })).data ?? []) as Person[]),
+    ),
+    Promise.all(
+      partners.map(
+        async (p) =>
+          (((await supabase.rpc("my_partner_money", { p_partner: p.id })).data ?? []) as Money[])[0] ?? NO_MONEY,
+      ),
+    ),
+  ]);
 
   return (
     <div className="flex flex-col gap-10">
@@ -76,6 +89,31 @@ export default async function PartnerPage() {
                 </div>
               ))}
             </dl>
+
+            <Card className="flex flex-col gap-4 p-5 sm:p-6">
+              <div>
+                <h2 className="font-semibold">Your earnings</h2>
+                <p className="mt-1 text-sm text-ink-2">
+                  You earn 10% of what your speakers are paid as mentors on Meetwell, for each speaker&apos;s first 12
+                  months. Meetwell pays you by bank transfer.
+                </p>
+              </div>
+              <dl className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Earned", value: naira(money[i].earned_kobo) },
+                  { label: "Paid to you", value: naira(money[i].paid_kobo) },
+                  {
+                    label: "Still to be paid",
+                    value: naira(money[i].earned_kobo - money[i].paid_kobo),
+                  },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-xl bg-surface-2 p-4">
+                    <dt className="text-sm text-ink-2">{s.label}</dt>
+                    <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Card>
 
             <Card className="p-0">
               <h2 className="border-b border-border px-5 py-4 font-semibold sm:px-6">People who joined</h2>
