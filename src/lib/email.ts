@@ -10,6 +10,7 @@ import {
   matchEmail,
   messageFromLine,
   mentorApprovedEmail,
+  mentoringEmail,
   newMessageEmail,
   type MatchedMember,
   noScansEmail,
@@ -98,6 +99,11 @@ export function sendIncompleteProfileEmail(
 /** One-off announcement: Spark is a new beta feature, come and try it. */
 export function sendSparkBetaEmail(to: string, fullName: string | null) {
   return send(to, sparkBetaEmail(common(fullName)));
+}
+
+/** One-off announcement: mentoring is open; add your years, and earn as a mentor with 4+. */
+export function sendMentoringEmail(to: string, fullName: string | null) {
+  return send(to, mentoringEmail(common(fullName)));
 }
 
 /** LinkedIn-style alert for the first message someone sends in a conversation (the database decides). */

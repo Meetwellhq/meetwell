@@ -1,7 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { sendInviteEmail, sendMentorApprovedEmail, sendSparkBetaEmail, sendWithdrawalSentEmail } from "../email";
+import {
+  sendInviteEmail,
+  sendMentorApprovedEmail,
+  sendMentoringEmail,
+  sendSparkBetaEmail,
+  sendWithdrawalSentEmail,
+} from "../email";
 import { refundPayment, sendTransfer } from "../payments/paystack";
 import { createClient, getCurrentUser } from "../supabase/server";
 import { parseOutreachList, xHandle } from "../outreach";
@@ -35,16 +41,26 @@ export type AnnounceState = { sent?: number; failed?: number; remaining?: number
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Each one-off announcement: its key in announcements_sent and how it is sent.
+const ANNOUNCEMENTS = {
+  spark_beta: sendSparkBetaEmail,
+  mentoring: sendMentoringEmail,
+} satisfies Record<string, (to: string, fullName: string | null) => Promise<boolean>>;
+
+export type AnnouncementKind = keyof typeof ANNOUNCEMENTS;
+
 /**
- * Email the Spark beta announcement to members who haven't had it yet, in
- * paced batches (Resend rate limit, ~60s function limit). Each person is
- * recorded only after their email went out, so a failed send is retried on
- * the next click. The database refuses anyone who isn't an admin.
+ * Email an announcement to members who haven't had it yet, in paced batches
+ * (Resend rate limit, ~60s function limit). Each person is recorded only after
+ * their email went out, so a failed send is retried on the next click. The
+ * database refuses anyone who isn't an admin.
  */
-export async function sendSparkAnnouncement(): Promise<AnnounceState> {
+export async function sendAnnouncement(kind: AnnouncementKind): Promise<AnnounceState> {
+  const sendOne = ANNOUNCEMENTS[kind];
+  if (!sendOne) return { error: "Unknown announcement." };
   if (!(await getCurrentUser())) return { error: "Please log in again." };
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("admin_announcement_recipients", { p_kind: "spark_beta", p_limit: 40 });
+  const { data, error } = await supabase.rpc("admin_announcement_recipients", { p_kind: kind, p_limit: 40 });
   if (error) {
     console.error("admin_announcement_recipients failed", error.code, error.message);
     return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't load the members." };
@@ -55,8 +71,8 @@ export async function sendSparkAnnouncement(): Promise<AnnounceState> {
   let failed = 0;
   for (const r of (data ?? []) as { email: string; full_name: string | null }[]) {
     if (Date.now() - started > 40_000) break;
-    if (await sendSparkBetaEmail(r.email, r.full_name)) {
-      await supabase.rpc("admin_mark_announced", { p_kind: "spark_beta", p_email: r.email });
+    if (await sendOne(r.email, r.full_name)) {
+      await supabase.rpc("admin_mark_announced", { p_kind: kind, p_email: r.email });
       sent++;
     } else {
       failed++;
@@ -64,7 +80,7 @@ export async function sendSparkAnnouncement(): Promise<AnnounceState> {
     await pause(600);
   }
 
-  const { data: status } = await supabase.rpc("admin_announcement_status", { p_kind: "spark_beta" });
+  const { data: status } = await supabase.rpc("admin_announcement_status", { p_kind: kind });
   const remaining = (status as { remaining: number }[] | null)?.[0]?.remaining;
   revalidatePath("/admin", "layout");
   return { sent, failed, remaining };

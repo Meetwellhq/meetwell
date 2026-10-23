@@ -410,6 +410,54 @@ export function sparkBetaEmail({ fullName, appName, siteUrl, photoUrl, replyEmai
   return { subject, text, html };
 }
 
+export function mentoringEmail({ fullName, appName, siteUrl, photoUrl, replyEmail }: Common) {
+  const firstName = firstNameOf(fullName);
+  const link = `${siteUrl}/dashboard/profile`;
+  const before = [
+    `Mentoring is now open on ${appName}, and I'd love you to try it.`,
+    "Members can now message experienced people directly, in a private chat on Meetwell. It's a simple way to get advice from someone who has done what you're trying to do.",
+    "First, add your years of experience to your card. It takes a few seconds, and it decides which side of mentoring you're on. Only the number of years is used for this.",
+  ];
+  // [bold lead-in, rest of the paragraph]
+  const sides: [string, string][] = [
+    [
+      "Under 4 years?",
+      "Look out for \"Message\" on mentors' cards. Some mentors are free, others charge a small fee for 30 days of messages.",
+    ],
+    [
+      "4 years or more?",
+      "You can become a mentor and earn from what you know. Open the Mentoring tab and apply, and I'll review it. Once you're approved, choose Free or set your own price from ₦2,000 to ₦20,000 for 30 days. You keep 80% of every payment, and you can withdraw to your bank from ₦5,000.",
+    ],
+  ];
+  const ask = "Questions, or ideas to make it better? Write to me at";
+  const smallPrint = `This is a one-off note about a new feature, sent because you have a ${appName} account.`;
+
+  const subject = `Mentoring is open on ${appName}`;
+  const text = [
+    `Hi ${firstName},`,
+    ...before,
+    `Add your years of experience: ${link}`,
+    ...sides.map(([lead, rest]) => `${lead} ${rest}`),
+    `${ask} ${replyEmail}.`,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+    smallPrint,
+  ].join("\n\n");
+  const html = founderLayout({
+    firstName,
+    appName,
+    siteUrl,
+    photoUrl,
+    bodyHtml: [
+      ...before.map(p),
+      button(link, "Add your years of experience"),
+      ...sides.map(([lead, rest]) => `<p><strong>${escapeHtml(lead)}</strong> ${escapeHtml(rest)}</p>`),
+      `<p>${escapeHtml(ask)} <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
+    ].join("\n  "),
+    footerHtml: escapeHtml(smallPrint),
+  });
+  return { subject, text, html };
+}
+
 /** Link that turns off message email alerts (no login needed). */
 export const messageEmailsOffUrl = (siteUrl: string, token: string) =>
   `${siteUrl}/unsubscribe/messages?t=${encodeURIComponent(token)}`;
