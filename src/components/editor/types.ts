@@ -102,17 +102,3 @@ export function toPreview(values: FormValues): PublicProfile {
     updatedAt: new Date(0).toISOString(),
   };
 }
-
-/** Rough completeness score for the dashboard and editor. */
-export function completion(values: Pick<FormValues, "fullName" | "avatarUrl" | "title" | "bio" | "networkingGoals" | "contacts" | "socials">) {
-  const checks = [
-    { label: "Name", done: !!values.fullName.trim() },
-    { label: "Photo", done: !!values.avatarUrl },
-    { label: "Title", done: !!values.title.trim() },
-    { label: "Short bio", done: !!values.bio.trim() },
-    { label: "A public contact method", done: values.contacts.some((c) => c.isPublic && c.value.trim()) },
-    { label: "A social link", done: values.socials.some((s) => s.url.trim()) },
-    { label: "Networking goals", done: values.networkingGoals.length > 0 },
-  ];
-  return { checks, percent: Math.round((checks.filter((c) => c.done).length / checks.length) * 100) };
-}

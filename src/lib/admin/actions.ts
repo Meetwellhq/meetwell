@@ -5,6 +5,7 @@ import {
   sendInviteEmail,
   sendMentorApprovedEmail,
   sendMentoringEmail,
+  sendPartnerAccessEmail,
   sendSparkBetaEmail,
   sendWithdrawalSentEmail,
 } from "../email";
@@ -298,14 +299,24 @@ export async function adminAddPartnerMember(partnerId: string, _: AdminFormState
   const parsed = emailSchema.safeParse(String(formData.get("email") ?? "").trim());
   if (!parsed.success) return { error: "That doesn't look like an email address." };
 
-  const { data, error } = await (await createClient()).rpc("admin_add_partner_member", {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_add_partner_member", {
     p_partner: partnerId,
     p_email: parsed.data,
   });
   if (error) return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't add them." };
   if (data !== true) return { error: "No Meetwell account with that email. Ask them to sign up through the link first." };
   revalidatePath("/admin", "layout");
-  return { ok: `${parsed.data} can now see the partner page.` };
+
+  // Tell them, with a link to the page.
+  const { data: partners } = await supabase.rpc("admin_list_partners");
+  const name = ((partners ?? []) as { id: string; name: string }[]).find((p) => p.id === partnerId)?.name;
+  const emailed = name ? await sendPartnerAccessEmail(parsed.data, null, name) : false;
+  return {
+    ok: emailed
+      ? `${parsed.data} can now see the partner page. We emailed them.`
+      : `${parsed.data} can now see the partner page. The email didn't send, so let them know.`,
+  };
 }
 
 export async function adminSetPartnerActive(partnerId: string, active: boolean): Promise<{ error?: string }> {

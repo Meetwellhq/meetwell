@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inviteEmail, mentoringEmail, newMessageEmail, sparkBetaEmail, waitlistEmail } from "@/lib/founder-emails";
+import { inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, sparkBetaEmail, waitlistEmail } from "@/lib/founder-emails";
 
 const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "support@meetwell.me" };
 
@@ -157,6 +157,16 @@ describe("mentoring announcement", () => {
     expect(text).toContain("You keep 80% of every payment");
     expect(text).not.toContain("<strong>");
     expect(text).toContain("one-off note");
+  });
+});
+
+describe("partner access email", () => {
+  it("names the partner, links to its page and explains the 10%", () => {
+    const { subject, text, html } = partnerAccessEmail({ ...base, fullName: null, partnerName: "ThinkUX" });
+    expect(subject).toBe("You can now see ThinkUX on Meetwell");
+    expect(text.startsWith("Hi there,")).toBe(true);
+    expect(html).toContain('href="https://meetwell.me/dashboard/partner"');
+    expect(text).toContain("10% of it for their first 12 months");
   });
 });
 

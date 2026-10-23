@@ -458,6 +458,42 @@ export function mentoringEmail({ fullName, appName, siteUrl, photoUrl, replyEmai
   return { subject, text, html };
 }
 
+/** Sent when Rasheed gives someone on a partner's team access to its page. */
+export function partnerAccessEmail({ fullName, appName, siteUrl, photoUrl, replyEmail, partnerName }: Common & { partnerName: string }) {
+  const firstName = firstNameOf(fullName);
+  const link = `${siteUrl}/dashboard/partner`;
+  const before = [
+    `You now have access to ${partnerName}'s partner page on ${appName}.`,
+    `It has ${partnerName}'s invite link to share with your speakers. The link works as their invite, so they don't need an access code, and everyone who joins through it shows up on the page.`,
+    `When a speaker who joined through your link is paid as a mentor on ${appName}, ${partnerName} earns 10% of it for their first 12 months. Your earnings are on the same page, and I pay them by bank transfer.`,
+  ];
+  const ask = "Questions about the partnership? Write to me at";
+  const smallPrint = `You're getting this because you were added to ${partnerName}'s team on ${appName}.`;
+
+  const subject = `You can now see ${partnerName} on ${appName}`;
+  const text = [
+    `Hi ${firstName},`,
+    ...before,
+    `Open the partner page: ${link}`,
+    `${ask} ${replyEmail}.`,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+    smallPrint,
+  ].join("\n\n");
+  const html = founderLayout({
+    firstName,
+    appName,
+    siteUrl,
+    photoUrl,
+    bodyHtml: [
+      ...before.map(p),
+      button(link, "Open the partner page"),
+      `<p>${escapeHtml(ask)} <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
+    ].join("\n  "),
+    footerHtml: escapeHtml(smallPrint),
+  });
+  return { subject, text, html };
+}
+
 /** Link that turns off message email alerts (no login needed). */
 export const messageEmailsOffUrl = (siteUrl: string, token: string) =>
   `${siteUrl}/unsubscribe/messages?t=${encodeURIComponent(token)}`;

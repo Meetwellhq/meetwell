@@ -4,7 +4,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CopyLinkButton, ShareButton } from "@/components/dashboard/share-actions";
 import { PublishButton } from "@/components/dashboard/publish-controls";
-import { completion, toFormValues } from "@/components/editor/types";
 import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
 import { Alert, Badge, Card } from "@/components/ui/misc";
@@ -13,7 +12,9 @@ import { LineChart } from "@/components/dashboard/line-chart";
 import { BarList } from "@/components/dashboard/bar-list";
 import { BreakdownBar, type Slice } from "@/components/dashboard/breakdown-bar";
 import { dailyCounts, percentChange, rate } from "@/lib/profiles/analytics";
+import { myCompleteness } from "@/lib/matching/my-completeness";
 import { getOwnProfile, getOwnProfileStats, getOwnViewTimes } from "@/lib/profiles/queries";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { qrSvg } from "@/lib/qr";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -34,15 +35,19 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const profile = await getOwnProfile();
   if (!profile) redirect("/onboarding");
 
-  const [{ published, password }, stats, stats60, viewTimes, qr] = await Promise.all([
+  const [user, supabase] = await Promise.all([getCurrentUser(), createClient()]);
+  const [{ published, password }, stats, stats60, viewTimes, qr, completeness] = await Promise.all([
     searchParams,
     getOwnProfileStats(30),
     getOwnProfileStats(60),
     getOwnViewTimes(60),
     qrSvg(qrTargetUrl(profile.slug), { margin: 1 }),
+    myCompleteness(supabase, user!.id),
   ]);
   const isLive = profile.status === "published";
-  const { checks, percent } = completion(toFormValues(profile, null));
+  // The same score as the Spark page and the "complete your profile" email.
+  const percent = completeness?.percent ?? 0;
+  const checks = completeness?.items ?? [];
   const url = publicProfileUrl(profile.slug);
 
   // The 30 days before this period: the last 60 days minus the last 30.
@@ -155,7 +160,13 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
               {checks.map((c) => (
                 <li key={c.label} className="flex items-center gap-2 text-sm">
                   {c.done ? <Check className="size-4 text-success" aria-hidden /> : <Circle className="size-4 text-ink-3" aria-hidden />}
-                  <span className={c.done ? "text-ink-2" : "text-ink"}>{c.label}</span>
+                  {c.done ? (
+                    <span className="text-ink-2">{c.label}</span>
+                  ) : (
+                    <Link href={c.where === "card" ? "/dashboard/profile" : "/dashboard/matches"} className="text-ink hover:underline">
+                      {c.label}
+                    </Link>
+                  )}
                   <span className="sr-only">{c.done ? "(done)" : "(to do)"}</span>
                 </li>
               ))}

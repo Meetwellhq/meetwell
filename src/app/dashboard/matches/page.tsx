@@ -10,7 +10,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert, EmptyState } from "@/components/ui/misc";
 import { publicProfilePath } from "@/lib/config";
-import { MATCHING_MIN_COMPLETENESS, profileCompleteness } from "@/lib/matching/completeness";
+import { MATCHING_MIN_COMPLETENESS } from "@/lib/matching/completeness";
+import { completenessOf } from "@/lib/matching/my-completeness";
 import { fieldLabel, isMentor, MENTOR_MIN_YEARS, SPARK_FREE_PER_MONTH } from "@/lib/matching/constants";
 import { paymentsEnabled } from "@/lib/payments/paystack";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
@@ -64,22 +65,7 @@ export default async function MatchesPage({ searchParams }: PageProps<"/dashboar
   const introduced = ((mentorStats.data ?? []) as { this_month: number; total: number }[])[0] ?? { this_month: 0, total: 0 };
   const rows = (matches.data ?? []) as MatchRow[];
   const usedThisMonth = Number(used.data ?? 0);
-  const completeness = profile
-    ? profileCompleteness({
-        avatarUrl: profile.avatar_url,
-        title: profile.professional_title,
-        organization: profile.organization,
-        bio: profile.bio,
-        hasPublicContact: (profile.contact_methods ?? []).some((c: { is_public: boolean }) => c.is_public),
-        hasPublicLink:
-          (profile.social_links ?? []).some((l: { is_public: boolean }) => l.is_public) ||
-          (!!profile.website_url && profile.website_is_public),
-        field: profile.field,
-        experienceYears: profile.experience_years,
-        lookingFor: profile.looking_for ?? [],
-        city: profile.city,
-      })
-    : null;
+  const completeness = profile ? completenessOf(profile) : null;
 
   return (
     <div className="flex max-w-3xl flex-col gap-10">

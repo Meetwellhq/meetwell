@@ -14,6 +14,7 @@ import {
   newMessageEmail,
   type MatchedMember,
   noScansEmail,
+  partnerAccessEmail,
   renewalReminderEmail,
   sparkBetaEmail,
   waitlistEmail,
@@ -99,6 +100,11 @@ export function sendIncompleteProfileEmail(
 /** One-off announcement: Spark is a new beta feature, come and try it. */
 export function sendSparkBetaEmail(to: string, fullName: string | null) {
   return send(to, sparkBetaEmail(common(fullName)));
+}
+
+/** Someone on a partner's team can now see its page. */
+export function sendPartnerAccessEmail(to: string, fullName: string | null, partnerName: string) {
+  return send(to, partnerAccessEmail({ ...common(fullName), partnerName }));
 }
 
 /** One-off announcement: mentoring is open; add your years, and earn as a mentor with 4+. */

@@ -13,14 +13,20 @@ export function DemoVideoButton({ className }: { className?: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const video = useRef<HTMLVideoElement>(null);
 
+  // iPhone Safari is strict: play() must start in the tap itself (before
+  // anything async), and rewinding a video that hasn't loaded yet can throw
+  // and stop it. If sound is still blocked, play muted rather than not at all.
   const open = () => {
-    dialog.current?.showModal();
     const v = video.current;
     if (v) {
-      v.currentTime = 0;
+      if (v.readyState > 0) v.currentTime = 0;
       v.muted = false;
-      void v.play().catch(() => {});
+      v.play().catch(() => {
+        v.muted = true;
+        void v.play().catch(() => {});
+      });
     }
+    dialog.current?.showModal();
   };
   const close = () => dialog.current?.close();
 
@@ -46,7 +52,7 @@ export function DemoVideoButton({ className }: { className?: string }) {
             poster="/demo/meetwell-demo-poster.jpg"
             controls
             playsInline
-            preload="none"
+            preload="metadata"
             className="aspect-[9/16] h-[min(85dvh,52rem)] w-auto max-w-[calc(100vw-2rem)] rounded-3xl bg-[#141413] object-contain shadow-2xl"
           />
           <button
