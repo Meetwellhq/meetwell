@@ -59,6 +59,11 @@ export default function PrivacyPage() {
           someone&apos;s card and you have a card of your own, they can see that you saved them.
         </p>
         <p className="mt-3">
+          <strong>If you join through a partner&apos;s link</strong> (for example an event you spoke at): we record
+          which partner invited you. That partner&apos;s team can see that you joined, when, whether you&apos;re a mentor,
+          and your public card once it&apos;s published. They never see your private details, messages or earnings.
+        </p>
+        <p className="mt-3">
           <strong>If you are a mentor:</strong> your application and its review, your price, what members paid you,
           your wallet balance and withdrawals, and where withdrawals go: your bank&apos;s name, the account name and the
           last 4 digits of the account number. The full account number is held by Paystack, not by us.

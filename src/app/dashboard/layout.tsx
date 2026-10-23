@@ -14,11 +14,12 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in?next=/dashboard");
   const supabase = await createClient();
-  const [{ data: isAdmin }, { data: profile }, conversations, unread] = await Promise.all([
+  const [{ data: isAdmin }, { data: profile }, conversations, unread, partners] = await Promise.all([
     supabase.rpc("is_admin"),
     supabase.from("profiles").select("field, experience_years, full_name, avatar_url").eq("user_id", user.id).maybeSingle(),
     supabase.rpc("my_conversations"),
     supabase.rpc("my_unread_messages"),
+    supabase.rpc("my_partners"),
   ]);
   const messages = (conversations.data ?? []).length > 0 ? { unread: Number(unread.data ?? 0) } : null;
   // Admin accounts are only for running Meetwell: they live in /admin, not here.
@@ -51,7 +52,11 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         <InstallApp variant="banner" />
 
         <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
-          <DashboardNav messages={messages} mentor={isMentor(profile?.experience_years)} />
+          <DashboardNav
+            messages={messages}
+            mentor={isMentor(profile?.experience_years)}
+            partner={(partners.data ?? []).length > 0}
+          />
           <main className="min-w-0 rounded-2xl bg-surface p-4 sm:p-6">{children}</main>
         </div>
       </div>

@@ -6,10 +6,10 @@ import { signUp } from "@/lib/auth/actions";
 import { readDeviceCards, type DeviceCard } from "@/lib/contacts/device";
 
 /**
- * Sign-up through someone's card. Sends the card (the invite) and the cards
- * saved on this phone, so they're in the new member's Contacts straight away.
+ * Sign-up through someone's card or a partner's link. Sends the invite and the
+ * cards saved on this phone, so they're in the new member's Contacts straight away.
  */
-export function JoinForm({ viaCard }: { viaCard: string }) {
+export function JoinForm({ viaCard = "", viaPartner = "" }: { viaCard?: string; viaPartner?: string }) {
   const [cards, setCards] = useState<DeviceCard[]>([]);
   // Phone storage can only be read once the page runs on the phone.
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -29,7 +29,7 @@ export function JoinForm({ viaCard }: { viaCard: string }) {
         confirmAge
         submitLabel="Create my free card"
         hideOnMessage
-        hidden={{ viaCard, savedCards: JSON.stringify(cards.map((c) => c.slug)) }}
+        hidden={{ viaCard, viaPartner, savedCards: JSON.stringify(cards.map((c) => c.slug)) }}
         fields={[
           { name: "email", label: "Email", type: "email", autoComplete: "email" },
           { name: "password", label: "Password", type: "password", autoComplete: "new-password", hint: "At least 8 characters" },

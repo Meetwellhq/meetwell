@@ -3,6 +3,7 @@
 import {
   BadgeCheck,
   BookUser,
+  Handshake,
   IdCard,
   LayoutDashboard,
   LogOut,
@@ -39,9 +40,18 @@ function UnreadBadge({ n, active }: { n: number; active: boolean }) {
 
 /**
  * Dashboard sidebar on large screens; a scrollable row of tabs on small ones.
- * Mentoring shows for 4+ years; Messages only for people who have a conversation, with their unread count.
+ * Mentoring shows for 4+ years; Messages only for people who have a conversation, with their unread count;
+ * Partner only for people on a partner's team.
  */
-export function DashboardNav({ messages, mentor = false }: { messages?: { unread: number } | null; mentor?: boolean }) {
+export function DashboardNav({
+  messages,
+  mentor = false,
+  partner = false,
+}: {
+  messages?: { unread: number } | null;
+  mentor?: boolean;
+  partner?: boolean;
+}) {
   const pathname = usePathname();
   const sections: { title: string; items: Item[] }[] = [
     {
@@ -59,6 +69,7 @@ export function DashboardNav({ messages, mentor = false }: { messages?: { unread
         { href: "/dashboard/matches", label: "Spark", icon: Sparkles },
         ...(mentor ? [{ href: "/dashboard/mentor", label: "Mentoring", icon: BadgeCheck }] : []),
         ...(messages ? [{ href: "/dashboard/messages", label: "Messages", icon: MessagesSquare, unread: true }] : []),
+        ...(partner ? [{ href: "/dashboard/partner", label: "Partner", icon: Handshake }] : []),
       ],
     },
   ];

@@ -40,6 +40,8 @@ const INVALID_CODE = "That access code isn't valid or has already been used. Che
 
 const CARD_FULL =
   "This card can't invite more people right now. Use an access code if you have one, or request early access.";
+const PARTNER_CLOSED =
+  "This invite link isn't open right now. Use an access code if you have one, or request early access.";
 
 /** Card links saved on the visitor's phone, sent along with sign-up (slugs only, up to 50). */
 function parseSavedCards(value: FormDataEntryValue | null): string[] {
@@ -90,17 +92,26 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   // Joining through someone's card: that card counts as the invite (20 per card,
   // checked again in the database), and cards saved on this phone come along.
   const viaCard = String(formData.get("viaCard") ?? "").trim().toLowerCase().slice(0, 64);
+  // Joining through a partner's link (an event platform): it works as an invite and is recorded for good.
+  const viaPartner = String(formData.get("viaPartner") ?? "").trim().toLowerCase().slice(0, 64);
   const savedCards = parseSavedCards(formData.get("savedCards"));
 
   const supabase = await createClient();
   if (!SIGNUPS_OPEN) {
     const { data: valid } = accessCode ? await supabase.rpc("check_access_code", { p_code: accessCode }) : { data: false };
     const { data: cardOpen } = valid !== true && viaCard ? await supabase.rpc("card_invite_open", { p_slug: viaCard }) : { data: false };
-    if (valid !== true && cardOpen !== true) return { error: viaCard ? CARD_FULL : INVALID_CODE, email };
+    const { data: partnerName } =
+      valid !== true && cardOpen !== true && viaPartner
+        ? await supabase.rpc("partner_invite_name", { p_slug: viaPartner })
+        : { data: null };
+    if (valid !== true && cardOpen !== true && !partnerName) {
+      return { error: viaPartner ? PARTNER_CLOSED : viaCard ? CARD_FULL : INVALID_CODE, email };
+    }
   }
   const meta: Record<string, unknown> = {};
   if (!SIGNUPS_OPEN && accessCode) meta.access_code = accessCode;
   if (viaCard) meta.via_card = viaCard;
+  if (viaPartner) meta.via_partner = viaPartner;
   if (savedCards.length) meta.saved_cards = savedCards;
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -120,7 +131,9 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   if (error) {
     if (error.code === "weak_password") return { error: error.message, email };
     // The database refused the account: the code (or the card's invites) ran out in the meantime.
-    if (!SIGNUPS_OPEN && error.code === "unexpected_failure") return { error: viaCard ? CARD_FULL : INVALID_CODE, email };
+    if (!SIGNUPS_OPEN && error.code === "unexpected_failure") {
+      return { error: viaPartner ? PARTNER_CLOSED : viaCard ? CARD_FULL : INVALID_CODE, email };
+    }
     console.error("signUp failed", error.code, error.message);
     return { error: "We couldn't create your account. Please try again.", email };
   }

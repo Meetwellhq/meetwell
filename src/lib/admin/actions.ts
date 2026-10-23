@@ -263,3 +263,55 @@ export async function adminDeleteOutreach(id: number): Promise<{ error?: string 
   revalidatePath("/admin", "layout");
   return {};
 }
+
+/** Turn a partner's name into its link name: "Think UX!" → "think-ux". */
+function partnerSlug(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40)
+    .replace(/-+$/, "");
+}
+
+/** Add a partner (an event platform). Its invite link is /join?partner=<slug>. */
+export async function adminCreatePartner(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const name = String(formData.get("name") ?? "").trim().slice(0, 80);
+  const slug = partnerSlug(String(formData.get("slug") ?? "") || name);
+  if (!name) return { error: "Add the partner's name." };
+  if (slug.length < 3) return { error: "The link name needs at least 3 letters or numbers." };
+
+  const { error } = await (await createClient()).rpc("admin_create_partner", { p_name: name, p_slug: slug });
+  if (error) {
+    console.error("admin_create_partner failed", error.code, error.message);
+    if (error.code === "23505") return { error: `The link name "${slug}" is taken. Try another.` };
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't add the partner." };
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: `Added ${name}.` };
+}
+
+/** Let someone on the partner's team see its page. They need a Meetwell account first. */
+export async function adminAddPartnerMember(partnerId: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const parsed = emailSchema.safeParse(String(formData.get("email") ?? "").trim());
+  if (!parsed.success) return { error: "That doesn't look like an email address." };
+
+  const { data, error } = await (await createClient()).rpc("admin_add_partner_member", {
+    p_partner: partnerId,
+    p_email: parsed.data,
+  });
+  if (error) return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't add them." };
+  if (data !== true) return { error: "No Meetwell account with that email. Ask them to sign up through the link first." };
+  revalidatePath("/admin", "layout");
+  return { ok: `${parsed.data} can now see the partner page.` };
+}
+
+export async function adminSetPartnerActive(partnerId: string, active: boolean): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_set_partner_active", { p_partner: partnerId, p_active: active });
+  if (error) return { error: "Couldn't update that." };
+  revalidatePath("/admin", "layout");
+  return {};
+}

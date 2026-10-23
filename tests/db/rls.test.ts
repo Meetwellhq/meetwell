@@ -1412,3 +1412,75 @@ describe("waiting list status", () => {
     expect(after.code_used).toBe(false);
   });
 });
+
+describe("partners", () => {
+  const SPEAKER = "5a5a5a5a-5a5a-5a5a-5a5a-5a5a5a5a5a5a";
+  const DRAFTER = "5b5b5b5b-5b5b-5b5b-5b5b-5b5b5b5b5b5b";
+  const TEAM = "5c5c5c5c-5c5c-5c5c-5c5c-5c5c5c5c5c5c";
+  const newUser = (id: string, email: string, meta: Record<string, unknown>) =>
+    db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)", [id, email, meta]);
+  let partner = "";
+
+  beforeAll(async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    const [{ id }] = await as<{ id: string }>(ALICE, "select public.admin_create_partner('ThinkUX', 'ThinkUX') as id");
+    partner = id;
+  });
+
+  it("only admins can create and list partners", async () => {
+    await expect(as(BOB, "select public.admin_create_partner('Fake', 'fake')")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.admin_list_partners()")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_list_partners()")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select * from public.partners")).rejects.toThrow(/permission denied/);
+  });
+
+  it("lets someone sign up through a partner link without a code, and records it", async () => {
+    expect(await as(null, "select public.partner_invite_name(' THINKUX ') as n")).toEqual([{ n: "ThinkUX" }]);
+    expect(await as(null, "select public.partner_invite_name('nobody') as n")).toEqual([{ n: null }]);
+    await newUser(SPEAKER, "speaker@partner.test", { via_partner: "thinkux" });
+    await newUser(DRAFTER, "drafter@partner.test", { via_partner: "thinkux" });
+    const rows = (await db.query("select user_id from public.partner_signups where partner_id = $1 order by user_id", [partner])).rows;
+    expect(rows).toEqual([{ user_id: SPEAKER }, { user_id: DRAFTER }]);
+    const [{ meta }] = (await db.query<{ meta: Record<string, unknown> }>("select raw_user_meta_data as meta from auth.users where id = $1", [SPEAKER])).rows;
+    expect(meta).not.toHaveProperty("via_partner");
+  });
+
+  it("refuses a paused or full partner link", async () => {
+    await as(ALICE, "select public.admin_set_partner_active($1, false)", [partner]);
+    await expect(newUser("5d5d5d5d-5d5d-5d5d-5d5d-5d5d5d5d5d5d", "late@partner.test", { via_partner: "thinkux" })).rejects.toThrow(/access code is required/);
+    await as(ALICE, "select public.admin_set_partner_active($1, true)", [partner]);
+    await db.query("update public.partners set max_signups = 2 where id = $1", [partner]);
+    await expect(newUser("5e5e5e5e-5e5e-5e5e-5e5e-5e5e5e5e5e5e", "full@partner.test", { via_partner: "thinkux" })).rejects.toThrow(/access code is required/);
+    await db.query("update public.partners set max_signups = 200 where id = $1", [partner]);
+  });
+
+  it("shows the partner's team who joined, with public details only once published", async () => {
+    await createProfile(SPEAKER, "partner-speaker");
+    await db.query("insert into public.mentor_settings (user_id, status) values ($1, 'approved')", [SPEAKER]);
+    await db.exec("insert into public.access_codes (code, max_uses) values ('PARTNER-TEAM', 1)");
+    await newUser(TEAM, "team@partner.test", { access_code: "PARTNER-TEAM" });
+    expect(await as(ALICE, "select public.admin_add_partner_member($1, 'nobody@partner.test') as ok", [partner])).toEqual([{ ok: false }]);
+    expect(await as(ALICE, "select public.admin_add_partner_member($1, ' TEAM@partner.test ') as ok", [partner])).toEqual([{ ok: true }]);
+
+    await expect(as(BOB, "select * from public.partner_people($1)", [partner])).rejects.toThrow(/Not allowed/);
+    expect(await as(BOB, "select * from public.my_partners()")).toEqual([]);
+    const [mine] = await as<{ name: string; signups: number }>(TEAM, "select name, signups from public.my_partners()");
+    expect(mine).toEqual({ name: "ThinkUX", signups: 2 });
+
+    const people = await as<{ full_name: string | null; published: boolean; mentor: boolean; slug: string | null }>(
+      TEAM,
+      "select full_name, published, mentor, slug from public.partner_people($1) order by published desc",
+      [partner],
+    );
+    expect(people).toEqual([
+      { full_name: "Test Person", published: true, mentor: true, slug: "partner-speaker" },
+      { full_name: null, published: false, mentor: false, slug: null },
+    ]);
+
+    const [row] = await as<{ signups: number; published: number; mentors: number; team: string[] }>(
+      ALICE,
+      "select signups, published, mentors, team from public.admin_list_partners() where slug = 'thinkux'",
+    );
+    expect(row).toEqual({ signups: 2, published: 1, mentors: 1, team: ["team@partner.test"] });
+  });
+});
