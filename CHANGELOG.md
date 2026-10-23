@@ -4,6 +4,11 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
+## 23 October 2026: Meetwell on your home screen
+
+- Add Meetwell to your phone's home screen and open it like an app.
+- Your card is one tap away, with no app store needed.
+
 ## 22 October 2026: Contacts
 
 - Everyone whose card you scan or open is kept in your new Contacts page, with notes and search.
