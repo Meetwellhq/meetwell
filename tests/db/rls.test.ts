@@ -1483,4 +1483,18 @@ describe("partners", () => {
     );
     expect(row).toEqual({ signups: 2, published: 1, mentors: 1, team: ["team@partner.test"] });
   });
+
+  it("lets only admins see a partner's full list", async () => {
+    await expect(as(TEAM, "select * from public.admin_partner_people($1)", [partner])).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_partner_people($1)", [partner])).rejects.toThrow(/permission denied/);
+    const rows = await as<{ email: string; mentor: boolean; published: boolean }>(
+      ALICE,
+      "select email, mentor, published from public.admin_partner_people($1) order by email",
+      [partner],
+    );
+    expect(rows).toEqual([
+      { email: "drafter@partner.test", mentor: false, published: false },
+      { email: "speaker@partner.test", mentor: true, published: true },
+    ]);
+  });
 });

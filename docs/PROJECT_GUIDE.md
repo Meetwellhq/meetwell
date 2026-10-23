@@ -176,7 +176,7 @@ every migration.
   `enforce_access_code` trigger). Phone-saved cards ride along in sign-up data (`saved_cards`) and are imported by the
   trigger; anything left is imported on the next dashboard visit (`DeviceCardsImporter`). Owners see members (with a
   card) who saved them (`who_saved_me`). "Export all" downloads one .vcf (`/dashboard/contacts/export`).
-- **Partners (step 1: links and tracking)**: `/admin/partners` (`20261119000000_partners.sql`). An event platform
+- **Partners (step 1: links and tracking)**: `/admin/partners` lists every partner; `/admin/partners/[slug]` shows one (link, team, mentors they invited, everyone else; `admin_partner_people`, `20261120000000_admin_partner_people.sql`). Tables in `20261119000000_partners.sql`. An event platform
   (first: ThinkUX) gets `/join?partner=<slug>`, which works as an invite (up to `max_signups`, 200 by default) and
   records the account in `partner_signups` for good (checked in `enforce_access_code`). Rasheed gives the partner's
   team access by email (`admin_add_partner_member`; they need an account); they get a "Partner" tab

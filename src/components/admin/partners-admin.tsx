@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { Check, ChevronRight, Copy } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/misc";
 import { Button } from "@/components/ui/button";
@@ -111,50 +112,82 @@ function PauseButton({ partner }: { partner: PartnerRow }) {
   );
 }
 
-export function PartnerList({ rows, site }: { rows: PartnerRow[]; site: string }) {
+/** All partners, one row each. Click a row to open that partner's page. */
+export function PartnerList({ rows }: { rows: PartnerRow[] }) {
   if (rows.length === 0) {
     return <p className="text-sm text-ink-2">No partners yet. Add your first one above.</p>;
   }
   return (
-    <div className="flex flex-col gap-3">
-      {rows.map((p) => (
-        <div key={p.id} className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <p className="font-medium text-ink">{p.name}</p>
-              {!p.active && <Badge tone="warning">Paused</Badge>}
-            </div>
-            <PauseButton partner={p} />
-          </div>
+    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      <div className="hidden grid-cols-[minmax(0,1fr)_6rem_6rem_6rem_1.5rem] gap-3 border-b border-border px-4 py-2.5 text-xs text-ink-3 sm:grid">
+        <span>Partner</span>
+        <span className="text-right">Joined</span>
+        <span className="text-right">Cards</span>
+        <span className="text-right">Mentors</span>
+        <span />
+      </div>
+      <ul className="divide-y divide-border">
+        {rows.map((p) => (
+          <li key={p.id}>
+            <Link
+              href={`/admin/partners/${p.slug}`}
+              className="grid grid-cols-[minmax(0,1fr)_1.5rem] items-center gap-3 px-4 py-3.5 hover:bg-surface-2 sm:grid-cols-[minmax(0,1fr)_6rem_6rem_6rem_1.5rem]"
+            >
+              <span className="min-w-0">
+                <span className="flex items-center gap-2">
+                  <span className="truncate font-medium text-ink">{p.name}</span>
+                  {!p.active && <Badge tone="warning">Paused</Badge>}
+                </span>
+                <span className="block text-sm text-ink-2 sm:hidden">
+                  {p.signups} joined · {p.published} cards · {p.mentors} mentors
+                </span>
+              </span>
+              <span className="hidden text-right tabular-nums text-ink sm:block">{p.signups}</span>
+              <span className="hidden text-right tabular-nums text-ink sm:block">{p.published}</span>
+              <span className="hidden text-right tabular-nums text-ink sm:block">{p.mentors}</span>
+              <ChevronRight className="size-4 text-ink-3" aria-hidden />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
-          <CopyLink link={partnerLink(site, p.slug)} />
-
-          <dl className="grid grid-cols-3 gap-3 text-sm">
-            <div>
-              <dt className="text-ink-2">Joined</dt>
-              <dd className="text-lg font-semibold tabular-nums text-ink">
-                {p.signups}
-                <span className="text-xs font-normal text-ink-3"> of {p.max_signups}</span>
-              </dd>
-            </div>
-            <div>
-              <dt className="text-ink-2">Published a card</dt>
-              <dd className="text-lg font-semibold tabular-nums text-ink">{p.published}</dd>
-            </div>
-            <div>
-              <dt className="text-ink-2">Mentors</dt>
-              <dd className="text-lg font-semibold tabular-nums text-ink">{p.mentors}</dd>
-            </div>
-          </dl>
-
-          <div className="flex flex-col gap-2 border-t border-border pt-3">
-            <p className="text-sm text-ink-2">
-              {p.team.length ? `Can see the partner page: ${p.team.join(", ")}` : "Nobody from their team can see the partner page yet."}
-            </p>
-            <AddTeamMember partnerId={p.id} />
-          </div>
+/** One partner's link, numbers and team, at the top of its page. */
+export function PartnerSummary({ partner, site }: { partner: PartnerRow; site: string }) {
+  return (
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="font-medium text-ink">Invite link</p>
+        <PauseButton partner={partner} />
+      </div>
+      <CopyLink link={partnerLink(site, partner.slug)} />
+      <dl className="grid grid-cols-3 gap-3 text-sm">
+        <div>
+          <dt className="text-ink-2">Joined</dt>
+          <dd className="text-lg font-semibold tabular-nums text-ink">
+            {partner.signups}
+            <span className="text-xs font-normal text-ink-3"> of {partner.max_signups}</span>
+          </dd>
         </div>
-      ))}
+        <div>
+          <dt className="text-ink-2">Published a card</dt>
+          <dd className="text-lg font-semibold tabular-nums text-ink">{partner.published}</dd>
+        </div>
+        <div>
+          <dt className="text-ink-2">Mentors</dt>
+          <dd className="text-lg font-semibold tabular-nums text-ink">{partner.mentors}</dd>
+        </div>
+      </dl>
+      <div className="flex flex-col gap-2 border-t border-border pt-3">
+        <p className="text-sm text-ink-2">
+          {partner.team.length
+            ? `Can see the partner page: ${partner.team.join(", ")}`
+            : "Nobody from their team can see the partner page yet."}
+        </p>
+        <AddTeamMember partnerId={partner.id} />
+      </div>
     </div>
   );
 }
