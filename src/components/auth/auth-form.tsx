@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 import { AUTH_BUTTON } from "@/components/auth/auth-section";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -30,6 +30,7 @@ type Props = {
 
 export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, footer, confirmAge }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
+  const [adultTicked, setAdultTicked] = useState(false);
 
   if (hideOnMessage && state.message) {
     return <Alert tone="success">{state.message}</Alert>;
@@ -79,6 +80,9 @@ export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, f
               name="adult"
               value="yes"
               required
+              // React resets the form after each try; this keeps the tick when the form comes back with an error.
+              defaultChecked={adultTicked}
+              onChange={(e) => setAdultTicked(e.target.checked)}
               aria-invalid={state.fieldErrors?.adult ? true : undefined}
               aria-describedby={state.fieldErrors?.adult ? "adult-error" : undefined}
               className="mt-0.5 size-5 shrink-0 cursor-pointer rounded accent-accent"
