@@ -1,4 +1,6 @@
+import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ProfileEditor } from "@/components/editor/profile-editor";
 import { getSiteUrl } from "@/lib/config";
@@ -21,6 +23,10 @@ export default async function EditProfilePage() {
 
   return (
     <>
+      {/* Phones hide the bottom bar here (the Save bar takes its place), so give a way back. */}
+      <Link href="/dashboard/me" className="mb-3 flex items-center gap-1 text-sm text-ink-2 hover:text-ink lg:hidden">
+        <ChevronLeft className="size-4" aria-hidden /> Profile
+      </Link>
       <h1 className="mb-6 text-2xl font-semibold tracking-tight">Edit your card</h1>
       <ProfileEditor
         // Remount after a save so the form reflects the server-normalised values.

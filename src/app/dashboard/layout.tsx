@@ -1,4 +1,3 @@
-import { LogOut } from "lucide-react";
 import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { DeviceCardsImporter } from "@/components/dashboard/device-cards-importer";
@@ -7,7 +6,6 @@ import { InstallApp } from "@/components/pwa/install-app";
 import { isMentor } from "@/lib/matching/constants";
 import { Logo } from "@/components/marketing/logo";
 import { Avatar } from "@/components/ui/avatar";
-import { signOut } from "@/lib/auth/actions";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
@@ -29,7 +27,8 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
 
   return (
     <div className="flex-1 bg-surface-2/60">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 py-4 sm:px-5 sm:py-6">
+      {/* Bottom padding on phones so the bottom bar never covers the page. */}
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 pt-4 pb-28 sm:px-5 sm:pt-6 lg:pb-6">
         <header className="flex items-center justify-between gap-4 rounded-2xl bg-surface px-4 py-3 sm:px-5">
           <Logo />
           <div className="flex items-center gap-2">
@@ -40,12 +39,6 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
                 <span className="max-w-[14rem] truncate text-xs text-ink-3">{user.email}</span>
               </span>
             </div>
-            {/* The sidebar has Log out on large screens; small screens get it here. */}
-            <form action={signOut} className="lg:hidden">
-              <button type="submit" aria-label="Log out" className="grid size-10 place-items-center rounded-full text-ink-2 hover:bg-surface-2">
-                <LogOut className="size-5" aria-hidden />
-              </button>
-            </form>
           </div>
         </header>
 
@@ -56,6 +49,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
             messages={messages}
             mentor={isMentor(profile?.experience_years)}
             partner={(partners.data ?? []).length > 0}
+            avatar={{ name, src: profile?.avatar_url ?? null }}
           />
           <main className="min-w-0 rounded-2xl bg-surface p-4 sm:p-6">{children}</main>
         </div>
