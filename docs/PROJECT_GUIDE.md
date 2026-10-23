@@ -216,7 +216,9 @@ Local dev uses a **separate Supabase project, `meetwell-test`** (set up 23 Oct 2
   fresh cron secret and the reusable access code `TESTMEETWELL`) and the secret to
   `docs/private/test-db-cron-secret.txt`. Paste the SQL into the **test** project's SQL Editor on an empty
   database, then copy the secret into `CRON_SECRET` in `.env.local`.
-- **New migrations:** run them on the test project first, then on live.
+- **New migrations:** run them on the test project yourself with `npm run test-db:run -- <file.sql>` (uses
+  `TEST_DATABASE_URL` in `.env.local`, the test project's session pooler; the script refuses any other
+  project), check they work, then give Rasheed the SQL for live. He only ever runs SQL on live.
 - **Accounts:** test logins are in `docs/private/test-db-accounts.md` (test admin `admin+test@meetwell.me`, made
   admin with `insert into public.admins`). If "Confirm email" is on in the test project, confirm a new test
   account with `update auth.users set email_confirmed_at = now() where email = …` in the test project.

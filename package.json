@@ -12,7 +12,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "check:changelog": "node scripts/check-changelog.mjs",
     "test:smoke": "playwright test",
-    "test-db:sql": "node scripts/test-db-sql.mjs"
+    "test-db:sql": "node scripts/test-db-sql.mjs",
+    "test-db:run": "node scripts/test-db-run.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.137.0",
@@ -41,6 +42,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.4.2",
+    "pg": "8.13.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.0.5"
