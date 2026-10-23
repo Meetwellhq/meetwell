@@ -11,7 +11,7 @@ import type { AuthFormState } from "@/lib/auth/actions";
 type FieldDef = {
   name: string;
   label: string;
-  type: "email" | "password" | "text";
+  type: "email" | "password" | "text" | "number";
   autoComplete: string;
   hint?: string;
 };
@@ -59,8 +59,11 @@ export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, f
               id={id}
               name={f.name}
               type={f.type}
+              inputMode={f.type === "number" ? "numeric" : undefined}
+              min={f.type === "number" ? 0 : undefined}
+              max={f.type === "number" ? 60 : undefined}
               autoComplete={f.autoComplete}
-              defaultValue={f.type === "email" ? state.email : f.type === "text" ? state.values?.[f.name] : undefined}
+              defaultValue={f.type === "email" ? state.email : state.values?.[f.name]}
               aria-describedby={describedBy}
               invalid={invalid}
               required

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getSiteUrl, SIGNUPS_OPEN } from "../config";
+import { MENTOR_MIN_YEARS } from "../matching/constants";
 import { sendWaitlistEmail } from "../email";
 import { limitByClient } from "../rate-limit";
 import { createClient } from "../supabase/server";
@@ -96,6 +97,22 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   const viaPartner = String(formData.get("viaPartner") ?? "").trim().toLowerCase().slice(0, 64);
   const savedCards = parseSavedCards(formData.get("savedCards"));
 
+  // Partner links are for experienced speakers only (4+ years). Checked again in the database.
+  const yearsText = String(formData.get("experienceYears") ?? "").trim();
+  const years = /^\d{1,2}$/.test(yearsText) ? Number(yearsText) : null;
+  if (viaPartner && (years === null || years < MENTOR_MIN_YEARS)) {
+    return {
+      fieldErrors: {
+        experienceYears:
+          years === null
+            ? "Enter your years of experience."
+            : `This invite is for speakers with ${MENTOR_MIN_YEARS} or more years. You can still request early access.`,
+      },
+      email,
+      values: { experienceYears: yearsText },
+    };
+  }
+
   const supabase = await createClient();
   if (!SIGNUPS_OPEN) {
     const { data: valid } = accessCode ? await supabase.rpc("check_access_code", { p_code: accessCode }) : { data: false };
@@ -111,7 +128,10 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   const meta: Record<string, unknown> = {};
   if (!SIGNUPS_OPEN && accessCode) meta.access_code = accessCode;
   if (viaCard) meta.via_card = viaCard;
-  if (viaPartner) meta.via_partner = viaPartner;
+  if (viaPartner) {
+    meta.via_partner = viaPartner;
+    meta.experience_years = years;
+  }
   if (savedCards.length) meta.saved_cards = savedCards;
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -123,6 +143,14 @@ export async function signUp(_: AuthFormState, formData: FormData): Promise<Auth
   });
   const outcome = classifySignUp(data, error?.code);
   if (outcome === "exists") {
+    if (viaPartner) {
+      const { data: partnerName } = await supabase.rpc("partner_invite_name", { p_slug: viaPartner });
+      const team = typeof partnerName === "string" && partnerName ? `${partnerName}'s` : "a partner's";
+      return {
+        error: `You already have a Meetwell account, so log in instead. If you're on ${team} team, ask us for access and you'll find a Partner tab in your dashboard.`,
+        email,
+      };
+    }
     return {
       error: "An account with this email already exists. Log in instead, or reset your password if you've forgotten it.",
       email,

@@ -178,7 +178,7 @@ every migration.
   card) who saved them (`who_saved_me`). "Export all" downloads one .vcf (`/dashboard/contacts/export`).
 - **Partners (step 1: links and tracking)**: `/admin/partners` lists every partner; `/admin/partners/[slug]` shows one (link, team, mentors they invited, everyone else; `admin_partner_people`, `20261120000000_admin_partner_people.sql`). Tables in `20261119000000_partners.sql`. An event platform
   (first: ThinkUX) gets `/join?partner=<slug>`, which works as an invite (up to `max_signups`, 200 by default) and
-  records the account in `partner_signups` for good (checked in `enforce_access_code`). Rasheed gives the partner's
+  records the account in `partner_signups` for good (checked in `enforce_access_code`). Partner links are for 4+ years only: the join form asks for years, `signUp` and the trigger refuse under 4 (`20261122000000_partner_min_years.sql`), and onboarding fills the years in from sign-up. Rasheed gives the partner's
   team access by email (`admin_add_partner_member`; they need an account); they get a "Partner" tab
   (`/dashboard/partner`, `my_partners`, `partner_people`) showing who joined: public card details only once
   published, plus a Mentor badge. Step 2 (`20261121000000_partner_earnings.sql`): a trigger on `payments` gives the

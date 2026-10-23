@@ -1437,20 +1437,27 @@ describe("partners", () => {
   it("lets someone sign up through a partner link without a code, and records it", async () => {
     expect(await as(null, "select public.partner_invite_name(' THINKUX ') as n")).toEqual([{ n: "ThinkUX" }]);
     expect(await as(null, "select public.partner_invite_name('nobody') as n")).toEqual([{ n: null }]);
-    await newUser(SPEAKER, "speaker@partner.test", { via_partner: "thinkux" });
-    await newUser(DRAFTER, "drafter@partner.test", { via_partner: "thinkux" });
+    await newUser(SPEAKER, "speaker@partner.test", { via_partner: "thinkux", experience_years: "9" });
+    await newUser(DRAFTER, "drafter@partner.test", { via_partner: "thinkux", experience_years: "9" });
     const rows = (await db.query("select user_id from public.partner_signups where partner_id = $1 order by user_id", [partner])).rows;
     expect(rows).toEqual([{ user_id: SPEAKER }, { user_id: DRAFTER }]);
     const [{ meta }] = (await db.query<{ meta: Record<string, unknown> }>("select raw_user_meta_data as meta from auth.users where id = $1", [SPEAKER])).rows;
     expect(meta).not.toHaveProperty("via_partner");
   });
 
+  it("refuses a partner link for people under 4 years, and keeps the years for onboarding", async () => {
+    await expect(newUser("5f5f5f5f-5f5f-5f5f-5f5f-5f5f5f5f5f5f", "junior@partner.test", { via_partner: "thinkux", experience_years: "2" })).rejects.toThrow(/access code is required/);
+    await expect(newUser("5f5f5f5f-5f5f-5f5f-5f5f-5f5f5f5f5f50", "noyears@partner.test", { via_partner: "thinkux" })).rejects.toThrow(/access code is required/);
+    const [{ meta }] = (await db.query<{ meta: Record<string, unknown> }>("select raw_user_meta_data as meta from auth.users where id = $1", [SPEAKER])).rows;
+    expect(meta.experience_years).toBe("9");
+  });
+
   it("refuses a paused or full partner link", async () => {
     await as(ALICE, "select public.admin_set_partner_active($1, false)", [partner]);
-    await expect(newUser("5d5d5d5d-5d5d-5d5d-5d5d-5d5d5d5d5d5d", "late@partner.test", { via_partner: "thinkux" })).rejects.toThrow(/access code is required/);
+    await expect(newUser("5d5d5d5d-5d5d-5d5d-5d5d-5d5d5d5d5d5d", "late@partner.test", { via_partner: "thinkux", experience_years: "9" })).rejects.toThrow(/access code is required/);
     await as(ALICE, "select public.admin_set_partner_active($1, true)", [partner]);
     await db.query("update public.partners set max_signups = 2 where id = $1", [partner]);
-    await expect(newUser("5e5e5e5e-5e5e-5e5e-5e5e-5e5e5e5e5e5e", "full@partner.test", { via_partner: "thinkux" })).rejects.toThrow(/access code is required/);
+    await expect(newUser("5e5e5e5e-5e5e-5e5e-5e5e-5e5e5e5e5e5e", "full@partner.test", { via_partner: "thinkux", experience_years: "9" })).rejects.toThrow(/access code is required/);
     await db.query("update public.partners set max_signups = 200 where id = $1", [partner]);
   });
 

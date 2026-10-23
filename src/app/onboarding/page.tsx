@@ -17,9 +17,15 @@ export default async function OnboardingPage() {
   const profile = await getOwnProfile();
   if (profile?.publishedAt) redirect("/dashboard");
   // Spark details live on the profile row but outside the card editor.
-  const { data: spark } = profile
-    ? await (await createClient()).from("profiles").select("field, experience_years").eq("id", profile.id).maybeSingle()
-    : { data: null };
+  const supabase = await createClient();
+  const [{ data: spark }, { data: auth }] = await Promise.all([
+    profile
+      ? supabase.from("profiles").select("field, experience_years").eq("id", profile.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.auth.getUser(),
+  ]);
+  // Speakers who joined through a partner link already gave their years at sign-up.
+  const signUpYears = auth.user?.user_metadata?.experience_years;
 
   return (
     <>
@@ -36,7 +42,10 @@ export default async function OnboardingPage() {
           userId={user.id}
           email={user.email}
           siteHost={getSiteUrl().replace(/^https?:\/\//, "")}
-          initialExperience={{ field: spark?.field ?? "", experienceYears: spark?.experience_years?.toString() ?? "" }}
+          initialExperience={{
+            field: spark?.field ?? "",
+            experienceYears: spark?.experience_years?.toString() ?? (signUpYears != null ? String(signUpYears) : ""),
+          }}
         />
       </main>
     </>

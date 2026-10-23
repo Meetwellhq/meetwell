@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AuthForm } from "@/components/auth/auth-form";
 import { signUp } from "@/lib/auth/actions";
 import { readDeviceCards, type DeviceCard } from "@/lib/contacts/device";
+import { MENTOR_MIN_YEARS } from "@/lib/matching/constants";
 
 /**
  * Sign-up through someone's card or a partner's link. Sends the invite and the
@@ -33,6 +34,18 @@ export function JoinForm({ viaCard = "", viaPartner = "" }: { viaCard?: string; 
         fields={[
           { name: "email", label: "Email", type: "email", autoComplete: "email" },
           { name: "password", label: "Password", type: "password", autoComplete: "new-password", hint: "At least 8 characters" },
+          // Partner links are for experienced speakers (mentors), so they ask for years up front.
+          ...(viaPartner
+            ? [
+                {
+                  name: "experienceYears",
+                  label: "Years of experience",
+                  type: "number" as const,
+                  autoComplete: "off",
+                  hint: `This invite is for speakers with ${MENTOR_MIN_YEARS} or more years of experience.`,
+                },
+              ]
+            : []),
         ]}
       />
     </div>
