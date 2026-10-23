@@ -4,6 +4,7 @@ import { PaymentHistory, type PaymentHistoryRow } from "@/components/dashboard/p
 import { DangerZone, PublishButton } from "@/components/dashboard/publish-controls";
 import { Card } from "@/components/ui/misc";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { InstallApp } from "@/components/pwa/install-app";
 import { getOwnProfile } from "@/lib/profiles/queries";
 import { MessageEmailsSwitch } from "@/components/messaging/message-emails-switch";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
@@ -51,6 +52,10 @@ export default async function SettingsPage() {
           <p className="mt-1 text-sm text-ink-2">Choose light or dark, or match your phone or computer.</p>
         </div>
         <ThemeToggle />
+      </Card>
+
+      <Card className="p-5 sm:p-6">
+        <InstallApp variant="row" />
       </Card>
 
       <Card id="payments" className="scroll-mt-28 p-5 sm:p-6">

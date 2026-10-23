@@ -249,7 +249,9 @@ export default function PrivacyPage() {
         <p>
           We only use the cookies needed to keep you logged in. We don&apos;t use advertising or tracking cookies. If
           you open cards without an account, your browser keeps a short list of them on your phone so you can bring
-          them along when you sign up. You can clear it anytime by clearing your browser&apos;s site data.
+          them along when you sign up. If you add {APP_NAME} to your home screen, your phone also keeps a simple
+          &ldquo;you&apos;re offline&rdquo; page, and remembers if you closed the install message. Neither holds personal data.
+          You can clear it anytime by clearing your browser&apos;s site data.
         </p>
       </section>
 

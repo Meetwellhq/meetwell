@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { PwaSetup } from "@/components/pwa/pwa-setup";
 import { ToastProvider } from "@/components/ui/toast";
 import { APP_NAME, getSiteUrl } from "@/lib/config";
 import "./globals.css";
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
   title: { default: `${APP_NAME} — Meet someone. Make it a connection.`, template: `%s · ${APP_NAME}` },
   description: "Share your card with one scan. Make it easy for people to follow up.",
   applicationName: APP_NAME,
+  // Installed on iPhone: open full screen with the Meetwell name under the icon (apple-icon.png).
+  appleWebApp: { capable: true, title: APP_NAME, statusBarStyle: "default" },
   // The share image itself comes from app/opengraph-image.png (a screenshot of the landing hero).
   openGraph: { type: "website", siteName: APP_NAME },
   twitter: { card: "summary_large_image" },
@@ -47,6 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <ToastProvider>{children}</ToastProvider>
+        <PwaSetup />
       </body>
     </html>
   );

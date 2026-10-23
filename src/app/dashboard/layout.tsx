@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { DeviceCardsImporter } from "@/components/dashboard/device-cards-importer";
 import { ExperiencePrompt } from "@/components/matching/experience-prompt";
+import { InstallApp } from "@/components/pwa/install-app";
 import { isMentor } from "@/lib/matching/constants";
 import { Logo } from "@/components/marketing/logo";
 import { Avatar } from "@/components/ui/avatar";
@@ -46,6 +47,8 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
             </form>
           </div>
         </header>
+
+        <InstallApp variant="banner" />
 
         <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
           <DashboardNav messages={messages} mentor={isMentor(profile?.experience_years)} />
