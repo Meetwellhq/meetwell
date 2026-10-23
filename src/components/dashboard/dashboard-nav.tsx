@@ -44,8 +44,8 @@ const PROFILE_PAGES = ["/dashboard/me", "/dashboard/profile", "/dashboard/qr", "
 
 /**
  * Phones: a bar fixed to the bottom with Overview, Contacts, Spark, Messages
- * (and Mentoring for mentors) and Profile. Everything else (Edit card, QR code,
- * Settings, Partner) is inside Profile. Hidden on Edit card, which has its own Save bar there.
+ * and Profile; mentors get Mentoring instead of Spark (Spark moves into Profile).
+ * Everything else (Edit card, QR code, Settings, Partner) is inside Profile. Hidden on Edit card, which has its own Save bar there.
  */
 function BottomNav({
   pathname,
@@ -62,18 +62,19 @@ function BottomNav({
   const tabs = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/contacts", label: "Contacts", icon: BookUser },
-    { href: "/dashboard/matches", label: "Spark", icon: Sparkles },
+    // Mentors (4+ years) are only recommended on Spark, so Mentoring takes its place for them.
+    ...(mentor ? [] : [{ href: "/dashboard/matches", label: "Spark", icon: Sparkles }]),
     { href: "/dashboard/messages", label: "Messages", icon: MessagesSquare, unread: true },
     ...(mentor ? [{ href: "/dashboard/mentor", label: "Mentoring", icon: BadgeCheck }] : []),
   ];
-  const profileActive = PROFILE_PAGES.some((p) => pathname.startsWith(p));
+  const profileActive = [...PROFILE_PAGES, ...(mentor ? ["/dashboard/matches"] : [])].some((p) => pathname.startsWith(p));
 
   return (
     <nav
       aria-label="Dashboard"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
     >
-      <ul className={cn("mx-auto grid max-w-md", mentor ? "grid-cols-6" : "grid-cols-5")}>
+      <ul className="mx-auto grid max-w-md grid-cols-5">
         {tabs.map((tab) => {
           const active = isActive(pathname, tab.href);
           return (
