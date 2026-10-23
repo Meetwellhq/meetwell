@@ -206,16 +206,28 @@ every migration.
   FCCPA 2018). Not yet reviewed by a lawyer. Run by **Meet Well Limited (RC 9952279)**, incorporated
   21 October 2026 (`COMPANY_NAME`, `COMPANY_RC` in `src/lib/config.ts`; shown in the footer, Terms, Privacy).
 
+## Test database
+
+Local dev uses a **separate Supabase project, `meetwell-test`** (set up 23 Oct 2026), never the live one.
+`.env.local` points at it (its URL, publishable key and its own `CRON_SECRET`); the live values are kept in
+`.env.live-db.local` (gitignored) for the rare case you need them. Sentry is off locally.
+
+- **Set up or rebuild:** `npm run test-db:sql` writes `docs/private/test-db-setup.sql` (every migration plus a
+  fresh cron secret and the reusable access code `TESTMEETWELL`) and the secret to
+  `docs/private/test-db-cron-secret.txt`. Paste the SQL into the **test** project's SQL Editor on an empty
+  database, then copy the secret into `CRON_SECRET` in `.env.local`.
+- **New migrations:** run them on the test project first, then on live.
+- **Accounts:** test logins are in `docs/private/test-db-accounts.md` (test admin `admin+test@meetwell.me`, made
+  admin with `insert into public.admins`). If "Confirm email" is on in the test project, confirm a new test
+  account with `update auth.users set email_confirmed_at = now() where email = …` in the test project.
+
 ## Testing payments locally
 
-Tested end to end on 22 Oct 2026 (credits and a mentor subscription). Put a Paystack **test** key and the real
-`CRON_SECRET` (copy it from Supabase: `select value from public.internal_settings where key = 'cron_secret'`)
-in `.env.local`, run `npm run dev -- --port 3100`, and use the LAN address in `NEXT_PUBLIC_SITE_URL`
+Tested end to end on 22 Oct 2026 (credits and a mentor subscription). Use a Paystack **test** key in
+`.env.local`, run `npm run dev -- --port 3100`, and use the LAN address in `NEXT_PUBLIC_SITE_URL`
 (http://192.168.1.144:3100) so Paystack returns to it. Test card 4084 0840 8408 4081, 12/30, CVV 408, PIN 0000,
-OTP 123456. Local dev uses the production database, so delete test payments, ledger rows and conversations
-afterwards. Sign-ups made on the local address get a broken confirmation link (not in Supabase's redirect list):
-confirm test accounts by hand with `update auth.users set email_confirmed_at = now() where email = …`.
-Never put a test key on the live site. Withdrawals can't be tested until Paystack Transfers are enabled.
+OTP 123456. This all lands in the test database. Never put a test key on the live site. Withdrawals can't be
+tested until Paystack Transfers are enabled.
 
 ## Deploying
 
