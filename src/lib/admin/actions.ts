@@ -116,8 +116,17 @@ export async function sendCampaign(params: Record<string, string>): Promise<Anno
     if (Date.now() - started > 40_000) break;
     const result = await sendCampaignEmail(audience.template, r.email, r.full_name);
     if (result.ok) {
-      await supabase.rpc("admin_record_email_send", { p_template: audience.template, p_email: r.email, p_resend_id: result.id });
       sent++;
+      const { error: logError } = await supabase.rpc("admin_record_email_send", {
+        p_template: audience.template,
+        p_email: r.email,
+        p_resend_id: result.id,
+      });
+      // If a send can't be logged, stop: carrying on could email the same people twice.
+      if (logError) {
+        console.error("admin_record_email_send failed", logError.code, logError.message);
+        return { sent, failed, error: "Sending stopped: a send couldn't be saved. Check the database SQL has been run." };
+      }
     } else {
       failed++;
     }
