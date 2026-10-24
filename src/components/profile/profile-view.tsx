@@ -27,6 +27,8 @@ type Props = {
   preview?: boolean;
   /** Set when this person is an approved mentor taking paid messages. */
   offer?: { priceKobo: number; firstName: string } | null;
+  /** Opened from an event page: payments started here credit that event's partner. */
+  eventSlug?: string | null;
   /** Who is looking: members keep the card in Contacts, visitors on their phone. */
   viewer?: Viewer;
   source?: "qr" | "link";
@@ -37,7 +39,7 @@ type Props = {
  * The visitor-facing card. Receives only the public projection of a profile,
  * so private fields cannot leak into the rendered HTML.
  */
-export function ProfileView({ profile, preview = false, offer = null, viewer = "visitor", source = "link" }: Props) {
+export function ProfileView({ profile, preview = false, offer = null, viewer = "visitor", source = "link", eventSlug = null }: Props) {
   const slug = preview ? null : profile.slug;
   const allActions = contactActions(profile);
   // Icon-only quick actions under Save contact: email, WhatsApp, call, website.
@@ -83,7 +85,7 @@ export function ProfileView({ profile, preview = false, offer = null, viewer = "
           )}
           {offer && !preview && (
             <Link
-              href={`/subscribe/${profile.slug}`}
+              href={eventSlug ? `/subscribe/${profile.slug}?event=${eventSlug}` : `/subscribe/${profile.slug}`}
               className={buttonClass({ variant: "secondary", size: "lg", className: "mt-3 w-full" })}
             >
               <MessageCircle className="size-5" aria-hidden />

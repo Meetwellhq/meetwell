@@ -5,6 +5,7 @@ import { ViewTracker } from "@/components/profile/tracking";
 import { isSupabaseConfigured } from "@/lib/config";
 import { getPublicProfile } from "@/lib/profiles/queries";
 import type { Viewer } from "@/components/profile/card-keeper";
+import { isEventSlug } from "@/lib/events";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export async function generateMetadata({ params }: PageProps<"/p/[slug]">): Promise<Metadata> {
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: PageProps<"/p/[slug]">): Prom
 
 export default async function PublicProfilePage({ params, searchParams }: PageProps<"/p/[slug]">) {
   const { slug } = await params;
-  const { src } = await searchParams;
+  const { src, event } = await searchParams;
   if (!isSupabaseConfigured()) notFound();
 
   const profile = await getPublicProfile(slug);
@@ -54,6 +55,7 @@ export default async function PublicProfilePage({ params, searchParams }: PagePr
         offer={offer ? { priceKobo: offer.price_kobo, firstName: offer.first_name } : null}
         viewer={viewer}
         source={source}
+        eventSlug={isEventSlug(event) ? event : null}
       />
     </main>
   );

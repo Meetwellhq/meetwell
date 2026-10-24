@@ -390,6 +390,70 @@ export async function adminSetPartnerActive(partnerId: string, active: boolean):
   return {};
 }
 
+/** Add an event page for a partner. Its page is /e/<slug>. */
+export async function adminCreateEvent(partnerSlugValue: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const name = String(formData.get("name") ?? "").trim().slice(0, 120);
+  const slug = partnerSlug(String(formData.get("slug") ?? "") || name);
+  const startsOn = String(formData.get("startsOn") ?? "");
+  const endsOn = String(formData.get("endsOn") ?? "") || null;
+  const isDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
+  if (!name) return { error: "Add the event's name." };
+  if (slug.length < 3) return { error: "The link name needs at least 3 letters or numbers." };
+  if (!isDate(startsOn)) return { error: "Pick the date it starts." };
+  if (endsOn && (!isDate(endsOn) || endsOn < startsOn)) return { error: "The end date can't be before the start." };
+
+  const { error } = await (await createClient()).rpc("admin_create_event", {
+    p_partner_slug: partnerSlugValue,
+    p_slug: slug,
+    p_name: name,
+    p_starts_on: startsOn,
+    p_ends_on: endsOn,
+    p_venue: String(formData.get("venue") ?? "").trim().slice(0, 120) || null,
+    p_about: String(formData.get("about") ?? "").trim().slice(0, 600) || null,
+  });
+  if (error) {
+    console.error("admin_create_event failed", error.code, error.message);
+    if (error.code === "23505") return { error: `The link name "${slug}" is taken. Try another.` };
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't add the event." };
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: `Added ${name}. Now add its speakers.` };
+}
+
+/** Add a speaker to an event by their account email or card link. */
+export async function adminAddEventSpeaker(eventSlug: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const who = String(formData.get("who") ?? "").trim().slice(0, 200);
+  if (!who) return { error: "Enter their email or card link." };
+  const { data, error } = await (await createClient()).rpc("admin_add_event_speaker", { p_event_slug: eventSlug, p_who: who });
+  if (error) {
+    if (error.message.includes("No card found")) return { error: "No card found for that email or link. They need a Meetwell card first." };
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't add them." };
+  }
+  revalidatePath("/admin", "layout");
+  revalidatePath(`/e/${eventSlug}`);
+  return { ok: `Added ${data as string}.` };
+}
+
+export async function adminRemoveEventSpeaker(eventSlug: string, profileSlug: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_remove_event_speaker", { p_event_slug: eventSlug, p_profile_slug: profileSlug });
+  if (error) return { error: "Couldn't remove them." };
+  revalidatePath("/admin", "layout");
+  revalidatePath(`/e/${eventSlug}`);
+  return {};
+}
+
+export async function adminSetEventActive(eventSlug: string, active: boolean): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_set_event_active", { p_event_slug: eventSlug, p_active: active });
+  if (error) return { error: "Couldn't update that." };
+  revalidatePath("/admin", "layout");
+  revalidatePath(`/e/${eventSlug}`);
+  return {};
+}
+
 /** After paying a partner by bank transfer, record it (in naira). Up to what's ready to pay. */
 export async function adminRecordPartnerPayout(partnerId: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };

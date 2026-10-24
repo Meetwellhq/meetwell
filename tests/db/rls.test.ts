@@ -1715,3 +1715,87 @@ describe("partners", () => {
     expect(ledger.map((l) => l.kind).sort()).toEqual(["earning", "earning", "payout", "refund"]);
   });
 });
+
+describe("partner event pages", () => {
+  // The ThinkUX speaker from "partners" (card partner-speaker, approved mentor) is reused.
+  const TEAM = "5c5c5c5c-5c5c-5c5c-5c5c-5c5c5c5c5c5c"; // on ThinkUX's team
+  const JUNIOR = "55555555-5555-5555-5555-555555555555"; // 1 year
+  let techcabal = "";
+
+  beforeAll(async () => {
+    const [{ id }] = await as<{ id: string }>(ALICE, "select public.admin_create_partner('TechCabal', 'techcabal') as id");
+    techcabal = id;
+  });
+
+  it("lets only admins create events and add speakers", async () => {
+    await expect(as(BOB, "select public.admin_create_event('techcabal', 'tc-summit', 'Summit', '2026-11-20')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_create_event('techcabal', 'tc-summit', 'Summit', '2026-11-20')")).rejects.toThrow(/permission denied/);
+    await as(ALICE, "select public.admin_create_event('techcabal', 'tc-summit', 'TechCabal Summit', '2026-11-20', null, 'Landmark, Lagos', 'Two days of talks.')");
+    await as(ALICE, "select public.admin_create_event('thinkux', 'thinkux-day', 'ThinkUX Day', '2026-12-05')");
+    await expect(as(ALICE, "select public.admin_create_event('techcabal', 'Bad Slug!', 'X', '2026-11-20')")).rejects.toThrow(/check constraint/);
+
+    await expect(as(BOB, "select public.admin_add_event_speaker('tc-summit', 'partner-speaker')")).rejects.toThrow(/Not allowed/);
+    await expect(as(ALICE, "select public.admin_add_event_speaker('tc-summit', 'nobody@x.test')")).rejects.toThrow(/No card found/);
+    // By card link (full URL works too) or by account email.
+    expect(await as(ALICE, "select public.admin_add_event_speaker('tc-summit', 'https://meetwell.me/p/partner-speaker') as n")).toEqual([{ n: "Test Person" }]);
+    expect(await as(ALICE, "select public.admin_add_event_speaker('thinkux-day', 'SPEAKER@partner.test') as n")).toEqual([{ n: "Test Person" }]);
+    await expect(as(null, "select * from public.partner_events")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select * from public.event_speakers")).rejects.toThrow(/permission denied/);
+  });
+
+  it("shows the public page with each speaker's card and mentoring price", async () => {
+    const [event] = await as<Record<string, unknown>>(null, "select name, venue, partner_name from public.public_event('TC-SUMMIT')");
+    expect(event).toEqual({ name: "TechCabal Summit", venue: "Landmark, Lagos", partner_name: "TechCabal" });
+    const speakers = await as<{ slug: string; price_kobo: number | null }>(null, "select slug, price_kobo from public.public_event_speakers('tc-summit')");
+    expect(speakers).toEqual([{ slug: "partner-speaker", price_kobo: 500000 }]);
+
+    await as(ALICE, "select public.admin_set_event_active('tc-summit', false)");
+    expect(await as(null, "select * from public.public_event('tc-summit')")).toEqual([]);
+    expect(await as(null, "select * from public.public_event_speakers('tc-summit')")).toEqual([]);
+    await as(ALICE, "select public.admin_set_event_active('tc-summit', true)");
+  });
+
+  it("credits the event's partner for a payment started from its page, only for its speakers", async () => {
+    const money = async (p: string) =>
+      (await as<{ earned_kobo: number }>(ALICE, "select earned_kobo from public.admin_partner_money($1)", [p]))[0].earned_kobo;
+    const [{ id: thinkux }] = (await db.query<{ id: string }>("select id from public.partners where slug = 'thinkux'")).rows;
+    const thinkuxBefore = await money(thinkux);
+
+    // Started from the TechCabal Summit page: credited to TechCabal, though the mentor joined through ThinkUX.
+    const [p] = await as<{ reference: string }>(JUNIOR, "select * from public.start_subscription_purchase('partner-speaker', 'tc-summit')");
+    const [{ event }] = (await db.query<{ event: string | null }>(
+      "select e.slug as event from public.payments y left join public.partner_events e on e.id = y.event_id where y.reference = $1", [p.reference],
+    )).rows;
+    expect(event).toBe("tc-summit");
+    await db.query("update public.payments set status = 'success', paid_at = now() where reference = $1", [p.reference]);
+    expect(await money(techcabal)).toBe(50000);
+    expect(await money(thinkux)).toBe(thinkuxBefore);
+
+    // An event the mentor doesn't speak at, or a made-up one, isn't kept.
+    await db.query("delete from public.event_speakers where event_id = (select id from public.partner_events where slug = 'thinkux-day')");
+    for (const ev of ["thinkux-day", "no-such-event"]) {
+      const [q] = await as<{ reference: string }>(JUNIOR, `select * from public.start_subscription_purchase('partner-speaker', '${ev}')`);
+      const [{ event_id }] = (await db.query<{ event_id: string | null }>("select event_id from public.payments where reference = $1", [q.reference])).rows;
+      expect(event_id).toBeNull();
+    }
+    // The old one-argument call still works.
+    expect(await as(JUNIOR, "select reference from public.start_subscription_purchase('partner-speaker')")).toHaveLength(1);
+
+    // A refund takes the event partner's share back.
+    await as(ALICE, `select public.admin_mark_refunded('${p.reference}')`);
+    expect(await money(techcabal)).toBe(0);
+
+    const [row] = await as<{ payments: number; revenue_kobo: number; speakers: { slug: string; mentor: boolean }[] }>(
+      ALICE, "select payments, revenue_kobo, speakers from public.admin_partner_events('techcabal')",
+    );
+    expect(row.payments).toBe(0); // refunded, so no longer counted
+    expect(row.speakers).toEqual([{ slug: "partner-speaker", full_name: "Test Person", status: "published", mentor: true }]);
+  });
+
+  it("shows a partner's team its own events only", async () => {
+    const mine = await as<{ name: string }>(TEAM, "select name from public.my_partner_events()");
+    expect(mine.map((e) => e.name)).toEqual(["ThinkUX Day"]);
+    expect(await as(BOB, "select * from public.my_partner_events()")).toEqual([]);
+    await expect(as(null, "select * from public.my_partner_events()")).rejects.toThrow(/permission denied/);
+  });
+});

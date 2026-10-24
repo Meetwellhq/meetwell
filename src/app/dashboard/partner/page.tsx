@@ -5,6 +5,7 @@ import { CopyPartnerLink } from "@/components/dashboard/copy-partner-link";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, Card } from "@/components/ui/misc";
 import { getSiteUrl } from "@/lib/config";
+import { eventDates } from "@/lib/events";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Partner" };
@@ -28,6 +29,8 @@ const naira = (kobo: number) =>
 
 const joined = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
+type PartnerEvent = { partner_name: string; slug: string; name: string; starts_on: string; active: boolean; speakers: number };
+
 /**
  * For a partner's team (an event platform such as ThinkUX): their invite link
  * and everyone who joined Meetwell through it. Public card details only.
@@ -38,7 +41,7 @@ export default async function PartnerPage() {
   const partners = (data ?? []) as Partner[];
   if (partners.length === 0) notFound();
 
-  const [people, money] = await Promise.all([
+  const [people, money, { data: eventRows }] = await Promise.all([
     Promise.all(
       partners.map(async (p) => ((await supabase.rpc("partner_people", { p_partner: p.id })).data ?? []) as Person[]),
     ),
@@ -48,7 +51,9 @@ export default async function PartnerPage() {
           (((await supabase.rpc("my_partner_money", { p_partner: p.id })).data ?? []) as Money[])[0] ?? NO_MONEY,
       ),
     ),
+    supabase.rpc("my_partner_events"),
   ]);
+  const allEvents = (eventRows ?? []) as PartnerEvent[];
 
   return (
     <div className="flex flex-col gap-10">
@@ -77,6 +82,34 @@ export default async function PartnerPage() {
               </p>
             </Card>
 
+            {allEvents.some((e) => e.partner_name === partner.name) && (
+              <Card className="flex flex-col gap-3 p-5 sm:p-6">
+                <div>
+                  <h2 className="font-semibold">Your event pages</h2>
+                  <p className="mt-1 text-sm text-ink-2">
+                    Every speaker&apos;s card in one place. Put the QR code on your slides, and speakers&apos; QR codes on
+                    their badges.
+                  </p>
+                </div>
+                <ul className="divide-y divide-border rounded-lg border border-border">
+                  {allEvents
+                    .filter((e) => e.partner_name === partner.name)
+                    .map((e) => (
+                      <li key={e.slug} className="flex flex-col gap-1 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="min-w-0">
+                          <Link href={`/e/${e.slug}`} className="font-medium text-ink hover:underline">{e.name}</Link>
+                          <span className="block text-xs text-ink-3">
+                            {eventDates(e.starts_on, null)} · {e.speakers} {e.speakers === 1 ? "speaker" : "speakers"}
+                            {!e.active && " · hidden"}
+                          </span>
+                        </span>
+                        <a href={`/e/${e.slug}/qr`} className="text-sm text-accent hover:underline">Download event QR</a>
+                      </li>
+                    ))}
+                </ul>
+              </Card>
+            )}
+
             <dl className="grid grid-cols-3 gap-3">
               {[
                 { label: "Joined", value: partner.signups },
@@ -95,7 +128,8 @@ export default async function PartnerPage() {
                 <h2 className="font-semibold">Your earnings</h2>
                 <p className="mt-1 text-sm text-ink-2">
                   You earn 10% of what your speakers are paid as mentors on Meetwell, for each speaker&apos;s first 12
-                  months. Meetwell pays you by bank transfer.
+                  months, and 10% of every paid message started from one of your event pages. Meetwell pays you by
+                  bank transfer.
                 </p>
               </div>
               <dl className="grid grid-cols-3 gap-3">

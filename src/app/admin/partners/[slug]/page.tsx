@@ -3,10 +3,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { date, naira, NotReady, PageTitle, Stats } from "@/components/admin/admin-ui";
+import { AddEvent, EventCard, type AdminEvent } from "@/components/admin/events-admin";
 import { PartnerSummary, RecordPayout, type PartnerMoney, type PartnerRow } from "@/components/admin/partners-admin";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/misc";
 import { getSiteUrl } from "@/lib/config";
+import { eventDates } from "@/lib/events";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Partner · Admin" };
@@ -34,11 +36,13 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
   const partner = ((data ?? []) as PartnerRow[]).find((p) => p.slug === slug);
   if (!partner) notFound();
 
-  const [{ data: rows }, { data: moneyRows }, { data: ledgerRows }] = await Promise.all([
+  const [{ data: rows }, { data: moneyRows }, { data: ledgerRows }, { data: eventRows, error: eventsError }] = await Promise.all([
     supabase.rpc("admin_partner_people", { p_partner: partner.id }),
     supabase.rpc("admin_partner_money", { p_partner: partner.id }),
     supabase.rpc("admin_partner_ledger", { p_partner: partner.id }),
+    supabase.rpc("admin_partner_events", { p_partner_slug: partner.slug }),
   ]);
+  const events = (eventRows ?? []) as AdminEvent[];
   const people = (rows ?? []) as Person[];
   const money = ((moneyRows ?? []) as PartnerMoney[])[0] ?? { earned_kobo: 0, paid_kobo: 0, available_kobo: 0, pending_kobo: 0 };
   const ledger = (ledgerRows ?? []) as LedgerRow[];
@@ -60,7 +64,8 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
         <div>
           <h2 className="font-medium text-ink">Their earnings</h2>
           <p className="text-sm text-ink-2">
-            10% of what their mentors are paid, for each mentor&apos;s first 12 months. It comes out of Meetwell&apos;s 20%.
+            10% of what their mentors are paid, for each mentor&apos;s first 12 months, plus 10% of every paid message
+            started from one of their event pages. It comes out of Meetwell&apos;s 20%.
           </p>
         </div>
         <Stats
@@ -93,6 +98,35 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
+        <div>
+          <h2 className="font-medium text-ink">Event pages</h2>
+          <p className="text-sm text-ink-2">
+            One page per event with every speaker&apos;s card and QR codes for badges and slides. When someone pays to
+            message a speaker from the event page, {partner.name} gets 10%, even if the speaker was already on Meetwell.
+          </p>
+        </div>
+        {eventsError ? (
+          <NotReady what="Event pages" />
+        ) : (
+          <>
+            {events.length > 0 && (
+              <ul className="flex flex-col gap-3">
+                {events.map((e) => (
+                  <EventCard key={e.slug} event={e} site={getSiteUrl()} dates={eventDates(e.starts_on, e.ends_on)} revenue={naira(e.revenue_kobo)} />
+                ))}
+              </ul>
+            )}
+            <details className="rounded-lg border border-dashed border-border p-3" open={events.length === 0}>
+              <summary className="cursor-pointer text-sm font-medium text-ink">Add an event</summary>
+              <div className="mt-3">
+                <AddEvent partnerSlug={partner.slug} />
+              </div>
+            </details>
+          </>
         )}
       </section>
 

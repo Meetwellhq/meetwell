@@ -187,6 +187,12 @@ every migration.
   taken from Meetwell's 20% (mentors keep 80%); a refund takes it back (`partner_ledger`). Ready to pay after 7 days.
   Rasheed pays partners by bank transfer and records it on the partner's admin page (`admin_record_partner_payout`).
   Admin revenue (`admin_metrics`) leaves the partner's share out. Partners see totals only (`my_partner_money`).
+  Step 3, event pages (`20261128000000_partner_events.sql`): public `/e/<slug>` with every speaker's card, an event QR
+  (slides) and per-speaker QR (badges) from `/e/<slug>/qr[?speaker=]`. Speaker links carry `?event=<slug>` to the card,
+  `/subscribe/<card>?event=` and `start_subscription_purchase(p_slug, p_event)`, which stores `payments.event_id` only if
+  the mentor speaks at that active event. Such a payment earns the **event's** partner 10% (no 12-month limit), even if
+  the mentor joined through another partner or none. Admins create events and add speakers (email or card link) on
+  `/admin/partners/<slug>`; partner teams see their events on the Partner tab (`my_partner_events`).
 - **Outreach tracker**: `/admin/outreach` (`20261113000000_outreach.sql`, `src/lib/outreach.ts`). Rasheed adds
   people he finds on X one at a time or by pasting a list (one per line: handle or link, optional name and note;
   `parseOutreachList`); names are optional ("Hi there") and editable. Each person gets a single-use access code (60 days), a "Copy message"
@@ -299,9 +305,7 @@ does not remove that. Revoke from `anon` explicitly for anything visitors must n
   Refund records: set `payments.status = 'refunded'` and add a negative `credit_ledger` row (reason `refund`)
   rather than deleting real payments.
 
-- **Next week (from 26 Oct 2026): build event pages** (partners step 3). One page per partner event with every
-  speaker's card, QR codes for badges and slides, and mentor payments that start from the event page credited to the
-  partner (10%, same rules), so speakers already on Meetwell count too. Promised to ThinkUX in the partnership pitch.
+- **Event pages built** (24 Oct 2026, partners step 3; see Partners above). Next: create ThinkUX's real event and add its speakers.
 - Talk to the first invited users; invite the next batch from /admin.
 - Lawyer review of Terms and Privacy.
 - Optional: delete meetwell.me from ImprovMX (no longer used).

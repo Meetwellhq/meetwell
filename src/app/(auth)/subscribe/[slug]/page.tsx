@@ -6,6 +6,7 @@ import { AuthIntro, AuthSection } from "@/components/auth/auth-section";
 import { SubscribeButton } from "@/components/mentors/subscribe-button";
 import { Avatar } from "@/components/ui/avatar";
 import { Alert } from "@/components/ui/misc";
+import { isEventSlug } from "@/lib/events";
 import { isMentor } from "@/lib/matching/constants";
 import type { ConversationRow } from "@/lib/messaging/types";
 import { paymentsEnabled } from "@/lib/payments/paystack";
@@ -19,10 +20,14 @@ const naira = (kobo: number) =>
 const day = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Africa/Lagos" });
 
-export default async function SubscribePage({ params }: PageProps<"/subscribe/[slug]">) {
-  const { slug } = await params;
+export default async function SubscribePage({ params, searchParams }: PageProps<"/subscribe/[slug]">) {
+  const [{ slug }, { event }] = await Promise.all([params, searchParams]);
+  const eventSlug = isEventSlug(event) ? event : null;
   const user = await getCurrentUser();
-  if (!user) redirect(`/sign-in?next=${encodeURIComponent(`/subscribe/${slug}`)}`);
+  if (!user) {
+    const back = eventSlug ? `/subscribe/${slug}?event=${eventSlug}` : `/subscribe/${slug}`;
+    redirect(`/sign-in?next=${encodeURIComponent(back)}`);
+  }
 
   const supabase = await createClient();
   const [card, { data: offerRows }, { data: me }, { data: convs }] = await Promise.all([
@@ -114,6 +119,7 @@ export default async function SubscribePage({ params }: PageProps<"/subscribe/[s
         ) : (
           <SubscribeButton
             slug={card.slug}
+            eventSlug={eventSlug}
             free={free}
             label={free ? (active ? "Add 30 more days" : `Start messaging ${first}`) : active ? `Add 30 days for ${naira(offer!.price_kobo)}` : `Pay ${naira(offer!.price_kobo)}`}
           />

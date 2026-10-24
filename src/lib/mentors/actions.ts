@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getSiteUrl } from "../config";
 import { createRecipient, initializeTransaction, paymentsEnabled, resolveAccount } from "../payments/paystack";
 import { rateLimit } from "../rate-limit";
+import { isEventSlug } from "../events";
 import { createClient, getCurrentUser } from "../supabase/server";
 
 export type Result = { ok?: boolean; error?: string; message?: string };
@@ -113,8 +114,12 @@ export async function subscribeToMentor(_: SubscribeState, formData: FormData): 
   if (!paymentsEnabled()) return { error: "Payments aren't open yet." };
   if (!rateLimit(`subscribe:${user.id}`, 5, 60_000)) return { error: "Please wait a moment and try again." };
   const slug = String(formData.get("slug") ?? "");
+  const event = formData.get("event");
 
-  const { data, error } = await (await createClient()).rpc("start_subscription_purchase", { p_slug: slug });
+  const { data, error } = await (await createClient()).rpc("start_subscription_purchase", {
+    p_slug: slug,
+    p_event: isEventSlug(event) ? event : null,
+  });
   const row = (data as { reference: string; amount_kobo: number; email: string; mentor_name: string }[] | null)?.[0];
   if (error || !row) {
     if (error?.code === "42501") return { error: "Messaging mentors is for members earlier in their careers." };
@@ -129,7 +134,7 @@ export async function subscribeToMentor(_: SubscribeState, formData: FormData): 
       amountKobo: row.amount_kobo,
       reference: row.reference,
       callbackUrl: `${getSiteUrl()}/api/paystack/callback`,
-      metadata: { kind: "mentor_subscription", mentor: slug, days: 30 },
+      metadata: { kind: "mentor_subscription", mentor: slug, days: 30, ...(isEventSlug(event) ? { event } : {}) },
     });
   } catch (err) {
     console.error("Paystack initialize failed", err);
