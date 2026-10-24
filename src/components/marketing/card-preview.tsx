@@ -126,7 +126,7 @@ export function SparkPreview() {
       </p>
       <div className="mt-4 flex gap-2">
         <span className="inline-flex h-9 items-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-ink">View card</span>
-        <span className="inline-flex h-9 items-center rounded-lg px-3 text-sm text-ink-2">5 free a month</span>
+        <span className="inline-flex h-9 items-center rounded-lg px-3 text-sm text-ink-2">1 free a month</span>
       </div>
     </div>
   );

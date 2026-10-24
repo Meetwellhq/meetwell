@@ -131,7 +131,7 @@ describe("complete your profile email", () => {
     expect(e.html).toContain('href="https://meetwell.me/dashboard/matches"');
     expect(e.text).toContain("people earlier in their careers who want to learn from you"); // 4+ years: recommended
     const junior = incompleteProfileEmail({ ...args, completeness: 70, hasPhoto: true, experienceYears: 2 });
-    expect(junior.text).toContain("up to 5 a month");
+    expect(junior.text).toContain("one a month");
   });
 });
 
@@ -140,7 +140,7 @@ describe("Spark beta announcement", () => {
     const { subject, text, html } = sparkBetaEmail({ ...base, fullName: "Ada Obi" });
     expect(subject).toBe("Come and try Spark, our new beta feature");
     expect(text.startsWith("Hi Ada,")).toBe(true);
-    expect(text).toContain("up to 5 free introductions a month");
+    expect(text).toContain("one free introduction a month");
     expect(html).toContain('href="https://meetwell.me/dashboard/matches"');
     expect(html).toContain('href="mailto:support@meetwell.me"');
     expect(text).toContain("one-off note");

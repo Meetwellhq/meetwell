@@ -45,7 +45,7 @@ export function SparkCredits({ balance, packs, freeLeft }: { balance: number; pa
       </div>
       <p className="mt-4 font-medium text-ink">{freeLeft === 0 ? "Get more introductions" : "Want more introductions?"}</p>
       <p className="mt-1 text-sm text-ink-2">
-        Each credit gives you one extra introduction after your 5 free ones. Still one a day at most. Credits never
+        Each credit gives you one extra introduction after your free one each month. Still one a day at most. Credits never
         expire.
       </p>
 

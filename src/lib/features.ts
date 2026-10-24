@@ -75,7 +75,7 @@ export const FEATURES: FeaturePage[] = [
       { title: "Reach out", body: "Open their card and say hello. Spark explains why you'd be a good match." },
     ],
     details: [
-      "Up to 5 free introductions a month, at most one a day.",
+      "One free introduction a month.",
       "Want more? Buy Spark credits on your Spark page.",
       "People with 4+ years are recommended to others, not introduced.",
       "Turn Spark on or off anytime.",

@@ -335,7 +335,7 @@ export function incompleteProfileEmail(
       before: [
         experienceYears !== null && experienceYears >= RECOMMENDABLE_MIN_YEARS
           ? `${progress} Once it reaches 80%, Spark can start introducing you to people earlier in their careers who want to learn from you.`
-          : `${progress} Once it reaches 80%, you'll start getting Spark introductions: more experienced people in your field worth meeting, up to 5 a month.`,
+          : `${progress} Once it reaches 80%, you'll start getting Spark introductions: more experienced people in your field worth meeting, one a month.`,
         "A few more details will get you there, and you can see exactly what's missing on your Spark page.",
       ],
       cta: { href: `${siteUrl}/dashboard/matches`, label: "Complete my profile" },
@@ -361,7 +361,7 @@ export function incompleteProfileEmail(
     ...args,
     subject: "Add a photo to get Spark introductions",
     before: [
-      `${progress} Once it reaches 80%, Spark will start recommending experienced people in your field for you to meet and learn from, up to 5 a month.`,
+      `${progress} Once it reaches 80%, Spark will start recommending experienced people in your field for you to meet and learn from, one a month.`,
       "The best first step is a clear photo of you. Experienced members are far more likely to reply when they can see who's reaching out.",
     ],
     cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },
@@ -376,7 +376,7 @@ export function sparkBetaEmail({ fullName, appName, siteUrl, photoUrl, replyEmai
   const before = [
     `I've just opened a new beta feature on ${appName} called Spark, and you're welcome to come and try it. It's free.`,
     "Spark introduces you to someone a step ahead of you: a member with 4+ years of experience in your field, or one close to it. Each introduction comes with a short note on why you two should talk, and a button to open their card and say hello.",
-    "To try it, open Spark in your dashboard, switch it on and tell us a little about your work. Only Spark sees these answers. They never show on your card. Once your profile is 80% complete, you'll get up to 5 free introductions a month, by email and on your Spark page.",
+    "To try it, open Spark in your dashboard, switch it on and tell us a little about your work. Only Spark sees these answers. They never show on your card. Once your profile is 80% complete, you'll get one free introduction a month, by email and on your Spark page.",
   ];
   const after = [
     "Been at it for 4 years or more? Turn Spark on and add a profile photo, and people earlier in their careers can be introduced to you.",

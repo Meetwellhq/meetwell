@@ -10,7 +10,9 @@ export function SparkAllowance({ used, credits = 0 }: { used: number; credits?: 
     <section className="rounded-xl bg-accent-soft p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <p className="font-medium text-ink">
-          {left} of {SPARK_FREE_PER_MONTH} free introductions left this month
+          {SPARK_FREE_PER_MONTH === 1
+            ? left > 0 ? "Your free introduction this month is still to come" : "You've had your free introduction this month"
+            : `${left} of ${SPARK_FREE_PER_MONTH} free introductions left this month`}
         </p>
         <p className="text-sm text-ink-2">Resets {reset}</p>
       </div>
@@ -22,7 +24,7 @@ export function SparkAllowance({ used, credits = 0 }: { used: number; credits?: 
       {left === 0 && (
         <p className="mt-3 text-sm text-ink-2">
           {credits > 0
-            ? `Your free ones are used, so Spark is using your credits (${credits} left).`
+            ? `Spark is using your credits now (${credits} left).`
             : `That's all for this month. More from ${reset}.`}
         </p>
       )}

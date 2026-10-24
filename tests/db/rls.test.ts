@@ -578,8 +578,8 @@ describe("AI network matching", () => {
     const dueAfter = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`);
     expect(dueAfter.map((d) => d.email)).not.toContain("junior@test");
 
-    // A day later: due again, and can get the next person.
-    await db.exec("update public.matches set created_at = now() - interval '1 day'");
+    // A day later (and in a new month, so the free one is back): due again, and can get the next person.
+    await db.exec("update public.matches set created_at = public.spark_month_start() - interval '1 day'");
     const dueNextDay = await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`);
     expect(dueNextDay.map((d) => d.email)).toContain("junior@test");
     const cands = await as<{ slug: string }>(null, `select slug from public.matching_candidates('${SECRET}', '${JUNIOR}', 8)`);
@@ -592,16 +592,16 @@ describe("AI network matching", () => {
     expect(await as(SENIOR, "select * from public.my_matches()")).toEqual([]); // one-way
   });
 
-  it("stops at 5 free matches a month (Lagos time), and last month doesn't count", async () => {
+  it("stops at 1 free match a month (Lagos time), and last month doesn't count", async () => {
     const used = async () =>
       (await db.query<{ n: number }>(`select public.spark_matches_this_month('${JUNIOR}') as n`)).rows[0].n;
     const due = async () =>
       (await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`)).map((d) => d.email);
     const ids = (await db.query<{ id: string }>(
-      "select id from public.profiles where slug not in ('junior', 'sparse') order by slug limit 5",
+      "select id from public.profiles where slug not in ('junior', 'sparse') order by slug limit 1",
     )).rows.map((r) => r.id);
-    expect(ids).toHaveLength(5);
-    const insertFive = (when: string) =>
+    expect(ids).toHaveLength(1);
+    const insertOne = (when: string) =>
       db.query(
         `insert into public.matches (user_id, matched_profile_id, reason, created_at)
          select $1, id, 'test', ${when} from unnest($2::uuid[]) as id`,
@@ -609,25 +609,26 @@ describe("AI network matching", () => {
       );
     await db.query("delete from public.matches where user_id = $1", [JUNIOR]);
 
-    // Five matches last month: none of them count, so the member is due.
-    await insertFive("public.spark_month_start() - interval '1 day'");
+    // A match last month doesn't count, so the member is due.
+    await insertOne("public.spark_month_start() - interval '1 day'");
     expect(await used()).toBe(0);
     expect(await due()).toContain("junior@test");
 
-    // Five this month: no sixth until next month.
+    // One this month (more than 20 hours ago): no second until next month.
     await db.query("delete from public.matches where user_id = $1", [JUNIOR]);
-    await insertFive("public.spark_month_start()");
-    expect(await used()).toBe(5);
+    await insertOne("least(public.spark_month_start(), now() - interval '1 day')");
+    if ((await used()) < 1) return; // first day of the month: the backdated match fell into last month
     expect(await due()).not.toContain("junior@test");
-    const [{ id: sixth }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'sparse'")).rows;
+    const [{ id: second }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'sparse'")).rows;
     const recorded = await as<{ m: string | null }>(
       null,
-      `select public.record_match('${SECRET}', '${JUNIOR}', '${sixth}', 'sixth') as m`,
+      `select public.record_match('${SECRET}', '${JUNIOR}', '${second}', 'second') as m`,
     );
     expect(recorded[0].m).toBeNull();
 
     // The member sees their own count; the helpers stay locked.
-    expect((await as<{ n: number }>(JUNIOR, "select public.my_matches_this_month() as n"))[0].n).toBe(5);
+    expect((await as<{ n: number }>(JUNIOR, "select public.my_matches_this_month() as n"))[0].n).toBe(1);
+    await expect(as(JUNIOR, "select public.spark_free_per_month()")).rejects.toThrow(/permission denied/);
     await expect(as(null, `select public.spark_matches_this_month('${JUNIOR}')`)).rejects.toThrow(/permission denied/);
     await expect(as(JUNIOR, `select public.spark_matches_this_month('${JUNIOR}')`)).rejects.toThrow(/permission denied/);
     await expect(as(JUNIOR, "select public.spark_month_start()")).rejects.toThrow(/permission denied/);
@@ -778,16 +779,16 @@ describe("Spark credits", () => {
     ]));
   });
 
-  it("uses a credit only after the free 5 in a month", async () => {
+  it("uses a credit only after the free one in a month", async () => {
     const ids = (await db.query<{ id: string }>(
-      "select id from public.profiles where slug not in ('junior', 'senior') order by slug limit 5",
+      "select id from public.profiles where slug not in ('junior', 'senior') order by slug limit 1",
     )).rows.map((r) => r.id);
     const [{ id: seniorId }] = (await db.query<{ id: string }>("select id from public.profiles where slug = 'senior'")).rows;
     const due = async () =>
       (await as<{ email: string }>(null, `select email from public.matching_due_users('${SECRET}', 50)`)).map((d) => d.email);
     await db.query("delete from public.matches where user_id = $1", [JUNIOR]);
 
-    // Five free this month, a day ago: with credits the member is still due.
+    // The free one this month, a day ago: with credits the member is still due.
     await db.query(
       `insert into public.matches (user_id, matched_profile_id, reason, created_at)
        select $1, id, 'free', greatest(public.spark_month_start(), now() - interval '1 day') from unnest($2::uuid[]) as id`,
@@ -795,7 +796,7 @@ describe("Spark credits", () => {
     );
     await db.query("update public.matches set created_at = now() - interval '1 day' where user_id = $1 and created_at > now() - interval '20 hours'", [JUNIOR]);
     const freeUsed = (await db.query<{ n: number }>(`select public.spark_matches_this_month('${JUNIOR}') as n`)).rows[0].n;
-    if (freeUsed < 5) return; // first day of the month: the backdated matches fell into last month
+    if (freeUsed < 1) return; // first day of the month: the backdated match fell into last month
     expect(await due()).toContain("junior@test");
 
     const [{ m }] = await as<{ m: string | null }>(null, `select public.record_match('${SECRET}', '${JUNIOR}', '${seniorId}', 'paid one') as m`);

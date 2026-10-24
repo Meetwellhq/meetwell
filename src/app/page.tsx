@@ -172,7 +172,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             body={
               <p>
                 Spark uses AI to introduce you to someone with more experience in your field, and tells you why
-                you should talk. Up to 5 free introductions a month.
+                you should talk. One free introduction a month.
               </p>
             }
             action={<ButtonLink href={cta}>

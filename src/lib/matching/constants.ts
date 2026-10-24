@@ -1,7 +1,7 @@
 /** Spark (AI matching): shared labels and limits. Values must match the database checks. */
 
-/** Free Spark matches per calendar month (Lagos time). Matches `spark_matches_this_month` checks in SQL. */
-export const SPARK_FREE_PER_MONTH = 5;
+/** Free Spark matches per calendar month (Lagos time). Matches `spark_free_per_month()` in SQL. */
+export const SPARK_FREE_PER_MONTH = 1;
 
 /**
  * Years of experience that make a member a mentor on Spark: recommended to people earlier in

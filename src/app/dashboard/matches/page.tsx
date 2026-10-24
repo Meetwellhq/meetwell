@@ -81,8 +81,8 @@ export default async function MatchesPage({ searchParams }: PageProps<"/dashboar
         ) : (
           <p className="mt-1 text-ink-2">
             Spark introduces you to someone a step ahead of you: an experienced person in your field ({MENTOR_MIN_YEARS}+
-            years) you can learn from. Up to {SPARK_FREE_PER_MONTH} free introductions a month, at most one a day, by
-            email and here.
+            years) you can learn from. One free introduction a month, by email and here. Credits add more, one a day at
+            most.
           </p>
         )}
       </div>

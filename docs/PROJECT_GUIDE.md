@@ -120,7 +120,7 @@ every migration.
 - **Spark (AI Network Matching)**: `/dashboard/matches` (shown to members as "Spark"; the URL stays /matches so old email links work) (opt-in + private fields: field, experience,
   looking for, city; list of matches). Recommends only people with 4+ years, a profile
   photo and more experience than the member, in the same or a related field
-  (`20261031000000_matching_min_experience.sql`). Up to 5 free matches per member per calendar month (Lagos time), at most one a day (`20261101000000_spark_monthly_limit.sql`; keep `SPARK_FREE_PER_MONTH` in `src/lib/matching/constants.ts` in step). Daily job
+  (`20261031000000_matching_min_experience.sql`). 1 free match per member per calendar month (Lagos time; was 5 until `20261123000000_spark_one_free_a_month.sql`), credits add more at most one a day. The limit is `spark_free_per_month()` in SQL; keep `SPARK_FREE_PER_MONTH` in `src/lib/matching/constants.ts` in step. Daily job
   `src/app/api/cron/matches/route.ts` (09:00 UTC): `matching_due_users()` → `matching_candidates()`
   (scores: field, extra years, mentoring, city; small penalty per recent recommendation; no
   repeats; photo required) → `chooseMatch()` in `src/lib/matching/engine.ts` (Claude `claude-opus-5-5`, low effort,
@@ -139,7 +139,7 @@ every migration.
   `/api/paystack/callback` and the webhook `/api/paystack/webhook` (HMAC-SHA512 signature checked;
   set `https://meetwell.me/api/paystack/webhook` in Paystack → Settings → API Keys & Webhooks).
   `public.credit_ledger` has one row per credit added or used; `record_match()` uses a credit only
-  after the free 5 in a month. Payments list in /admin. Refunds by hand in Paystack.
+  after the free one in a month. Payments list in /admin. Refunds by hand in Paystack.
 - **Messages**: private conversations between a member (under 4 years) and a mentor (4+), in
   `/dashboard/messages` (list) and `/dashboard/messages/[id]` (thread, refreshes every 8s). The Messages tab
   only shows for people with a conversation, with an unread count. All rules live in
