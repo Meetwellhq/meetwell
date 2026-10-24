@@ -115,7 +115,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                 },
                 { label: `Mentees (under ${MENTOR_MIN_YEARS} years)`, value: mentees },
                 { label: "Mentor to mentee ratio", value: ratio(mentors.length, mentees), note: "mentees for every mentor" },
-                { label: "Years not set yet", value: unset, note: "No card, or skipped the question" },
+                { label: "Profile not set up", value: unset, note: "No card, or no years of experience yet" },
               ]}
             />
             {known > 0 && (
@@ -148,7 +148,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                 { value: "all", label: `Everyone (${people.length})` },
                 { value: "mentor", label: `Mentors (${mentors.length})` },
                 { value: "mentee", label: `Mentees (${mentees})` },
-                { value: "unset", label: `Years not set (${unset})` },
+                { value: "unset", label: `Profile not set up (${unset})` },
               ]}
               cards={[
                 { value: "all", label: "Any card" },
@@ -184,7 +184,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {role === "unset" ? (
-                          <Badge>Years not set</Badge>
+                          <Badge>Profile not set up</Badge>
                         ) : (
                           <Badge tone={role === "mentor" ? "accent" : "mentee"}>
                             {role === "mentor" ? "Mentor" : "Mentee"} · {m.experience_years} {m.experience_years === 1 ? "year" : "years"}
