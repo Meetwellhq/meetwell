@@ -34,10 +34,10 @@ export function AddEvent({ partnerSlug }: { partnerSlug: string }) {
     <form ref={form} action={action} className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Event name">
-          {({ id }) => <Input id={id} name="name" required maxLength={120} placeholder="ThinkUX Design Day 2026" />}
+          {({ id }) => <Input id={id} name="name" required maxLength={120} placeholder="e.g. Design Summit 2026" />}
         </Field>
         <Field label="Link name" hint="Optional. Made from the name if you leave it empty.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="slug" maxLength={40} placeholder="thinkux-2026" />}
+          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="slug" maxLength={40} placeholder="e.g. design-summit-2026" />}
         </Field>
         <Field label="Starts">
           {({ id }) => <Input id={id} name="startsOn" type="date" required />}

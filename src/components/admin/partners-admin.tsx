@@ -41,11 +41,11 @@ export function AddPartner() {
     <form ref={form} action={action} className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Partner name">
-          {({ id }) => <Input id={id} name="name" required maxLength={80} placeholder="ThinkUX" />}
+          {({ id }) => <Input id={id} name="name" required maxLength={80} placeholder="e.g. Lagos Design Week" />}
         </Field>
         <Field label="Link name" hint="Optional. Made from the name if you leave it empty.">
           {({ id, describedBy }) => (
-            <Input id={id} aria-describedby={describedBy} name="slug" maxLength={40} placeholder="thinkux" />
+            <Input id={id} aria-describedby={describedBy} name="slug" maxLength={40} placeholder="e.g. lagos-design-week" />
           )}
         </Field>
       </div>
