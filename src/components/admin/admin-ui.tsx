@@ -80,12 +80,18 @@ const REMINDER_LABEL = {
   profile_incomplete: "Profile reminder sent",
 } as const;
 
+/** Only the latest reminder: each new one replaces the last as the person's status. */
 export function ReminderBadges({ reminders }: { reminders?: Reminder[] }) {
-  return (reminders ?? []).map((r) => (
-    <Badge key={r.kind} tone="accent">
-      {REMINDER_LABEL[r.kind] ?? "Reminder sent"} {date(r.sent_at)}
+  const latest = (reminders ?? []).reduce<Reminder | null>(
+    (last, r) => (!last || new Date(r.sent_at) > new Date(last.sent_at) ? r : last),
+    null,
+  );
+  if (!latest) return null;
+  return (
+    <Badge tone="accent">
+      {REMINDER_LABEL[latest.kind] ?? "Reminder sent"} {date(latest.sent_at)}
     </Badge>
-  ));
+  );
 }
 
 export function Stats({
