@@ -13,7 +13,7 @@ const mail = (
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy notice" updated="October 22, 2026">
+    <LegalPage title="Privacy notice" updated="October 24, 2026">
       <section>
         <p>
           This notice explains what personal data {APP_NAME} collects, why, and the rights you have. We follow the
@@ -119,6 +119,12 @@ export default function PrivacyPage() {
             of providing the service.
           </li>
           <li>
+            <strong>To see whether our emails are useful</strong>, based on our legitimate interest in improving them.
+            For some emails we send you, such as a reminder to publish your card, we record whether it was delivered,
+            opened and whether you clicked its button, using a small image and a tracked link. We only look at the
+            totals for each email, and we don&apos;t use this for advertising.
+          </li>
+          <li>
             <strong>To show you engagement totals and keep the service secure</strong>, based on our legitimate
             interest in running a safe, working product.
           </li>
@@ -159,7 +165,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Supabase</strong>: database, file storage and login;</li>
           <li><strong>Vercel</strong>: website hosting;</li>
-          <li><strong>Resend</strong>: sending emails;</li>
+          <li><strong>Resend</strong>: sending emails, and telling us whether they were delivered, opened or clicked;</li>
           <li>
             <strong>Sentry</strong>: error reports and page-speed timings, so we can fix crashes and slow pages. A
             report says what went wrong or how long a page took, on which page and browser. We switch off IP

@@ -69,6 +69,7 @@ every migration.
 | `PAYSTACK_SECRET_KEY` | Vercel (production, sensitive) + `.env.local` for testing | Spark credits. Test key (`sk_test_…`) first; live key only with Rasheed's OK. Without it the credit packs are hidden. The webhook and return page also need `CRON_SECRET` |
 | `NEXT_PUBLIC_SENTRY_DSN` | Vercel (production) | Sentry error reports (`src/instrumentation.ts`, `src/instrumentation-client.ts`, settings in `src/lib/sentry.ts`: errors plus 10% tracing, release = Vercel commit, no IPs/cookies, no replay or feedback widget). Without it Sentry is off. Listed in the Privacy notice. Org `meet-well`, project `meetwell` |
 | `SENTRY_AUTH_TOKEN` | Vercel (production, sensitive) | Lets the build upload source maps to Sentry (`withSentryConfig` in `next.config.ts`) so error reports show readable code. Optional |
+| `RESEND_WEBHOOK_SECRET` | Vercel (production, sensitive) | Signing secret of the Resend webhook (`/api/resend/webhook`) that records delivered, opened, clicked and bounced for New email sends. Without it events are refused. Needs `CRON_SECRET` too |
 | `ANTHROPIC_API_KEY` | Vercel (production, sensitive) | Claude for AI Network Matching. Without it, matching falls back to rule-based picks and template reasons |
 
 ## Key features and where they live
@@ -208,6 +209,11 @@ every migration.
   card, no photo, under 80%, last logged in), see the count, the first names and a preview, send a test to yourself, then
   send in batches of 40. Every send is logged in `public.email_sends` so nobody gets the same email twice, unless
   "Send again after N days" is chosen; older one-off announcements count as sent (`20261126000000_email_campaigns.sql`).
+  Results (`20261127000000_email_results.sql`) show under "Sent with New email" on Announcements: delivered, opened,
+  clicked (from Resend's webhook, matched by the Resend id kept per send) and "did it" (worked out from the profile now:
+  published, has a photo, 80%+, Spark on, years added). Resend setup: Domains → meetwell.me → turn on click tracking (and
+  open tracking); Webhooks → add `https://meetwell.me/api/resend/webhook` with email.delivered, opened, clicked, bounced,
+  then put its signing secret in `RESEND_WEBHOOK_SECRET`. The Privacy notice says emails may record opens and clicks.
   A "write your own" email (with an unsubscribe link for news) is the planned next step.
 - **Changelog**: big new features only, with Rasheed's OK (see Deploying). `/changelog` is built from `CHANGELOG.md` (`src/lib/changelog.ts` reads the small
   Markdown subset used there). Linked in the footer. Add a dated `## D Month YYYY: Title` entry per release.

@@ -759,7 +759,7 @@ describe("New email (audience and send log)", () => {
     await expect(as(BOB, "select * from public.admin_email_audience('publish_card')")).rejects.toThrow(/Not allowed/);
     await expect(as(null, "select * from public.admin_email_audience('publish_card')")).rejects.toThrow(/permission denied/);
     await expect(as(BOB, "select public.admin_record_email_send('publish_card', 'x@test')")).rejects.toThrow(/Not allowed/);
-    await expect(as(null, "select * from public.admin_email_history()")).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select * from public.admin_email_results()")).rejects.toThrow(/permission denied/);
     await expect(as(ALICE, "select * from public.email_sends")).rejects.toThrow(/permission denied/);
     await expect(audience("'nope'")).rejects.toThrow(/Unknown email or filter/);
     await expect(audience("'publish_card', 'boss'")).rejects.toThrow(/Unknown email or filter/);
@@ -801,11 +801,47 @@ describe("New email (audience and send log)", () => {
     expect(await audience("'publish_card', 'all', 'draft', false, false, null, 14")).toContain(draftEmail);
     expect(await audience("'publish_card', 'all', 'draft'")).not.toContain(draftEmail); // "never again" still holds
 
-    const history = await as<{ template: string; people: number }>(ALICE, "select template, people from public.admin_email_history()");
+    const history = await as<{ template: string; people: number }>(ALICE, "select template, people from public.admin_email_results()");
     expect(history).toEqual(expect.arrayContaining([{ template: "publish_card", people: 1 }]));
 
     await db.query("delete from public.email_sends where email = $1", [draftEmail]);
     await db.query("update public.profiles set status = $2 where id = $1", [draftId, was]);
+  });
+
+  it("records Resend's events and shows results, including who did what the email asked", async () => {
+    const SECRET = "test-secret-that-is-long-enough-1234567890";
+    // Two sends of "Add a photo": one person has a photo now, one doesn't.
+    const [withPhoto, without] = (await db.query<{ email: string }>(
+      `select u.email from auth.users u join public.profiles p on p.user_id = u.id
+       where not public.is_admin_user(u.id) order by (p.avatar_url is null), u.email limit 2`,
+    )).rows.map((r) => r.email);
+    await db.query("update public.profiles set avatar_url = 'https://example.test/a.jpg' where user_id = (select id from auth.users where email = $1)", [withPhoto]);
+    const [{ was }] = (await db.query<{ was: string | null }>(
+      "select p.avatar_url as was from public.profiles p join auth.users u on u.id = p.user_id where u.email = $1", [without],
+    )).rows;
+    await db.query("update public.profiles set avatar_url = null where user_id = (select id from auth.users where email = $1)", [without]);
+
+    await as(ALICE, `select public.admin_record_email_send('add_photo', '${withPhoto}', 're_1')`);
+    await as(ALICE, `select public.admin_record_email_send('add_photo', '${without}', 're_2')`);
+
+    // Events need the cron secret; unknown ids and types are ignored.
+    await expect(as(null, "select public.record_email_event('wrong', 're_1', 'delivered')")).rejects.toThrow();
+    const event = (id: string, type: string) =>
+      as<{ ok: boolean }>(null, `select public.record_email_event('${SECRET}', '${id}', '${type}') as ok`).then((r) => r[0].ok);
+    expect(await event("re_1", "delivered")).toBe(true);
+    expect(await event("re_2", "delivered")).toBe(true);
+    expect(await event("re_1", "clicked")).toBe(true); // a click counts as an open too
+    expect(await event("re_2", "bounced")).toBe(true);
+    expect(await event("re_missing", "clicked")).toBe(false);
+    expect(await event("re_1", "spam")).toBe(false);
+
+    const [row] = await as<Record<string, number | string>>(
+      ALICE, "select people, delivered, opened, clicked, bounced, acted from public.admin_email_results() where template = 'add_photo'",
+    );
+    expect(row).toEqual({ people: 2, delivered: 2, opened: 1, clicked: 1, bounced: 1, acted: 1 });
+
+    await db.query("delete from public.email_sends where resend_id in ('re_1', 're_2')");
+    await db.query("update public.profiles set avatar_url = $2 where user_id = (select id from auth.users where email = $1)", [without, was]);
   });
 
   it("counts older one-off announcements as already sent", async () => {

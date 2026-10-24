@@ -9,36 +9,43 @@ export const TEMPLATES = [
     id: "publish_card",
     label: "Publish your card",
     about: "For people whose card is still a draft.",
+    did: "Published",
     defaults: { card: "draft" },
   },
   {
     id: "add_photo",
     label: "Add a photo",
     about: "For published cards without a photo.",
+    did: "Added a photo",
     defaults: { card: "published", noPhoto: true },
   },
   {
     id: "finish_profile",
     label: "Finish your profile",
     about: "For profiles under 80%, so Spark can introduce them.",
+    did: "Reached 80%",
     defaults: { card: "published", under80: true },
   },
   {
     id: "spark_beta",
     label: "Try Spark",
     about: "Introduces Spark, our AI introductions.",
+    did: "Spark on",
     defaults: {},
   },
   {
     id: "mentoring",
     label: "Mentoring is open",
     about: "Explains mentoring for both sides.",
+    did: "Added years",
     defaults: {},
   },
 ] as const satisfies readonly {
   id: string;
   label: string;
   about: string;
+  /** What "did it" means in the results: worked out from their profile now. */
+  did: string;
   defaults: Partial<Omit<Audience, "template">>;
 }[];
 

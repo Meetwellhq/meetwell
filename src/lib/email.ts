@@ -34,19 +34,23 @@ function common(fullName: string | null) {
   return { fullName, appName: APP_NAME, siteUrl: site, photoUrl: `${site}/founder/rasheed.jpg`, replyEmail: SUPPORT_EMAIL };
 }
 
+type EmailContent = { subject: string; text: string; html: string };
+type SendOptions = { from?: string; replyTo?: string | null };
+
 /**
  * Sends one email through Resend's API. Needs RESEND_API_KEY (server-only).
  * Without it the email is skipped, so local development sends nothing.
+ * Returns Resend's email id (used to match delivery and click events) or null.
  */
-async function send(
+async function deliver(
   to: string,
-  { subject, text, html }: { subject: string; text: string; html: string },
-  { from = FROM, replyTo = SUPPORT_EMAIL }: { from?: string; replyTo?: string | null } = {},
-) {
+  { subject, text, html }: EmailContent,
+  { from = FROM, replyTo = SUPPORT_EMAIL }: SendOptions = {},
+): Promise<{ ok: boolean; id: string | null }> {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn(`RESEND_API_KEY is not set; skipping email "${subject}"`);
-    return false;
+    return { ok: false, id: null };
   }
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -55,12 +59,20 @@ async function send(
       body: JSON.stringify({ from, to: [to], ...(replyTo ? { reply_to: replyTo } : {}), subject, text, html }),
       signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) console.error("Email failed", subject, res.status, await res.text());
-    return res.ok;
+    if (!res.ok) {
+      console.error("Email failed", subject, res.status, await res.text());
+      return { ok: false, id: null };
+    }
+    const body = (await res.json().catch(() => null)) as { id?: unknown } | null;
+    return { ok: true, id: typeof body?.id === "string" ? body.id : null };
   } catch (err) {
     console.error("Email failed", subject, err);
-    return false;
+    return { ok: false, id: null };
   }
+}
+
+async function send(to: string, content: EmailContent, options?: SendOptions) {
+  return (await deliver(to, content, options)).ok;
 }
 
 /** "Thanks for joining the private beta." */
@@ -120,8 +132,9 @@ const CAMPAIGN_EMAILS = {
   mentoring: mentoringEmail,
 } satisfies Record<TemplateId, unknown>;
 
+/** Returns whether it went out, and Resend's id for its delivery and click events. */
 export function sendCampaignEmail(template: TemplateId, to: string, fullName: string | null) {
-  return send(to, CAMPAIGN_EMAILS[template](common(fullName)));
+  return deliver(to, CAMPAIGN_EMAILS[template](common(fullName)));
 }
 
 /** The email as it will look, for the preview on the New email page. */

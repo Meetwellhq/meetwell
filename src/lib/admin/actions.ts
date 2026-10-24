@@ -114,8 +114,9 @@ export async function sendCampaign(params: Record<string, string>): Promise<Anno
   let failed = 0;
   for (const r of (data ?? []) as { email: string; full_name: string | null }[]) {
     if (Date.now() - started > 40_000) break;
-    if (await sendCampaignEmail(audience.template, r.email, r.full_name)) {
-      await supabase.rpc("admin_record_email_send", { p_template: audience.template, p_email: r.email });
+    const result = await sendCampaignEmail(audience.template, r.email, r.full_name);
+    if (result.ok) {
+      await supabase.rpc("admin_record_email_send", { p_template: audience.template, p_email: r.email, p_resend_id: result.id });
       sent++;
     } else {
       failed++;
@@ -135,7 +136,7 @@ export async function sendCampaignTest(template: string): Promise<AdminFormState
   const { data: isAdmin } = await (await createClient()).rpc("is_admin");
   if (!isAdmin) return { error: "You don't have access to this." };
   const { template: checked } = parseAudience({ template });
-  return (await sendCampaignEmail(checked, user.email, "Rasheed"))
+  return (await sendCampaignEmail(checked, user.email, "Rasheed")).ok
     ? { ok: `Test sent to ${user.email}.` }
     : { error: "The test didn't send. Is RESEND_API_KEY set?" };
 }
