@@ -1,7 +1,9 @@
 /**
  * Personal emails from the founder: the waiting-list welcome and the beta
- * invite. Pure (no imports) so they can be unit-tested and previewed.
+ * invite. Pure (only plain constants imported) so they can be unit-tested and previewed.
  */
+
+import { SOCIAL_LINKS } from "./config";
 
 export const FOUNDER_NAME = "Rasheed";
 
@@ -39,6 +41,28 @@ export function emailLogo(siteUrl: string, appName: string) {
   </table>`;
 }
 
+/**
+ * "Follow Meetwell" with a round icon per social account (PNGs, like the logo,
+ * because Gmail doesn't show SVGs). At the bottom of every email.
+ */
+export function emailSocials(siteUrl: string, appName: string) {
+  const links = SOCIAL_LINKS.filter((s) => s.url);
+  if (links.length === 0) return "";
+  const icons = links
+    .map(
+      (s) => `<td style="padding-right:8px;vertical-align:middle">
+        <a href="${s.url}" style="text-decoration:none"><img src="${siteUrl}/email/social-${s.platform}.png" width="24" height="24" alt="${s.label}" style="display:block;width:24px;height:24px;border:0"></a>
+      </td>`,
+    )
+    .join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:28px;border-collapse:collapse">
+    <tr>
+      <td style="padding-right:12px;vertical-align:middle;font-size:13px;color:#5c5c57">Follow ${escapeHtml(appName)}</td>
+      ${icons}
+    </tr>
+  </table>`;
+}
+
 /** Shared layout: logo, greeting, body (already HTML), founder sign-off with photo. */
 function founderLayout({ firstName, bodyHtml, appName, siteUrl, photoUrl, footerHtml }: {
   firstName: string;
@@ -65,8 +89,9 @@ function founderLayout({ firstName, bodyHtml, appName, siteUrl, photoUrl, footer
         <a href="${siteUrl}" style="color:#1f4d3f">${siteLabel}</a>
       </td>
     </tr>
-  </table>${footerHtml ? `
-  <p style="margin-top:28px;color:#5c5c57;font-size:13px;line-height:1.5">${footerHtml}</p>` : ""}
+  </table>
+  ${emailSocials(siteUrl, appName)}${footerHtml ? `
+  <p style="margin-top:16px;color:#5c5c57;font-size:13px;line-height:1.5">${footerHtml}</p>` : ""}
 </div>`;
 }
 
@@ -225,6 +250,20 @@ export function draftReminderEmail(args: Common) {
     ],
     cta: { href: `${args.siteUrl}/dashboard/profile`, label: "Finish my card" },
     after: [ONLY_ONCE],
+  });
+}
+
+/** One-off, sent by the admin to everyone whose card is still a draft. */
+export function publishCardEmail(args: Common) {
+  return note({
+    ...args,
+    subject: `Your ${args.appName} card is one tap from going live`,
+    before: [
+      "Your account is set up, but your card is still a draft, so nobody can see it yet.",
+      "Add your name, a photo and one way to reach you, then tap Publish. Your QR code works the moment you do.",
+    ],
+    cta: { href: `${args.siteUrl}/dashboard/profile`, label: "Publish my card" },
+    after: ["Then bring it to your next event. One scan and they have your details."],
   });
 }
 
@@ -569,7 +608,8 @@ export function newMessageEmail({
       </p>${mentorNote ? `
       <p style="margin:16px 0 0;font-size:14px;color:#5c5c57">${escapeHtml(mentorNote)}</p>` : ""}
     </div>
-    <p style="margin:16px 4px 0;font-size:12px;line-height:1.5;color:#7a7a74">${escapeHtml(why)} <a href="${off}" style="color:#7a7a74">Turn off message emails</a>.</p>
+    <div style="margin:0 4px">${emailSocials(siteUrl, appName)}</div>
+    <p style="margin:12px 4px 0;font-size:12px;line-height:1.5;color:#7a7a74">${escapeHtml(why)} <a href="${off}" style="color:#7a7a74">Turn off message emails</a>.</p>
   </div>
 </div>`;
   return { subject, text, html };

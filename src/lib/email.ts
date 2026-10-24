@@ -15,6 +15,7 @@ import {
   type MatchedMember,
   noScansEmail,
   partnerAccessEmail,
+  publishCardEmail,
   renewalReminderEmail,
   sparkBetaEmail,
   waitlistEmail,
@@ -105,6 +106,11 @@ export function sendSparkBetaEmail(to: string, fullName: string | null) {
 /** Someone on a partner's team can now see its page. */
 export function sendPartnerAccessEmail(to: string, fullName: string | null, partnerName: string) {
   return send(to, partnerAccessEmail({ ...common(fullName), partnerName }));
+}
+
+/** One-off announcement to draft cards only: publish your card. */
+export function sendPublishCardEmail(to: string, fullName: string | null) {
+  return send(to, publishCardEmail(common(fullName)));
 }
 
 /** One-off announcement: mentoring is open; add your years, and earn as a mentor with 4+. */

@@ -103,7 +103,7 @@ every migration.
 - **Admin area**: `/admin` (`src/app/admin/`), with its own log-in page `/admin/sign-in` (`adminSignIn`
   refuses non-admin accounts), for the separate admin account admin@meetwell.me
   (`public.admins`; everyone else gets a 404). Separate pages: Overview, Waiting list (Invite/Resend),
-  Users (`/admin/users`; card status, photo, views, QR scans, saves, reminder tags; mentors (4+ years) vs mentees with the ratio and filters, `20261124000000_admin_members_roles.sql`; the admin area
+  Users (`/admin/users`; card status, photo, views, QR scans, saves, reminder tags; mentors (4+ years) vs mentees with the ratio, `20261124000000_admin_members_roles.sql`; 10 per page with search, role, card and sort filters in the address; the admin area
   says "users", member pages say "members"), Mentors, Messages, Announcements, Payments;
   shared bits in `src/components/admin/admin-ui.tsx`. Admin accounts have no card: they're sent from /dashboard and /onboarding to /admin, and are
   left out of Members, announcements and reminders (`20261105000000_admin_account.sql`).
@@ -195,13 +195,13 @@ every migration.
 - **Founder emails**: `src/lib/founder-emails.ts` (pure templates, unit-tested) and
   `src/lib/email.ts` (sending). From "Rasheed from Meetwell" `<noreply@meetwell.me>`, reply-to
   `support@meetwell.me`, with Rasheed's photo (`public/founder/rasheed.jpg`).
-- **Logo in emails and inboxes**: every email starts with `emailLogo()` (`public/email/logo.png`, a PNG
+- **Logo in emails and inboxes**: every email starts with `emailLogo()` and ends with `emailSocials()` (round icons `public/email/social-*.png` linking to `SOCIAL_LINKS`) (`public/email/logo.png`, a PNG
   because Gmail blocks SVG). Inbox sender picture uses BIMI: `public/bimi/meetwell.svg` (SVG Tiny PS) and a
   `default._bimi` TXT record; DMARC must be `p=quarantine` or stricter. Yahoo/AOL show it for free; Gmail and
   Apple need a paid VMC/CMC certificate (not bought yet).
 - **Announcements**: one-off emails from the founder to every confirmed member, sent from the
   admin area ("Send Spark email", in paced batches; click again for the rest). Each person gets each
-  announcement once (`public.announcements_sent`, `20261102000000_announcements.sql`). Template:
+  announcement once (`public.announcements_sent`, `20261102000000_announcements.sql`; allowed kinds and the draft-only "Publish card" email in `20261125000000_publish_card_announcement.sql`). Template:
   `sparkBetaEmail` in `src/lib/founder-emails.ts`.
 - **Changelog**: big new features only, with Rasheed's OK (see Deploying). `/changelog` is built from `CHANGELOG.md` (`src/lib/changelog.ts` reads the small
   Markdown subset used there). Linked in the footer. Add a dated `## D Month YYYY: Title` entry per release.

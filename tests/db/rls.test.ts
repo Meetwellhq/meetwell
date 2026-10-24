@@ -716,6 +716,38 @@ describe("announcements", () => {
     expect(status).toEqual({ sent: 1, remaining: confirmed - 1 });
     await expect(as(ALICE, "select public.admin_mark_announced('other', 'x@test')")).rejects.toThrow(/check constraint/);
   });
+
+  it("can record the Mentoring announcement", async () => {
+    expect((await as<{ ok: boolean }>(ALICE, "select public.admin_mark_announced('mentoring', 'x@test') as ok"))[0].ok).toBe(true);
+  });
+
+  it("sends 'publish your card' only to confirmed members whose card is a draft", async () => {
+    // Make one confirmed member's card a draft for this test.
+    const [{ id: draftId, status: was }] = (await db.query<{ id: string; status: string }>(
+      `update public.profiles p set status = 'draft' from auth.users u, public.profiles old
+       where p.id = (select p2.id from public.profiles p2 join auth.users u2 on u2.id = p2.user_id
+                     where u2.email_confirmed_at is not null and not public.is_admin_user(u2.id) and p2.status <> 'draft'
+                     order by p2.created_at limit 1)
+         and u.id = p.user_id and old.id = p.id
+       returning p.id, old.status::text as status`,
+    )).rows;
+    const [{ drafts }] = (await db.query<{ drafts: number }>(
+      `select count(*)::int as drafts from auth.users u join public.profiles p on p.user_id = u.id
+       where p.status = 'draft' and u.email_confirmed_at is not null and not public.is_admin_user(u.id)`,
+    )).rows;
+    expect(drafts).toBeGreaterThan(0);
+    const recipients = await as<{ email: string }>(ALICE, "select email from public.admin_announcement_recipients('publish_card', 100)");
+    expect(recipients).toHaveLength(drafts);
+    const statuses = (await db.query<{ status: string | null }>(
+      `select p.status::text as status from auth.users u left join public.profiles p on p.user_id = u.id
+       where u.email = any($1)`,
+      [recipients.map((r) => r.email)],
+    )).rows.map((r) => r.status);
+    expect(new Set(statuses)).toEqual(new Set(["draft"]));
+    const [status] = await as<{ sent: number; remaining: number }>(ALICE, "select * from public.admin_announcement_status('publish_card')");
+    expect(status).toEqual({ sent: 0, remaining: drafts });
+    await db.query("update public.profiles set status = $2 where id = $1", [draftId, was]);
+  });
 });
 
 describe("Spark credits", () => {

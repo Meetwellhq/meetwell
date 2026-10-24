@@ -6,6 +6,7 @@ import {
   sendMentorApprovedEmail,
   sendMentoringEmail,
   sendPartnerAccessEmail,
+  sendPublishCardEmail,
   sendSparkBetaEmail,
   sendWithdrawalSentEmail,
 } from "../email";
@@ -46,6 +47,8 @@ const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const ANNOUNCEMENTS = {
   spark_beta: sendSparkBetaEmail,
   mentoring: sendMentoringEmail,
+  // Only to people whose card is still a draft (the database picks them).
+  publish_card: sendPublishCardEmail,
 } satisfies Record<string, (to: string, fullName: string | null) => Promise<boolean>>;
 
 export type AnnouncementKind = keyof typeof ANNOUNCEMENTS;
