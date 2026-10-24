@@ -1,7 +1,8 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { date, isActive, NotReady, PageTitle, ReminderBadges, Stats, toMembers } from "@/components/admin/admin-ui";
+import { UsersToolbar } from "@/components/admin/users-toolbar";
 import { Badge, EmptyState } from "@/components/ui/misc";
 import { cn } from "@/lib/cn";
 import { publicProfilePath } from "@/lib/config";
@@ -20,12 +21,19 @@ const CARD_BADGE = {
 type Role = "mentor" | "mentee" | "unset";
 const roleOf = (years: number | null): Role => (years == null ? "unset" : isMentor(years) ? "mentor" : "mentee");
 
-const ROLE_FILTERS = [
-  { role: "all", label: "Everyone" },
-  { role: "mentor", label: "Mentors" },
-  { role: "mentee", label: "Mentees" },
-  { role: "unset", label: "Years not set" },
+const ROLES = ["all", "mentor", "mentee", "unset"] as const;
+const CARDS = ["all", "published", "draft", "unpublished", "none"] as const;
+const SORTS = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "active", label: "Last seen" },
+  { value: "views", label: "Most views" },
 ] as const;
+const PER_PAGE = 10;
+
+const pick = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
+  allowed.includes(value as T) ? (value as T) : fallback;
+const time = (iso: string | null) => (iso ? new Date(iso).getTime() : 0);
 
 /** "1 : 3.5" mentees for every mentor. */
 function ratio(mentors: number, mentees: number) {
@@ -34,13 +42,42 @@ function ratio(mentors: number, mentees: number) {
 }
 
 export default async function AdminUsersPage({ searchParams }: PageProps<"/admin/users">) {
-  const [{ data, error }, { role: roleParam }] = await Promise.all([
+  const [{ data, error }, params] = await Promise.all([
     (await createClient()).rpc("admin_list_members"),
     searchParams,
   ]);
   const people = toMembers(data);
-  const filter = ROLE_FILTERS.find((f) => f.role === roleParam)?.role ?? "all";
-  const shown = filter === "all" ? people : people.filter((m) => roleOf(m.experience_years) === filter);
+
+  // Search, filters and sort come from the address, so each view has its own link.
+  const q = typeof params.q === "string" ? params.q.trim().slice(0, 100) : "";
+  const role = pick(ROLES, params.role, "all");
+  const card = pick(CARDS, params.card, "all");
+  const sort = pick(SORTS.map((o) => o.value), params.sort, "newest");
+  const needle = q.toLowerCase();
+  const matching = people
+    .filter((m) => !needle || m.email.toLowerCase().includes(needle) || (m.full_name ?? "").toLowerCase().includes(needle))
+    .filter((m) => role === "all" || roleOf(m.experience_years) === role)
+    .filter((m) => card === "all" || (card === "none" ? m.card_status === null : m.card_status === card))
+    .sort((a, b) =>
+      sort === "oldest" ? time(a.joined_at) - time(b.joined_at)
+      : sort === "active" ? time(b.last_sign_in_at) - time(a.last_sign_in_at)
+      : sort === "views" ? b.views - a.views
+      : time(b.joined_at) - time(a.joined_at),
+    );
+  const pages = Math.max(1, Math.ceil(matching.length / PER_PAGE));
+  const page = Math.min(Math.max(Number.parseInt(String(params.page ?? "1"), 10) || 1, 1), pages);
+  const shown = matching.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const pageHref = (n: number) => {
+    const qs = new URLSearchParams();
+    if (q) qs.set("q", q);
+    if (role !== "all") qs.set("role", role);
+    if (card !== "all") qs.set("card", card);
+    if (sort !== "newest") qs.set("sort", sort);
+    if (n > 1) qs.set("page", String(n));
+    const str = qs.toString();
+    return str ? `/admin/users?${str}` : "/admin/users";
+  };
+
   const mentors = people.filter((m) => roleOf(m.experience_years) === "mentor");
   const mentees = people.filter((m) => roleOf(m.experience_years) === "mentee").length;
   const unset = people.length - mentors.length - mentees;
@@ -95,33 +132,40 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
             )}
           </section>
 
-          <nav className="flex flex-wrap gap-2" aria-label="Show">
-            {ROLE_FILTERS.map((f) => {
-              const count = f.role === "all" ? people.length : f.role === "mentor" ? mentors.length : f.role === "mentee" ? mentees : unset;
-              return (
-                <Link
-                  key={f.role}
-                  href={f.role === "all" ? "/admin/users" : `/admin/users?role=${f.role}`}
-                  aria-current={filter === f.role ? "page" : undefined}
-                  className={cn(
-                    "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
-                    filter === f.role
-                      ? "border-accent bg-accent-soft font-medium text-accent"
-                      : "border-border text-ink-2 hover:border-border-strong hover:text-ink",
-                  )}
-                >
-                  {f.label} ({count})
-                </Link>
-              );
-            })}
-          </nav>
+          <section className="flex flex-col gap-3">
+            <div className="flex items-baseline justify-between gap-4">
+              <h2 className="text-lg font-semibold text-ink">All users</h2>
+              <p className="text-sm text-ink-2">
+                {matching.length === people.length ? `${people.length} users` : `${matching.length} of ${people.length} users`}
+              </p>
+            </div>
+            <UsersToolbar
+              q={q}
+              role={role}
+              card={card}
+              sort={sort}
+              roles={[
+                { value: "all", label: `Everyone (${people.length})` },
+                { value: "mentor", label: `Mentors (${mentors.length})` },
+                { value: "mentee", label: `Mentees (${mentees})` },
+                { value: "unset", label: `Years not set (${unset})` },
+              ]}
+              cards={[
+                { value: "all", label: "Any card" },
+                { value: "published", label: "Published" },
+                { value: "draft", label: "Draft" },
+                { value: "unpublished", label: "Unpublished" },
+                { value: "none", label: "No card" },
+              ]}
+              sorts={[...SORTS]}
+            />
 
           {shown.length === 0 ? (
             <div className="rounded-xl border border-border bg-surface">
               {people.length === 0 ? (
                 <EmptyState title="No accounts yet" description="People appear here once they create an account." />
               ) : (
-                <EmptyState title="Nobody here yet" description="No users match this filter." />
+                <EmptyState title="No users found" description="Try another search or clear the filters." />
               )}
             </div>
           ) : (
@@ -183,8 +227,67 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
               })}
             </ul>
           )}
+
+          {pages > 1 && (
+            <nav className="flex flex-col items-center justify-between gap-3 sm:flex-row" aria-label="Pages">
+              <p className="text-sm text-ink-2">
+                Showing {(page - 1) * PER_PAGE + 1} to {Math.min(page * PER_PAGE, matching.length)} of {matching.length}
+              </p>
+              <div className="flex items-center gap-1">
+                <PageLink href={pageHref(page - 1)} disabled={page === 1} label="Previous page">
+                  <ChevronLeft className="size-4" aria-hidden />
+                </PageLink>
+                {Array.from({ length: pages }, (_, i) => i + 1)
+                  .filter((n) => n === 1 || n === pages || Math.abs(n - page) <= 1)
+                  .map((n, i, list) => (
+                    <span key={n} className="flex items-center gap-1">
+                      {i > 0 && n - list[i - 1] > 1 && <span className="px-1 text-ink-3">…</span>}
+                      <PageLink href={pageHref(n)} current={n === page} label={`Page ${n}`}>
+                        {n}
+                      </PageLink>
+                    </span>
+                  ))}
+                <PageLink href={pageHref(page + 1)} disabled={page === pages} label="Next page">
+                  <ChevronRight className="size-4" aria-hidden />
+                </PageLink>
+              </div>
+            </nav>
+          )}
+          </section>
         </>
       )}
     </div>
+  );
+}
+
+function PageLink({
+  href,
+  label,
+  current = false,
+  disabled = false,
+  children,
+}: {
+  href: string;
+  label: string;
+  current?: boolean;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  const cls = "grid h-9 min-w-9 place-items-center rounded-lg border px-2 text-sm tabular-nums transition-colors";
+  if (disabled) {
+    return <span aria-label={label} aria-disabled className={cn(cls, "border-border text-ink-3 opacity-50")}>{children}</span>;
+  }
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      aria-current={current ? "page" : undefined}
+      className={cn(
+        cls,
+        current ? "border-accent bg-accent-soft font-medium text-accent" : "border-border text-ink-2 hover:border-border-strong hover:text-ink",
+      )}
+    >
+      {children}
+    </Link>
   );
 }
