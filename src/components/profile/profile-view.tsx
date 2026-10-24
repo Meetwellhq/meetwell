@@ -5,7 +5,7 @@ import { CompanyAvatar } from "./company-avatar";
 import { buttonClass } from "@/components/ui/button";
 import { LogoMark } from "@/components/marketing/logo";
 import { APP_NAME, SIGNUPS_OPEN } from "@/lib/config";
-import { nairaShort } from "@/lib/format";
+import { nairaFull } from "@/lib/format";
 import { goalLabel, isOfferedGoal, socialLabel } from "@/lib/profiles/constants";
 import { contactActions, displayUrl, type ContactAction } from "@/lib/profiles/links";
 import type { PublicProfile } from "@/lib/profiles/types";
@@ -87,7 +87,7 @@ export function ProfileView({ profile, preview = false, offer = null, viewer = "
               className={buttonClass({ variant: "secondary", size: "lg", className: "mt-3 w-full" })}
             >
               <MessageCircle className="size-5" aria-hidden />
-              Message {offer.firstName} · {offer.priceKobo === 0 ? "Free" : `${nairaShort(offer.priceKobo)}/month`}
+              Message {offer.firstName} · {offer.priceKobo === 0 ? "Free" : `${nairaFull(offer.priceKobo)}/month`}
             </Link>
           )}
         </div>
