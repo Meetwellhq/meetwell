@@ -85,11 +85,11 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
               <div>
                 <div className="flex h-3 overflow-hidden rounded-full bg-surface-2" aria-hidden>
                   <span className="bg-accent" style={{ width: `${(mentors.length / known) * 100}%` }} />
-                  <span className="bg-warning" style={{ width: `${(mentees / known) * 100}%` }} />
+                  <span className="bg-mentee" style={{ width: `${(mentees / known) * 100}%` }} />
                 </div>
                 <p className="mt-2 flex flex-wrap gap-x-4 text-sm text-ink-2">
                   <span><span className="mr-1.5 inline-block size-2 rounded-full bg-accent" />Mentors {Math.round((mentors.length / known) * 100)}%</span>
-                  <span><span className="mr-1.5 inline-block size-2 rounded-full bg-warning" />Mentees {Math.round((mentees / known) * 100)}%</span>
+                  <span><span className="mr-1.5 inline-block size-2 rounded-full bg-mentee" />Mentees {Math.round((mentees / known) * 100)}%</span>
                 </p>
               </div>
             )}
@@ -142,7 +142,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                         {role === "unset" ? (
                           <Badge>Years not set</Badge>
                         ) : (
-                          <Badge tone={role === "mentor" ? "accent" : "warning"}>
+                          <Badge tone={role === "mentor" ? "accent" : "mentee"}>
                             {role === "mentor" ? "Mentor" : "Mentee"} · {m.experience_years} {m.experience_years === 1 ? "year" : "years"}
                           </Badge>
                         )}

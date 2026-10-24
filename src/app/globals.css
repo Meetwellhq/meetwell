@@ -24,6 +24,9 @@
   --cream: #fbf8f2;
   --clay: #d9c7ab;
   --sage: #cfe0d4;
+  --mentee: #0b2e22;
+  --mentee-soft: #0b2e22;
+  --mentee-ink: #e8f0ec;
   /* Badges, alerts and charts. */
   --warning-soft: #fffaeb;
   --warning: #93370d;
@@ -62,6 +65,9 @@
     --cream: #1a1e1b;
     --clay: #2c2820;
     --sage: #1c2c23;
+    --mentee: #1f4d3f;
+    --mentee-soft: #1f4d3f;
+    --mentee-ink: #cfe0d4;
     --warning-soft: #33270e;
     --warning: #fdb022;
     --danger-line: #5c2a24;
@@ -95,6 +101,9 @@
   --cream: #1a1e1b;
   --clay: #2c2820;
   --sage: #1c2c23;
+  --mentee: #1f4d3f;
+  --mentee-soft: #1f4d3f;
+  --mentee-ink: #cfe0d4;
   --warning-soft: #33270e;
   --warning: #fdb022;
   --danger-line: #5c2a24;
@@ -127,6 +136,9 @@
   --color-cream: var(--cream);
   --color-clay: var(--clay);
   --color-sage: var(--sage);
+  --color-mentee: var(--mentee);
+  --color-mentee-soft: var(--mentee-soft);
+  --color-mentee-ink: var(--mentee-ink);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-danger-line: var(--danger-line);

@@ -5,13 +5,14 @@ export function Card({ className, ...props }: ComponentProps<"div">) {
   return <div className={cn("rounded-2xl border border-border bg-surface", className)} {...props} />;
 }
 
-type BadgeTone = "neutral" | "accent" | "success" | "warning" | "danger";
+type BadgeTone = "neutral" | "accent" | "success" | "warning" | "danger" | "mentee";
 const tones: Record<BadgeTone, string> = {
   neutral: "bg-surface-2 text-ink-2",
   accent: "bg-accent-soft text-accent",
   success: "bg-success-soft text-success",
   warning: "bg-warning-soft text-warning",
   danger: "bg-danger-soft text-danger",
+  mentee: "bg-mentee-soft text-mentee-ink",
 };
 
 export function Badge({ tone = "neutral", className, ...props }: ComponentProps<"span"> & { tone?: BadgeTone }) {
