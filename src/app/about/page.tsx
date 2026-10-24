@@ -95,7 +95,7 @@ export default async function AboutPage() {
           <div className="grid items-center gap-10 lg:grid-cols-[auto_1fr] lg:gap-16">
             <Image
               src="/founder/rasheed-about.webp"
-              alt="Rasheed Idris, founder of Meetwell"
+              alt="Abdur-rasheed Idris, founder of Meetwell"
               width={240}
               height={240}
               className="size-40 rounded-full object-cover sm:size-56"
@@ -104,8 +104,16 @@ export default async function AboutPage() {
               <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">Built in Lagos</h2>
               <div className="mt-5 max-w-2xl space-y-4 text-[17px] leading-relaxed text-ink-2">
                 <p>
-                  I&apos;m Rasheed, a product designer and the founder of {APP_NAME}. I started it because the
-                  people who helped my career most were people I almost didn&apos;t keep in touch with.
+                  I&apos;m Rasheed, a design engineer and the founder of {APP_NAME}. Almost every step in my
+                  career came from someone I met, or someone who mentioned my name. But it rarely felt easy. I
+                  spent many events trying to make the right impression, and just as many walking away with a
+                  polite no.
+                </p>
+                <p>
+                  I learned that a saved number isn&apos;t a relationship. People don&apos;t always reply, and
+                  they won&apos;t always remember you when an opportunity comes up. Messages to the people who
+                  could change your path often go unanswered. {APP_NAME} is built to fix that: to turn a quick
+                  hello into a connection that helps both people grow.
                 </p>
                 <p>
                   We&apos;re in private beta and letting people in slowly, so every early member gets a good
@@ -116,7 +124,7 @@ export default async function AboutPage() {
                   gets read.
                 </p>
               </div>
-              <p className="mt-5 font-medium text-ink">Rasheed Idris, founder</p>
+              <p className="mt-5 font-medium text-ink">Abdur-rasheed Idris, Founder</p>
             </div>
           </div>
         </Panel>
