@@ -10,6 +10,7 @@ export const TEMPLATES = [
     label: "Publish your card",
     about: "For people whose card is still a draft.",
     did: "Published",
+    didSentence: "published their card",
     defaults: { card: "draft" },
   },
   {
@@ -17,6 +18,7 @@ export const TEMPLATES = [
     label: "Add a photo",
     about: "For published cards without a photo.",
     did: "Added a photo",
+    didSentence: "added a photo",
     defaults: { card: "published", noPhoto: true },
   },
   {
@@ -24,6 +26,7 @@ export const TEMPLATES = [
     label: "Finish your profile",
     about: "For profiles under 80%, so Spark can introduce them.",
     did: "Reached 80%",
+    didSentence: "finished their profile (80% or more)",
     defaults: { card: "published", under80: true },
   },
   {
@@ -31,6 +34,7 @@ export const TEMPLATES = [
     label: "Try Spark",
     about: "Introduces Spark, our AI introductions.",
     did: "Spark on",
+    didSentence: "turned Spark on",
     defaults: {},
   },
   {
@@ -38,6 +42,7 @@ export const TEMPLATES = [
     label: "Mentoring is open",
     about: "Explains mentoring for both sides.",
     did: "Added years",
+    didSentence: "added their years of experience",
     defaults: {},
   },
 ] as const satisfies readonly {
@@ -46,6 +51,8 @@ export const TEMPLATES = [
   about: string;
   /** What "did it" means in the results: worked out from their profile now. */
   did: string;
+  /** The same, for a sentence: "13 of 40 people have published their card". */
+  didSentence: string;
   defaults: Partial<Omit<Audience, "template">>;
 }[];
 
