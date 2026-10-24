@@ -203,6 +203,12 @@ every migration.
   admin area ("Send Spark email", in paced batches; click again for the rest). Each person gets each
   announcement once (`public.announcements_sent`, `20261102000000_announcements.sql`; allowed kinds and the draft-only "Publish card" email in `20261125000000_publish_card_announcement.sql`). Template:
   `sparkBetaEmail` in `src/lib/founder-emails.ts`.
+- **New email** (`/admin/announcements/new`): pick a ready-made email (Publish card, Add a photo, Finish profile,
+  Try Spark, Mentoring; list in `src/lib/admin/campaigns.ts`, templates in `founder-emails.ts`) and who gets it (role,
+  card, no photo, under 80%, last logged in), see the count, the first names and a preview, send a test to yourself, then
+  send in batches of 40. Every send is logged in `public.email_sends` so nobody gets the same email twice, unless
+  "Send again after N days" is chosen; older one-off announcements count as sent (`20261126000000_email_campaigns.sql`).
+  A "write your own" email (with an unsubscribe link for news) is the planned next step.
 - **Changelog**: big new features only, with Rasheed's OK (see Deploying). `/changelog` is built from `CHANGELOG.md` (`src/lib/changelog.ts` reads the small
   Markdown subset used there). Linked in the footer. Add a dated `## D Month YYYY: Title` entry per release.
 - **Automatic reminders**: `src/app/api/cron/reminders/route.ts`, scheduled in `vercel.json`

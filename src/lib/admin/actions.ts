@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { audienceArgs, parseAudience } from "./campaigns";
 import {
+  sendCampaignEmail,
   sendInviteEmail,
   sendMentorApprovedEmail,
   sendMentoringEmail,
@@ -88,6 +90,54 @@ export async function sendAnnouncement(kind: AnnouncementKind): Promise<Announce
   const remaining = (status as { remaining: number }[] | null)?.[0]?.remaining;
   revalidatePath("/admin", "layout");
   return { sent, failed, remaining };
+}
+
+/**
+ * New email page: send the chosen email to the next batch of people the
+ * filters match (same pacing as announcements). `params` are the page's
+ * address values, checked again here. Each person is logged after their
+ * email went out, so a failed send is retried on the next click.
+ */
+export async function sendCampaign(params: Record<string, string>): Promise<AnnounceState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const audience = parseAudience({ ...params, role: params.role ?? "all" });
+  const args = audienceArgs(audience);
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_email_audience", { ...args, p_limit: 40 });
+  if (error) {
+    console.error("admin_email_audience failed", error.code, error.message);
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't load the people for this email." };
+  }
+
+  const started = Date.now();
+  let sent = 0;
+  let failed = 0;
+  for (const r of (data ?? []) as { email: string; full_name: string | null }[]) {
+    if (Date.now() - started > 40_000) break;
+    if (await sendCampaignEmail(audience.template, r.email, r.full_name)) {
+      await supabase.rpc("admin_record_email_send", { p_template: audience.template, p_email: r.email });
+      sent++;
+    } else {
+      failed++;
+    }
+    await pause(600);
+  }
+
+  const { data: remaining } = await supabase.rpc("admin_email_audience_count", args);
+  revalidatePath("/admin/announcements", "layout");
+  return { sent, failed, remaining: typeof remaining === "number" ? remaining : undefined };
+}
+
+/** New email page: send the chosen email to yourself only (not logged). */
+export async function sendCampaignTest(template: string): Promise<AdminFormState> {
+  const user = await getCurrentUser();
+  if (!user?.email) return { error: "Please log in again." };
+  const { data: isAdmin } = await (await createClient()).rpc("is_admin");
+  if (!isAdmin) return { error: "You don't have access to this." };
+  const { template: checked } = parseAudience({ template });
+  return (await sendCampaignEmail(checked, user.email, "Rasheed"))
+    ? { ok: `Test sent to ${user.email}.` }
+    : { error: "The test didn't send. Is RESEND_API_KEY set?" };
 }
 
 export type AdminFormState = { ok?: string; error?: string };

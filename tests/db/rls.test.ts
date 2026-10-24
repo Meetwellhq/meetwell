@@ -750,6 +750,73 @@ describe("announcements", () => {
   });
 });
 
+describe("New email (audience and send log)", () => {
+  const audience = (args: string) =>
+    as<{ email: string }>(ALICE, `select email from public.admin_email_audience(${args})`).then((r) => r.map((x) => x.email));
+
+  it("is admin-only and checks the filters", async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    await expect(as(BOB, "select * from public.admin_email_audience('publish_card')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_email_audience('publish_card')")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select public.admin_record_email_send('publish_card', 'x@test')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_email_history()")).rejects.toThrow(/permission denied/);
+    await expect(as(ALICE, "select * from public.email_sends")).rejects.toThrow(/permission denied/);
+    await expect(audience("'nope'")).rejects.toThrow(/Unknown email or filter/);
+    await expect(audience("'publish_card', 'boss'")).rejects.toThrow(/Unknown email or filter/);
+  });
+
+  it("filters by card, sends each email once, and allows a resend after the chosen days", async () => {
+    const [{ id: draftId, status: was }] = (await db.query<{ id: string; status: string }>(
+      `update public.profiles p set status = 'draft' from public.profiles old
+       where p.id = (select p2.id from public.profiles p2 join auth.users u2 on u2.id = p2.user_id
+                     where u2.email_confirmed_at is not null and not public.is_admin_user(u2.id) and p2.status <> 'draft'
+                     order by p2.created_at limit 1)
+         and old.id = p.id
+       returning p.id, old.status::text as status`,
+    )).rows;
+    const [{ email: draftEmail }] = (await db.query<{ email: string }>(
+      "select u.email from auth.users u join public.profiles p on p.user_id = u.id where p.id = $1", [draftId],
+    )).rows;
+
+    const drafts = await audience("'publish_card', 'all', 'draft'");
+    expect(drafts).toContain(draftEmail);
+    const statuses = (await db.query<{ status: string }>(
+      "select p.status::text as status from auth.users u join public.profiles p on p.user_id = u.id where u.email = any($1)", [drafts],
+    )).rows.map((r) => r.status);
+    expect(new Set(statuses)).toEqual(new Set(["draft"]));
+    const [{ n }] = await as<{ n: number }>(ALICE, "select public.admin_email_audience_count('publish_card', 'all', 'draft') as n");
+    expect(n).toBe(drafts.length);
+    const noCard = await audience("'publish_card', 'all', 'none'");
+    const withCard = (await db.query("select 1 from auth.users u join public.profiles p on p.user_id = u.id where u.email = any($1)", [noCard])).rows;
+    expect(withCard).toHaveLength(0);
+
+    // Sent once: gone from the list, and from the count.
+    await as(ALICE, `select public.admin_record_email_send('publish_card', '${draftEmail}')`);
+    expect(await audience("'publish_card', 'all', 'draft'")).not.toContain(draftEmail);
+    // Another email still reaches them.
+    expect(await audience("'add_photo', 'all', 'draft'")).toContain(draftEmail);
+    // Resend after 14 days: not yet, then yes once the send is older.
+    expect(await audience("'publish_card', 'all', 'draft', false, false, null, 14")).not.toContain(draftEmail);
+    await db.query("update public.email_sends set sent_at = now() - interval '20 days' where email = $1", [draftEmail]);
+    expect(await audience("'publish_card', 'all', 'draft', false, false, null, 14")).toContain(draftEmail);
+    expect(await audience("'publish_card', 'all', 'draft'")).not.toContain(draftEmail); // "never again" still holds
+
+    const history = await as<{ template: string; people: number }>(ALICE, "select template, people from public.admin_email_history()");
+    expect(history).toEqual(expect.arrayContaining([{ template: "publish_card", people: 1 }]));
+
+    await db.query("delete from public.email_sends where email = $1", [draftEmail]);
+    await db.query("update public.profiles set status = $2 where id = $1", [draftId, was]);
+  });
+
+  it("counts older one-off announcements as already sent", async () => {
+    const all = await audience("'mentoring'");
+    expect(all.length).toBeGreaterThan(0);
+    await db.query("insert into public.announcements_sent (kind, email) values ('mentoring', $1) on conflict do nothing", [all[0]]);
+    expect(await audience("'mentoring'")).not.toContain(all[0]);
+    await db.query("delete from public.announcements_sent where kind = 'mentoring' and email = $1", [all[0]]);
+  });
+});
+
 describe("Spark credits", () => {
   const SECRET = "test-secret-that-is-long-enough-1234567890";
   const JUNIOR = "55555555-5555-5555-5555-555555555555";

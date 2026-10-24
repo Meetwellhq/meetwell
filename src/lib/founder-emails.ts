@@ -267,6 +267,32 @@ export function publishCardEmail(args: Common) {
   });
 }
 
+/** Sent from the admin's New email page to members whose card has no photo. */
+export function addPhotoEmail(args: Common) {
+  return note({
+    ...args,
+    subject: "Add a photo to your Meetwell card",
+    before: [
+      "Your card doesn't have a photo yet.",
+      "People are far more likely to save your contact and reply when they can see who they met. A clear, friendly photo of your face works best.",
+    ],
+    cta: { href: `${args.siteUrl}/dashboard/profile`, label: "Add my photo" },
+  });
+}
+
+/** Sent from the admin's New email page to members whose profile is under 80%. */
+export function finishProfileEmail(args: Common) {
+  return note({
+    ...args,
+    subject: `A few details to finish your ${args.appName} profile`,
+    before: [
+      "Your profile is nearly there. A few more details and it's complete.",
+      `Once it reaches 80%, Spark can start introducing you to people in your field. Your Spark page shows exactly what's missing.`,
+    ],
+    cta: { href: `${args.siteUrl}/dashboard/matches`, label: "Finish my profile" },
+  });
+}
+
 /** Card published a week ago but never opened from a QR scan. */
 export function noScansEmail(args: Common) {
   return reminder({

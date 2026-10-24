@@ -1,8 +1,11 @@
 import "server-only";
 import { APP_NAME, getSiteUrl, SUPPORT_EMAIL } from "./config";
 import { fieldLabel } from "./matching/constants";
+import type { TemplateId } from "./admin/campaigns";
 import {
+  addPhotoEmail,
   draftReminderEmail,
+  finishProfileEmail,
   incompleteProfileEmail,
   FOUNDER_NAME,
   inviteEmail,
@@ -106,6 +109,24 @@ export function sendSparkBetaEmail(to: string, fullName: string | null) {
 /** Someone on a partner's team can now see its page. */
 export function sendPartnerAccessEmail(to: string, fullName: string | null, partnerName: string) {
   return send(to, partnerAccessEmail({ ...common(fullName), partnerName }));
+}
+
+/** The ready-made emails on the admin New email page. */
+const CAMPAIGN_EMAILS = {
+  publish_card: publishCardEmail,
+  add_photo: addPhotoEmail,
+  finish_profile: finishProfileEmail,
+  spark_beta: sparkBetaEmail,
+  mentoring: mentoringEmail,
+} satisfies Record<TemplateId, unknown>;
+
+export function sendCampaignEmail(template: TemplateId, to: string, fullName: string | null) {
+  return send(to, CAMPAIGN_EMAILS[template](common(fullName)));
+}
+
+/** The email as it will look, for the preview on the New email page. */
+export function previewCampaignEmail(template: TemplateId, fullName: string | null) {
+  return CAMPAIGN_EMAILS[template](common(fullName));
 }
 
 /** One-off announcement to draft cards only: publish your card. */
