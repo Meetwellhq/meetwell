@@ -4,6 +4,12 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
+## 24 October 2026: Event pages
+
+- Partners like ThinkUX now get a page for each event, with every speaker's card in one place.
+- Each event has a QR code for slides and posters, and each speaker gets a QR code for their badge.
+- Scan, save a speaker's card, or message them straight from the event page.
+
 ## 23 October 2026: A new look on your phone
 
 ![Meetwell on a phone, with the new menu at the bottom](/changelog/new-look-on-your-phone.webp)
