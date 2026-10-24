@@ -811,6 +811,26 @@ describe("Spark credits", () => {
   });
 });
 
+describe("mentors and mentees on the admin Users page", () => {
+  const JUNIOR = "55555555-5555-5555-5555-555555555555"; // 1 year
+  const SENIOR = "66666666-6666-6666-6666-666666666666"; // 4 years
+
+  it("shows each person's years and mentoring status", async () => {
+    await db.query("insert into public.mentor_settings (user_id, status) values ($1, 'approved')", [SENIOR]);
+    const rows = await as<{ email: string; experience_years: number | null; mentor_status: string | null }>(
+      "11111111-1111-1111-1111-111111111111",
+      "select email, experience_years, mentor_status from public.admin_list_members()",
+    );
+    const byEmail = (e: string) => rows.find((r) => r.email === e);
+    expect(byEmail("junior@test")).toMatchObject({ experience_years: 1, mentor_status: null });
+    expect(byEmail("senior@test")).toMatchObject({ experience_years: 4, mentor_status: "approved" });
+    expect(byEmail("invitee@test")?.experience_years).toBeNull(); // no card
+    await expect(as(JUNIOR, "select * from public.admin_list_members()")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_list_members()")).rejects.toThrow(/permission denied/);
+    await db.query("delete from public.mentor_settings where user_id = $1", [SENIOR]);
+  });
+});
+
 describe("admin account", () => {
   const SECRET = "test-secret-that-is-long-enough-1234567890";
   const ADMIN = "abababab-abab-abab-abab-abababababab";

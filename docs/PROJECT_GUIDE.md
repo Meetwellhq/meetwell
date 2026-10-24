@@ -103,7 +103,7 @@ every migration.
 - **Admin area**: `/admin` (`src/app/admin/`), with its own log-in page `/admin/sign-in` (`adminSignIn`
   refuses non-admin accounts), for the separate admin account admin@meetwell.me
   (`public.admins`; everyone else gets a 404). Separate pages: Overview, Waiting list (Invite/Resend),
-  Users (`/admin/users`; card status, photo, views, QR scans, saves, reminder tags; the admin area
+  Users (`/admin/users`; card status, photo, views, QR scans, saves, reminder tags; mentors (4+ years) vs mentees with the ratio and filters, `20261124000000_admin_members_roles.sql`; the admin area
   says "users", member pages say "members"), Mentors, Messages, Announcements, Payments;
   shared bits in `src/components/admin/admin-ui.tsx`. Admin accounts have no card: they're sent from /dashboard and /onboarding to /admin, and are
   left out of Members, announcements and reminders (`20261105000000_admin_account.sql`).

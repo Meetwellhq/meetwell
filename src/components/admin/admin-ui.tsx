@@ -32,6 +32,10 @@ export type MemberRow = {
   qr_scans: number;
   contacts_saved: number;
   reminders?: Reminder[];
+  /** Null until they answer "Your experience" in onboarding or on the Spark page. */
+  experience_years: number | null;
+  /** Their mentoring application, if they applied. */
+  mentor_status: "applied" | "approved" | "rejected" | "paused" | null;
 };
 
 export type PaymentRow = {
@@ -52,6 +56,7 @@ export const toMembers = (rows: unknown) =>
     views: Number(m.views),
     qr_scans: Number(m.qr_scans),
     contacts_saved: Number(m.contacts_saved),
+    experience_years: m.experience_years == null ? null : Number(m.experience_years),
   }));
 
 export const naira = (kobo: number) =>
