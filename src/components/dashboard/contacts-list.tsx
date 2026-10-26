@@ -157,21 +157,9 @@ function Empty({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-/** Column layout of each table, shared by its header and rows (stacked on phones). */
+/** Column layout of each table's rows (stacked on phones). */
 const CONTACT_COLS = "sm:grid sm:grid-cols-[minmax(0,1fr)_9rem_6.5rem_9.5rem] sm:items-center sm:gap-4";
 const SAVER_COLS = "sm:grid sm:grid-cols-[minmax(0,1fr)_7rem_9rem] sm:items-center sm:gap-4";
-
-function TableHead({ cols, labels }: { cols: string; labels: string[] }) {
-  return (
-    <div className={cn("hidden border-b border-border bg-surface-2 px-4 py-2.5 text-xs font-medium text-ink-2", cols)} role="row">
-      {labels.map((l, i) => (
-        <span key={l} role="columnheader" className={i === labels.length - 1 ? "text-right" : undefined}>
-          {l}
-        </span>
-      ))}
-    </div>
-  );
-}
 
 type ContactFilter = "all" | "qr" | "link" | "note" | "mutual";
 
@@ -218,7 +206,6 @@ export function ContactsList({ contacts, savedMe }: { contacts: Contact[]; saved
         <p className="px-1 py-6 text-center text-sm text-ink-3">No one matches.</p>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border" role="table" aria-label="Contacts saved">
-          <TableHead cols={CONTACT_COLS} labels={["Name", "How you met", "Saved on", "Actions"]} />
           <ul className="divide-y divide-border" role="rowgroup">
             {shown.slice((b.page - 1) * PER_PAGE, b.page * PER_PAGE).map((c) => (
               <ContactRow key={c.slug} contact={c} />
@@ -265,7 +252,6 @@ export function SavedByList({ savers }: { savers: Saver[] }) {
         <p className="px-1 py-6 text-center text-sm text-ink-3">No one matches.</p>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border" role="table" aria-label="Saved by people">
-          <TableHead cols={SAVER_COLS} labels={["Name", "Saved on", "Status"]} />
           <ul className="divide-y divide-border" role="rowgroup">
             {shown.slice((b.page - 1) * PER_PAGE, b.page * PER_PAGE).map((s) => (
               <li key={s.slug} role="row" className={cn("flex items-center gap-3 px-4 py-3", SAVER_COLS)}>
