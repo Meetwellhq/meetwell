@@ -6,7 +6,6 @@ import {
   ChartLine,
   ChevronsUpDown,
   Handshake,
-  IdCard,
   LayoutDashboard,
   LogOut,
   MessagesSquare,
@@ -14,6 +13,7 @@ import {
   Wallet as WalletIcon,
   Settings,
   Sparkles,
+  UserRound,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -48,7 +48,7 @@ function UnreadBadge({ n, active }: { n: number; active: boolean }) {
 
 /**
  * The member's photo, name and email at the bottom of the sidebar. Clicking it
- * opens a small menu above it: Edit profile, Settings and Log out. Closes on a
+ * opens a small menu above it: Profile (the card editor), Settings and Log out. Closes on a
  * click outside, on Escape, or when a page is picked.
  */
 function ProfileMenu({ me, pathname }: { me: Me; pathname: string }) {
@@ -77,8 +77,8 @@ function ProfileMenu({ me, pathname }: { me: Me; pathname: string }) {
           className="absolute inset-x-3 bottom-full mb-2 flex flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
         >
           <Link href="/dashboard/profile" onClick={() => setOpenOn(null)} className={cn(item, "text-ink hover:bg-surface-2")}>
-            <IdCard className="size-[18px] shrink-0" aria-hidden />
-            Edit profile
+            <UserRound className="size-[18px] shrink-0" aria-hidden />
+            Profile
           </Link>
           <Link href="/dashboard/settings" onClick={() => setOpenOn(null)} className={cn(item, "text-ink hover:bg-surface-2")}>
             <Settings className="size-[18px] shrink-0" aria-hidden />
@@ -144,12 +144,6 @@ export function DashboardNav({
       items: [
         { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
         { href: "/dashboard/analytics", label: "Analytics", icon: ChartLine },
-        { href: "/dashboard/profile", label: "Edit card", icon: IdCard },
-      ],
-    },
-    {
-      title: "Connect",
-      items: [
         { href: "/dashboard/contacts", label: "Contacts", icon: BookUser },
         ...(spark ? [{ href: "/dashboard/matches", label: "Spark", icon: Sparkles }] : []),
         ...(mentor
@@ -182,7 +176,13 @@ export function DashboardNav({
             title: s.title,
             items: s.items.map(({ unread: hasUnread, ...item }) => ({ ...item, badge: hasUnread ? unread : 0 })),
           })),
-          { title: "General", items: [{ href: "/dashboard/settings", label: "Settings", icon: Settings }] },
+          {
+            title: "General",
+            items: [
+              { href: "/dashboard/profile", label: "Profile", icon: UserRound },
+              { href: "/dashboard/settings", label: "Settings", icon: Settings },
+            ],
+          },
         ]}
         titles={false}
       />
