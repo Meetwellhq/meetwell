@@ -115,8 +115,8 @@ export function DashboardNav({
   }
 
   return (
-    <aside className="hidden lg:block">
-      <nav aria-label="Dashboard" className="sticky top-6 flex flex-col gap-6 rounded-2xl bg-surface p-4">
+    <aside className="hidden w-60 shrink-0 border-r border-border bg-surface lg:block">
+      <nav aria-label="Dashboard" className="sticky top-0 flex flex-col gap-6 p-4">
         {sections.map((section) => (
           <div key={section.title} className="flex flex-col gap-1">
             <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>

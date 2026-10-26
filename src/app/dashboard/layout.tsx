@@ -29,10 +29,10 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const nav = { messages, mentor: isMentor(profile?.experience_years), partner: (partners.data ?? []).length > 0, spark };
 
   return (
-    <div className="flex-1 bg-surface-2/60">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 py-4 sm:px-5 sm:py-6">
-        {/* relative: the phone menu drops down under the header. */}
-        <header className="relative flex items-center justify-between gap-4 rounded-2xl bg-surface px-4 py-3 sm:px-5">
+    <div className="flex flex-1 flex-col bg-surface-2/60">
+      {/* Full width, edge to edge; relative: the phone menu drops down under it. */}
+      <header className="border-b border-border bg-surface">
+        <div className="relative flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
           <Logo large />
           <div className="flex items-center gap-2">
             {/* Phones show only the menu button here. */}
@@ -45,13 +45,15 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
             </div>
             <DashboardNav placement="menu" {...nav} />
           </div>
-        </header>
+        </div>
+      </header>
 
-        <InstallApp variant="banner" />
-
-        <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
-          <DashboardNav placement="sidebar" {...nav} />
-          <main className="min-w-0 rounded-2xl bg-surface p-4 sm:p-6">{children}</main>
+      {/* The sidebar runs down the left edge; the page sits in its card beside it. */}
+      <div className="flex flex-1">
+        <DashboardNav placement="sidebar" {...nav} />
+        <div className="flex min-w-0 flex-1 flex-col gap-4 px-3 py-4 sm:px-5 sm:py-6">
+          <InstallApp variant="banner" />
+          <main className="mx-auto w-full max-w-6xl min-w-0 rounded-2xl bg-surface p-4 sm:p-6">{children}</main>
         </div>
       </div>
       {profile && profile.experience_years === null && <ExperiencePrompt initialField={profile.field} spark={spark} />}

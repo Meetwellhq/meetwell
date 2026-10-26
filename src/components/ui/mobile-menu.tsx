@@ -64,7 +64,7 @@ export function MobileMenu({
           <nav
             id="mobile-menu"
             aria-label={label}
-            className="absolute inset-x-0 top-full z-50 mt-2 flex max-h-[calc(100dvh-6rem)] flex-col gap-5 overflow-y-auto rounded-2xl border border-border bg-surface p-4 shadow-xl"
+            className="absolute inset-x-3 top-full z-50 mt-2 flex max-h-[calc(100dvh-6rem)] flex-col gap-5 overflow-y-auto rounded-2xl border border-border bg-surface p-4 shadow-xl"
           >
             {sections.map((section) => (
               <div key={section.title} className="flex flex-col gap-1">
