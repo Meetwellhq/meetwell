@@ -124,7 +124,7 @@ every migration.
   `admin_spark_progress`; it rebuilds every page). Read it with `isSparkOn()`. While off, Spark is hidden completely:
   menu, `/dashboard/matches` (redirects to /dashboard), landing, feature pages (`visibleFeatures`), footer, About,
   Support, the Spark emails in admin; the matching job skips; credits can't be bought; experience wording and profile
-  emails have Spark-free versions; and the profile score counts the 8 card items (no "looking for" or city), in SQL and
+  emails have Spark-free versions; and the profile score counts 6 items (photo, title, organisation, bio, public contact, years), in SQL and
   in `profileCompleteness(p, spark)`. Database tests switch it on in setup. Terms and Privacy still describe Spark.
 - **Spark (AI Network Matching)**: `/dashboard/matches` (shown to members as "Spark"; the URL stays /matches so old email links work) (opt-in + private fields: field, experience,
   looking for, city; list of matches). Recommends only people with 4+ years, a profile
