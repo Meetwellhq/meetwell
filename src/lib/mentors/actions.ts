@@ -98,7 +98,12 @@ export async function startFreeConversation(_: SubscribeState, formData: FormDat
   if (!user) return { error: "Please log in again." };
   if (!rateLimit(`free-chat:${user.id}`, 10, 60_000)) return { error: "Please wait a moment and try again." };
   const slug = String(formData.get("slug") ?? "");
-  const { data, error } = await (await createClient()).rpc("start_free_conversation", { p_slug: slug });
+  const event = formData.get("event");
+  // From an event page: the conversation is tagged with that event (counted for its partner).
+  const { data, error } = await (await createClient()).rpc("start_free_conversation", {
+    p_slug: slug,
+    p_event: isEventSlug(event) ? event : null,
+  });
   if (error || typeof data !== "number") {
     if (error?.code === "42501") return { error: "Messaging mentors is for members earlier in their careers." };
     if (error?.code === "22023") return { error: "This person isn't taking free messages right now." };

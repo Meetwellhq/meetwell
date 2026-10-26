@@ -29,7 +29,7 @@ const naira = (kobo: number) =>
 
 const joined = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-type PartnerEvent = { partner_name: string; slug: string; name: string; starts_on: string; active: boolean; speakers: number };
+type PartnerEvent = { partner_name: string; slug: string; name: string; starts_on: string; active: boolean; speakers: number; conversations?: number };
 
 /**
  * For a partner's team (an event platform such as ThinkUX): their invite link
@@ -100,6 +100,7 @@ export default async function PartnerPage() {
                           <Link href={`/e/${e.slug}`} className="font-medium text-ink hover:underline">{e.name}</Link>
                           <span className="block text-xs text-ink-3">
                             {eventDates(e.starts_on, null)} · {e.speakers} {e.speakers === 1 ? "speaker" : "speakers"}
+                            {typeof e.conversations === "number" && <> · {e.conversations} {e.conversations === 1 ? "conversation" : "conversations"} started</>}
                             {!e.active && " · hidden"}
                           </span>
                         </span>

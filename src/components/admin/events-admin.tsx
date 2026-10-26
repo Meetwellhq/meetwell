@@ -20,6 +20,8 @@ export type AdminEvent = {
   speakers: { slug: string; full_name: string; status: string; mentor: boolean }[];
   payments: number;
   revenue_kobo: number;
+  /** Conversations with free mentors started from this page. */
+  free_conversations?: number;
 };
 
 /** New event page for this partner: name, dates, venue, a short description. */
@@ -195,7 +197,8 @@ export function EventCard({ event, site, dates, revenue }: { event: AdminEvent; 
       {editing && <EditEvent event={event} onDone={stopEditing} />}
 
       <p className="text-sm text-ink-2">
-        Paid messages started from this page: <span className="font-medium text-ink">{event.payments}</span> · {revenue}
+        Paid messages started from this page: <span className="font-medium text-ink">{event.payments}</span> · {revenue} · Free
+        conversations: <span className="font-medium text-ink">{event.free_conversations ?? 0}</span>
       </p>
 
       <div className="flex flex-col gap-2">

@@ -1805,9 +1805,32 @@ describe("partner event pages", () => {
     expect(row.speakers).toEqual([{ slug: "partner-speaker", full_name: "Test Person", status: "published", mentor: true }]);
   });
 
+  it("tags a free mentor's conversation with the event it started from", async () => {
+    const owner = "(select user_id from public.profiles where slug = 'partner-speaker')";
+    const [{ price }] = (await db.query<{ price: number }>(`select price_kobo as price from public.mentor_settings where user_id = ${owner}`)).rows;
+    await db.query(`update public.mentor_settings set price_kobo = 0 where user_id = ${owner}`);
+
+    // From the TechCabal Summit page (the mentor speaks there): tagged, and counted for admins.
+    const [{ id }] = await as<{ id: number }>(JUNIOR, "select public.start_free_conversation('partner-speaker', 'tc-summit') as id");
+    const eventOf = async () =>
+      (await db.query<{ event: string | null }>(
+        "select e.slug as event from public.conversations c left join public.partner_events e on e.id = c.event_id where c.id = $1", [id],
+      )).rows[0].event;
+    expect(await eventOf()).toBe("tc-summit");
+    const [row] = await as<{ free_conversations: number }>(ALICE, "select free_conversations from public.admin_partner_events('techcabal')");
+    expect(row.free_conversations).toBe(1);
+    // Starting again from another page keeps the first event; the old one-argument call still works.
+    await as(JUNIOR, "select public.start_free_conversation('partner-speaker', 'thinkux-day')");
+    await as(JUNIOR, "select public.start_free_conversation('partner-speaker')");
+    expect(await eventOf()).toBe("tc-summit");
+
+    await db.query(`update public.mentor_settings set price_kobo = $1 where user_id = ${owner}`, [price]);
+  });
+
   it("shows a partner's team its own events only", async () => {
-    const mine = await as<{ name: string }>(TEAM, "select name from public.my_partner_events()");
+    const mine = await as<{ name: string; conversations: number }>(TEAM, "select name, conversations from public.my_partner_events()");
     expect(mine.map((e) => e.name)).toEqual(["ThinkUX Day"]);
+    expect(mine[0].conversations).toBe(0); // the free conversation above came from TechCabal's event
     expect(await as(BOB, "select * from public.my_partner_events()")).toEqual([]);
     await expect(as(null, "select * from public.my_partner_events()")).rejects.toThrow(/permission denied/);
   });
