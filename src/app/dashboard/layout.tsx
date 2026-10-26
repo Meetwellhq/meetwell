@@ -7,7 +7,6 @@ import { InstallApp } from "@/components/pwa/install-app";
 import { isMentor } from "@/lib/matching/constants";
 import { isSparkOn } from "@/lib/spark";
 import { Logo } from "@/components/marketing/logo";
-import { ThemeMenu } from "@/components/ui/theme-toggle";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
@@ -37,8 +36,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         <div className="relative flex h-15 items-center justify-between gap-4 px-4 sm:px-5">
           <Logo large />
           <div className="flex items-center gap-2">
-            {/* Laptops and up: the theme button, then the avatar and its menu. Phones and tablets: the menu button. */}
-            <ThemeMenu className="hidden lg:block" />
+            {/* Laptops and up: the avatar and its menu. Phones and tablets: the menu button. */}
             <AccountMenu me={{ name, email: user.email ?? null, avatarUrl: profile?.avatar_url ?? null }} className="hidden lg:block" />
             <DashboardNav placement="menu" {...nav} />
           </div>

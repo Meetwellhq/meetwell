@@ -1,8 +1,7 @@
 "use client";
 
-import { Check, Monitor, Moon, Sun } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Monitor, Moon, Sun } from "lucide-react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 
 export const THEME_KEY = "meetwell-theme";
@@ -76,70 +75,28 @@ export function ThemeToggle({ className }: { className?: string }) {
   );
 }
 
-/**
- * The same choice as a small round button showing the current theme's icon;
- * clicking it opens a menu below it (dashboard header). Closes on a click outside, on
- * Escape, or after picking.
- */
-export function ThemeMenu({ className }: { className?: string }) {
+/** The same choice as three small icons in a row (the avatar menu in the dashboard header). */
+export function ThemeIcons({ className }: { className?: string }) {
   const [theme, choose] = useTheme();
-  const pathname = usePathname();
-  const [openOn, setOpenOn] = useState<string | null>(null);
-  const open = openOn === pathname;
-  const ref = useRef<HTMLDivElement>(null);
-  const Current = OPTIONS.find((o) => o.value === theme)!.icon;
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpenOn(null);
-    const onClick = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpenOn(null);
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("mousedown", onClick);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("mousedown", onClick);
-    };
-  }, [open]);
-
   return (
-    <div ref={ref} className={cn("relative", className)}>
-      {open && (
-        <div
-          id="theme-menu"
-          role="radiogroup"
-          aria-label="Theme"
-          className="absolute right-0 top-full z-50 mt-2 flex w-40 flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
+    <div role="radiogroup" aria-label="Theme" className={cn("inline-flex rounded-full bg-surface-2 p-0.5", className)}>
+      {OPTIONS.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="radio"
+          aria-checked={theme === o.value}
+          aria-label={o.label}
+          title={o.label}
+          onClick={() => choose(o.value)}
+          className={cn(
+            "grid size-7 place-items-center rounded-full transition-colors",
+            theme === o.value ? "bg-surface text-ink shadow-sm" : "text-ink-3 hover:text-ink",
+          )}
         >
-          {OPTIONS.map((o) => (
-            <button
-              key={o.value}
-              type="button"
-              role="radio"
-              aria-checked={theme === o.value}
-              onClick={() => {
-                choose(o.value);
-                setOpenOn(null);
-              }}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-ink hover:bg-surface-2"
-            >
-              <o.icon className="size-4 shrink-0" aria-hidden />
-              {o.label}
-              {theme === o.value && <Check className="ml-auto size-4 text-accent" aria-hidden />}
-            </button>
-          ))}
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={() => setOpenOn(open ? null : pathname)}
-        aria-expanded={open}
-        aria-controls="theme-menu"
-        aria-label="Theme"
-        title="Theme"
-        className="grid size-9 place-items-center rounded-full bg-surface-2 text-ink-2 hover:bg-border hover:text-ink"
-      >
-        <Current className="size-4" aria-hidden />
-      </button>
+          <o.icon className="size-3.5" aria-hidden />
+        </button>
+      ))}
     </div>
   );
 }

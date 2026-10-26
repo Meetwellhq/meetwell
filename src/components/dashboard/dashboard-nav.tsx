@@ -12,6 +12,7 @@ import {
   Wallet as WalletIcon,
   Settings,
   Sparkles,
+  SunMoon,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -21,6 +22,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { MobileMenu } from "@/components/ui/mobile-menu";
 import { NavGroup, type NavChild } from "@/components/ui/nav-group";
+import { ThemeIcons } from "@/components/ui/theme-toggle";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 
@@ -48,7 +50,7 @@ function UnreadBadge({ n }: { n: number }) {
 /**
  * The member's avatar at the top right of the header (laptops and up; phones
  * use the menu button). Clicking it drops down their full name and email, then
- * Profile (the card editor), Settings and Log out. Closes on a click outside,
+ * Profile (the card editor), Settings, the theme (System, Light, Dark) and Log out. Closes on a click outside,
  * on Escape, or when a page is picked.
  */
 export function AccountMenu({ me, className }: { me: Me; className?: string }) {
@@ -102,6 +104,11 @@ export function AccountMenu({ me, className }: { me: Me; className?: string }) {
             <Settings className="size-[18px] shrink-0" aria-hidden />
             Settings
           </Link>
+          <div className="flex items-center gap-3 px-3 py-1.5 text-[15px] text-ink">
+            <SunMoon className="size-[18px] shrink-0" aria-hidden />
+            Theme
+            <ThemeIcons className="ml-auto" />
+          </div>
           <form action={signOut} className="mt-0.5 border-t border-border pt-1">
             <button type="submit" className={cn(item, "text-danger hover:bg-danger/10")}>
               <LogOut className="size-[18px] shrink-0" aria-hidden />
