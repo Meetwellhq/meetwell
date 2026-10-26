@@ -1743,6 +1743,17 @@ describe("partner event pages", () => {
     expect(await as(ALICE, "select public.admin_add_event_speaker('thinkux-day', 'SPEAKER@partner.test') as n")).toEqual([{ n: "Test Person" }]);
     await expect(as(null, "select * from public.partner_events")).rejects.toThrow(/permission denied/);
     await expect(as(null, "select * from public.event_speakers")).rejects.toThrow(/permission denied/);
+
+    // Editing: admins only; the link name stays; ends before it starts is refused.
+    await expect(as(BOB, "select public.admin_update_event('thinkux-day', 'Hacked', '2026-12-05')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_update_event('thinkux-day', 'Hacked', '2026-12-05')")).rejects.toThrow(/permission denied/);
+    await expect(as(ALICE, "select public.admin_update_event('no-such-event', 'X', '2026-12-05')")).rejects.toThrow(/No such event/);
+    await expect(as(ALICE, "select public.admin_update_event('thinkux-day', 'X', '2026-12-05', '2026-12-01')")).rejects.toThrow(/check constraint/);
+    await as(ALICE, "select public.admin_update_event('thinkux-day', ' ThinkUX Day 2026 ', '2026-12-06', '2026-12-07', 'Lagos', '  ')");
+    expect(
+      (await db.query("select name, starts_on::text, ends_on::text, venue, about from public.partner_events where slug = 'thinkux-day'")).rows,
+    ).toEqual([{ name: "ThinkUX Day 2026", starts_on: "2026-12-06", ends_on: "2026-12-07", venue: "Lagos", about: null }]);
+    await as(ALICE, "select public.admin_update_event('thinkux-day', 'ThinkUX Day', '2026-12-05')");
   });
 
   it("shows the public page with each speaker's card and mentoring price", async () => {

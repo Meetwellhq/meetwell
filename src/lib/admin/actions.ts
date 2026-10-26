@@ -427,6 +427,34 @@ export async function adminCreateEvent(partnerSlugValue: string, _: AdminFormSta
   return { ok: `Added ${name}. Now add its speakers.` };
 }
 
+/** Edit an event's name, dates, venue and description. Its link (and printed QR codes) stays the same. */
+export async function adminUpdateEvent(eventSlug: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const name = String(formData.get("name") ?? "").trim().slice(0, 120);
+  const startsOn = String(formData.get("startsOn") ?? "");
+  const endsOn = String(formData.get("endsOn") ?? "") || null;
+  const isDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
+  if (!name) return { error: "Add the event's name." };
+  if (!isDate(startsOn)) return { error: "Pick the date it starts." };
+  if (endsOn && (!isDate(endsOn) || endsOn < startsOn)) return { error: "The end date can't be before the start." };
+
+  const { error } = await (await createClient()).rpc("admin_update_event", {
+    p_event_slug: eventSlug,
+    p_name: name,
+    p_starts_on: startsOn,
+    p_ends_on: endsOn,
+    p_venue: String(formData.get("venue") ?? "").trim().slice(0, 120) || null,
+    p_about: String(formData.get("about") ?? "").trim().slice(0, 600) || null,
+  });
+  if (error) {
+    console.error("admin_update_event failed", error.code, error.message);
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't save the changes." };
+  }
+  revalidatePath("/admin", "layout");
+  revalidatePath(`/e/${eventSlug}`);
+  return { ok: "Saved." };
+}
+
 /** Add a speaker to an event by their account email or card link. */
 export async function adminAddEventSpeaker(eventSlug: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };
