@@ -9,12 +9,13 @@ export default async function MessagesPage({ searchParams }: PageProps<"/dashboa
   const { payment } = await searchParams;
 
   return (
-    <div className="flex flex-col gap-4">
+    // Phones show this only for a payment note; the list is the page there.
+    <div className={payment ? "flex h-full flex-col gap-4 p-4" : "hidden h-full flex-col gap-4 p-4 lg:flex"}>
       {payment === "pending" && (
         <Alert>We&apos;re confirming your payment with Paystack. Your conversation will appear here in a minute.</Alert>
       )}
       {payment === "failed" && <Alert tone="danger">The payment didn&apos;t go through, so you weren&apos;t charged.</Alert>}
-      <div className="hidden min-h-[60vh] items-center justify-center rounded-xl border border-border bg-surface lg:flex">
+      <div className="hidden flex-1 items-center justify-center lg:flex">
         <EmptyState
           icon={<MessagesSquare className="size-5" aria-hidden />}
           title="Pick a conversation"

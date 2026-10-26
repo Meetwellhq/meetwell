@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Select, Textarea } from "@/components/ui/field";
 import { Alert } from "@/components/ui/misc";
+import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import { publicProfilePath, SUPPORT_EMAIL } from "@/lib/config";
 import { markConversationRead, reportMessage, sendMessage, setBlocked } from "@/lib/messaging/actions";
@@ -119,8 +120,8 @@ export function Thread({
     });
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           {/* Phones only: the list is beside the conversation from laptops up. */}
           <Link href="/dashboard/messages" aria-label="All messages" className="-ml-2 rounded-full p-2 text-ink-2 hover:bg-surface-2 lg:hidden">
@@ -156,13 +157,13 @@ export function Thread({
       </div>
 
       {justPaid && (
-        <Alert tone="success">
+        <Alert tone="success" className="mx-4 mt-3">
           Payment received. You can message {conversation.other_name.split(" ")[0]} until{" "}
           {new Date(conversation.access_until).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Africa/Lagos" })}.
         </Alert>
       )}
 
-      <div className="flex min-h-[50vh] flex-col gap-2 overflow-y-auto rounded-xl border border-border bg-surface p-4 lg:h-[calc(100dvh-26rem)] lg:min-h-80">
+      <div className="flex min-h-[50vh] flex-1 flex-col gap-2 overflow-y-auto p-4 lg:min-h-0">
         {messages.length === 0 && (
           <p className="m-auto max-w-xs text-center text-sm text-ink-3">
             {conversation.role === "member"
@@ -197,7 +198,7 @@ export function Thread({
       </div>
 
       {conversation.locked ? (
-        <Alert>
+        <Alert className="mx-4 mb-3">
           <LockedNotice conversation={conversation} />
         </Alert>
       ) : (
@@ -206,10 +207,11 @@ export function Thread({
             e.preventDefault();
             send();
           }}
-          className="flex flex-col gap-2"
+          className="flex flex-col gap-2 border-t border-border p-3"
         >
           {error && <Alert tone="danger">{error}</Alert>}
-          <div className="flex items-end gap-2">
+          {/* The send button sits inside the message box, bottom right. */}
+          <div className="relative">
             <Textarea
               aria-label="Message"
               value={draft}
@@ -223,11 +225,17 @@ export function Thread({
                   if (draft.trim()) send();
                 }
               }}
-              className="flex-1 resize-none"
+              className="resize-none pr-14"
             />
-            <Button type="submit" loading={sending} disabled={!draft.trim()} icon={<Send className="size-4" />}>
-              Send
-            </Button>
+            <button
+              type="submit"
+              disabled={sending || !draft.trim()}
+              aria-label="Send message"
+              title="Send"
+              className="absolute bottom-2.5 right-2.5 grid size-9 place-items-center rounded-full bg-accent text-accent-ink transition-colors hover:bg-accent-hover disabled:opacity-40"
+            >
+              {sending ? <Spinner className="size-4" /> : <Send className="size-4" aria-hidden />}
+            </button>
           </div>
           <p className="text-right text-xs text-ink-3">
             {draft.length > MAX - 200 ? `${MAX - draft.length} characters left · ` : ""}Enter to send, Shift+Enter for a new line
@@ -235,7 +243,7 @@ export function Thread({
         </form>
       )}
 
-      <p className="text-center text-xs text-ink-3">
+      <p className="px-4 pb-3 text-center text-xs text-ink-3">
         Messages are private between you two. Please keep to our{" "}
         <Link href="/community-rules" className="underline">
           community rules

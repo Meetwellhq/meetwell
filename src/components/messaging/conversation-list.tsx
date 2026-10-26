@@ -69,18 +69,19 @@ export function ConversationList({ rows }: { rows: ConversationRow[] }) {
 }
 
 /**
- * Two panes from laptops up: the list on the left, the open conversation on the
- * right. On phones one at a time: the list, or the conversation (with a back arrow).
+ * One box with two panes from laptops up: the list on the left, the open
+ * conversation on the right, split by a line. On phones one at a time: the
+ * list, or the conversation (with a back arrow).
  */
 export function MessagesShell({ list, children }: { list: React.ReactNode; children: React.ReactNode }) {
   const pathname = usePathname();
   const inThread = pathname !== "/dashboard/messages";
   return (
-    <div className="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-6">
-      <div className={cn("overflow-hidden rounded-xl border border-border bg-surface lg:self-start", inThread && "hidden lg:block")}>
-        <div className="max-h-[calc(100dvh-13rem)] overflow-y-auto">{list}</div>
-      </div>
-      <div className={cn("min-w-0", !inThread && "order-first lg:order-none")}>{children}</div>
+    // One box: the list and the conversation, split by a single line.
+    <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface lg:grid lg:h-[calc(100dvh-14rem)] lg:min-h-[28rem] lg:grid-cols-[20rem_minmax(0,1fr)]">
+      <div className={cn("overflow-y-auto lg:border-r lg:border-border", inThread && "hidden lg:block")}>{list}</div>
+      {/* Phones, no conversation open: only the page's payment notes show, above the list. */}
+      <div className={cn("min-h-0 min-w-0", !inThread && "order-first lg:order-none")}>{children}</div>
     </div>
   );
 }
