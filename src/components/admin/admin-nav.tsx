@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  BadgeCheck,
+  HandHeart,
   CreditCard,
   LayoutDashboard,
   ListOrdered,
@@ -37,7 +37,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
   {
     title: "Mentoring",
     items: [
-      { href: "/admin/mentors", label: "Mentors", icon: BadgeCheck, count: "mentors" },
+      { href: "/admin/mentors", label: "Mentors", icon: HandHeart, count: "mentors" },
       { href: "/admin/messages", label: "Messages", icon: MessagesSquare, count: "reports" },
     ],
   },

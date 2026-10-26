@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  BadgeCheck,
+  HandHeart,
   BookUser,
   Handshake,
   IdCard,
@@ -75,7 +75,7 @@ export function DashboardNav({
       items: [
         { href: "/dashboard/contacts", label: "Contacts", icon: BookUser },
         ...(spark ? [{ href: "/dashboard/matches", label: "Spark", icon: Sparkles }] : []),
-        ...(mentor ? [{ href: "/dashboard/mentor", label: "Mentoring", icon: BadgeCheck }] : []),
+        ...(mentor ? [{ href: "/dashboard/mentor", label: "Mentoring", icon: HandHeart }] : []),
         ...(messages ? [{ href: "/dashboard/messages", label: "Messages", icon: MessagesSquare, unread: true }] : []),
         ...(partner ? [{ href: "/dashboard/partner", label: "Partner", icon: Handshake }] : []),
       ],
