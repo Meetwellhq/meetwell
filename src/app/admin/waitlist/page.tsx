@@ -9,7 +9,9 @@ export const metadata: Metadata = { title: "Waiting list · Admin" };
 
 export default async function AdminWaitlistPage() {
   const { data, error } = await (await createClient()).rpc("admin_list_waitlist");
-  const rows = (data ?? []) as WaitlistRow[];
+  // Newest activity first: a fresh invite or a new joiner goes to the top.
+  const latest = (r: WaitlistRow) => Math.max(Date.parse(r.joined_at), r.invited_at ? Date.parse(r.invited_at) : 0);
+  const rows = ((data ?? []) as WaitlistRow[]).sort((a, b) => latest(b) - latest(a));
   const invited = rows.filter((r) => r.invited_at).length;
 
   return (
