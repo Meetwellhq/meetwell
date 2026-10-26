@@ -883,3 +883,31 @@ export function feedbackEmail(args: { kind: FeedbackKind; message: string; name:
 </div>`;
   return { subject, text, html };
 }
+
+/** Added as a speaker at a partner's event: their event page, their badge QR, and what it does. */
+export function eventSpeakerEmail(
+  args: Common & {
+    eventName: string;
+    eventSlug: string;
+    profileSlug: string;
+    dates: string;
+    venue: string | null;
+    partnerName: string;
+    published: boolean;
+  },
+) {
+  const where = [args.dates, args.venue].filter(Boolean).join(", ");
+  const event = `${args.siteUrl}/e/${encodeURIComponent(args.eventSlug)}`;
+  const badge = `${event}/qr?speaker=${encodeURIComponent(args.profileSlug)}`;
+  return note({
+    ...args,
+    subject: `You're a speaker at ${args.eventName} on ${args.appName}`,
+    before: [
+      `${args.partnerName} has added you as a speaker at ${args.eventName} (${where}). Your card is now on the event's page, with everyone else speaking.`,
+      `You also get your own QR code for your badge or your last slide. People who scan it open your card, save your contact in one tap and can follow up after the event. If you mentor on ${args.appName}, they can message you from there too.`,
+      ...(args.published ? [] : [`Your card isn't published yet, so people can't see it. Publish it from your dashboard before the event.`]),
+    ],
+    cta: { href: event, label: "See the event page" },
+    after: [`Download your badge QR code: ${badge}`],
+  });
+}

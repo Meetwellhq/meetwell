@@ -6,6 +6,7 @@ import type { TemplateId } from "./admin/campaigns";
 import {
   addPhotoEmail,
   draftReminderEmail,
+  eventSpeakerEmail,
   feedbackEmail,
   type FeedbackKind,
   finishProfileEmail,
@@ -128,6 +129,11 @@ export function sendSparkBetaEmail(to: string, fullName: string | null) {
 /** Someone on a partner's team can now see its page. */
 export function sendPartnerAccessEmail(to: string, fullName: string | null, partnerName: string) {
   return send(to, partnerAccessEmail({ ...common(fullName), partnerName }));
+}
+
+/** Added as a speaker at a partner's event. */
+export function sendEventSpeakerEmail(to: string, fullName: string | null, details: Omit<Parameters<typeof eventSpeakerEmail>[0], keyof ReturnType<typeof common>>) {
+  return send(to, eventSpeakerEmail({ ...common(fullName), ...details }));
 }
 
 /** The ready-made emails on the admin New email page. */

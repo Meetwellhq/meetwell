@@ -1851,6 +1851,20 @@ describe("partner event pages", () => {
     await db.query(`update public.mentor_settings set price_kobo = $1 where user_id = ${owner}`, [price]);
   });
 
+  it("adds a speaker with the details for their email, and says if they were already on", async () => {
+    await as(ALICE, "select public.admin_create_event('techcabal', 'tc-mail', 'Mail Summit', '2026-11-30', null, 'Lagos')");
+    await expect(as(BOB, "select * from public.admin_add_event_speaker_details('tc-mail', 'partner-speaker')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_add_event_speaker_details('tc-mail', 'partner-speaker')")).rejects.toThrow(/permission denied/);
+    const [first] = await as<Record<string, unknown>>(ALICE, "select * from public.admin_add_event_speaker_details('tc-mail', 'partner-speaker')");
+    expect(first).toMatchObject({
+      full_name: "Test Person", email: "speaker@partner.test", profile_slug: "partner-speaker", added: true,
+      event_name: "Mail Summit", venue: "Lagos", partner_name: "TechCabal",
+    });
+    const [again] = await as<{ added: boolean }>(ALICE, "select added from public.admin_add_event_speaker_details('tc-mail', 'SPEAKER@partner.test')");
+    expect(again.added).toBe(false);
+    await as(ALICE, "select public.admin_delete_event('tc-mail')");
+  });
+
   it("deletes an event only while nothing has come from it", async () => {
     await as(ALICE, "select public.admin_create_event('techcabal', 'tc-mistake', 'Typo Event', '2026-11-30')");
     await as(ALICE, "select public.admin_add_event_speaker('tc-mistake', 'partner-speaker')");

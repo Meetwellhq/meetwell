@@ -301,3 +301,23 @@ describe("feedback email", () => {
     expect(e.text).toContain("Page: /dashboard");
   });
 });
+
+describe("event speaker email", () => {
+  it("names the event, links its page and the speaker's badge QR, and nudges an unpublished card", async () => {
+    const { eventSpeakerEmail } = await import("@/lib/founder-emails");
+    const e = eventSpeakerEmail({
+      ...base, fullName: "Ada Obi", eventName: "ThinkUX Day", eventSlug: "thinkux-day", profileSlug: "ada",
+      dates: "5 Dec 2026", venue: "Lagos", partnerName: "ThinkUX", published: false,
+    });
+    expect(e.subject).toBe("You're a speaker at ThinkUX Day on Meetwell");
+    expect(e.html).toContain('href="https://meetwell.me/e/thinkux-day"');
+    expect(e.text).toContain("https://meetwell.me/e/thinkux-day/qr?speaker=ada");
+    expect(e.text).toContain("ThinkUX Day (5 Dec 2026, Lagos)");
+    expect(e.text).toContain("isn't published yet");
+    const live = eventSpeakerEmail({
+      ...base, fullName: "Ada Obi", eventName: "ThinkUX Day", eventSlug: "thinkux-day", profileSlug: "ada",
+      dates: "5 Dec 2026", venue: null, partnerName: "ThinkUX", published: true,
+    });
+    expect(live.text).not.toContain("isn't published yet");
+  });
+});

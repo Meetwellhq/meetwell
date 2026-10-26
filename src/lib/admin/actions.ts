@@ -7,6 +7,7 @@ import {
   sendInviteEmail,
   sendMentorApprovedEmail,
   sendMentoringEmail,
+  sendEventSpeakerEmail,
   sendPartnerAccessEmail,
   sendPublishCardEmail,
   sendSparkBetaEmail,
@@ -18,6 +19,7 @@ import { isSparkOn } from "../spark";
 import { createClient, getCurrentUser } from "../supabase/server";
 import { parseOutreachList, xHandle } from "../outreach";
 import { emailSchema } from "../validation";
+import { eventDates } from "../events";
 
 export type InviteState = { ok?: boolean; error?: string };
 
@@ -468,19 +470,45 @@ export async function adminDeleteEvent(eventSlug: string): Promise<{ error?: str
   return {};
 }
 
-/** Add a speaker to an event by their account email or card link. */
+type SpeakerAdded = {
+  full_name: string;
+  email: string;
+  profile_slug: string;
+  card_status: string;
+  added: boolean;
+  event_name: string;
+  starts_on: string;
+  ends_on: string | null;
+  venue: string | null;
+  partner_name: string;
+};
+
+/** Add a speaker to an event by their account email or card link, and email them about it (only the first time). */
 export async function adminAddEventSpeaker(eventSlug: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };
   const who = String(formData.get("who") ?? "").trim().slice(0, 200);
   if (!who) return { error: "Enter their email or card link." };
-  const { data, error } = await (await createClient()).rpc("admin_add_event_speaker", { p_event_slug: eventSlug, p_who: who });
+  const { data, error } = await (await createClient()).rpc("admin_add_event_speaker_details", { p_event_slug: eventSlug, p_who: who });
   if (error) {
     if (error.message.includes("No card found")) return { error: "No card found for that email or link. They need a Meetwell card first." };
     return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't add them." };
   }
   revalidatePath("/admin", "layout");
   revalidatePath(`/e/${eventSlug}`);
-  return { ok: `Added ${data as string}.` };
+  const s = ((data ?? []) as SpeakerAdded[])[0];
+  if (!s) return { ok: "Added." };
+  if (!s.added) return { ok: `${s.full_name} is already a speaker.` };
+  // Tell them they're on the event, with their badge QR.
+  const emailed = await sendEventSpeakerEmail(s.email, s.full_name, {
+    eventName: s.event_name,
+    eventSlug,
+    profileSlug: s.profile_slug,
+    dates: eventDates(s.starts_on, s.ends_on),
+    venue: s.venue,
+    partnerName: s.partner_name,
+    published: s.card_status === "published",
+  });
+  return { ok: emailed ? `Added ${s.full_name}. We emailed them.` : `Added ${s.full_name}. The email didn't send, so let them know.` };
 }
 
 export async function adminRemoveEventSpeaker(eventSlug: string, profileSlug: string): Promise<{ error?: string }> {
