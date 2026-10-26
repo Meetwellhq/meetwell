@@ -67,7 +67,7 @@ export function MobileMenu({
             className="absolute inset-x-3 top-full z-50 mt-2 flex max-h-[calc(100dvh-6rem)] flex-col gap-5 overflow-y-auto rounded-2xl border border-border bg-surface p-4 shadow-xl"
           >
             {sections.map((section) => (
-              <div key={section.title} className="flex flex-col gap-1 border-t border-border pt-4 first:border-t-0 first:pt-0">
+              <div key={section.title} className="flex flex-col gap-1">
                 {/* A group can have no title (the first one in the member menu). */}
                 {section.title && <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>}
                 {section.items.map((item) => {
@@ -83,7 +83,7 @@ export function MobileMenu({
                       onClick={() => setOpenOn(null)}
                       className={cn(
                         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors",
-                        active ? "bg-accent font-medium text-white" : "text-ink hover:bg-surface-2",
+                        active ? "bg-border font-medium text-ink" : "text-ink hover:bg-border",
                       )}
                     >
                       <item.icon className="size-[18px] shrink-0" aria-hidden />
@@ -92,7 +92,7 @@ export function MobileMenu({
                         <span
                           className={cn(
                             "ml-auto rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
-                            active ? "bg-surface/20 text-white" : "bg-accent text-white",
+                            "bg-accent text-white",
                           )}
                         >
                           {item.badge > 99 ? "99+" : item.badge}

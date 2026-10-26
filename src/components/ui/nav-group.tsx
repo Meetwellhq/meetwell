@@ -10,8 +10,8 @@ export type NavChild = { href: string; label: string; icon: LucideIcon };
 /**
  * A menu item with pages under it (Mentoring → Wallet, Transactions), for the
  * sidebar and the phone menu. The arrow shows or hides them: right when closed,
- * down when open. Open by default on any of its pages. The pages under it have
- * a lighter look than the main items, hanging off a thin line.
+ * down when open. Open by default on any of its pages. The pages under it are
+ * smaller, hanging off a thin line.
  */
 export function NavGroup({
   href,
@@ -39,7 +39,7 @@ export function NavGroup({
       <div
         className={cn(
           "flex items-center rounded-lg transition-colors",
-          here ? "bg-accent text-white" : inside ? "text-accent" : "text-ink hover:bg-surface-2",
+          here ? "bg-border text-ink" : "text-ink hover:bg-border",
         )}
       >
         <Link
@@ -57,7 +57,7 @@ export function NavGroup({
           aria-expanded={open}
           aria-controls={listId}
           aria-label={open ? `Hide ${label} pages` : `Show ${label} pages`}
-          className={cn("mr-1 grid size-8 place-items-center rounded-md", here ? "hover:bg-white/15" : "hover:bg-surface-2")}
+          className={cn("mr-1 grid size-8 place-items-center rounded-md", "hover:bg-border-strong")}
         >
           {open ? <ChevronDown className="size-4" aria-hidden /> : <ChevronRight className="size-4" aria-hidden />}
         </button>
@@ -74,7 +74,7 @@ export function NavGroup({
                 onClick={onNavigate}
                 className={cn(
                   "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
-                  active ? "bg-accent-soft font-medium text-accent" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+                  active ? "bg-border font-medium text-ink" : "text-ink-2 hover:bg-border hover:text-ink",
                 )}
               >
                 <c.icon className="size-4 shrink-0" aria-hidden />

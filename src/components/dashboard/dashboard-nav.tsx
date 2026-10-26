@@ -31,13 +31,13 @@ type Me = { name: string; email: string | null; avatarUrl: string | null };
 const isActive = (pathname: string, href: string) =>
   href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
-function UnreadBadge({ n, active }: { n: number; active: boolean }) {
+function UnreadBadge({ n }: { n: number }) {
   if (!n) return null;
   return (
     <span
       className={cn(
         "ml-auto rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
-        active ? "bg-surface/20 text-white" : "bg-accent text-white",
+        "bg-accent text-white",
       )}
     >
       {n > 99 ? "99+" : n}
@@ -208,9 +208,8 @@ export function DashboardNav({
       <div className="sticky top-[calc(3.75rem+1px)] flex h-[calc(100dvh-3.75rem-1px)] flex-col">
         <nav aria-label="Dashboard" className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-4">
           {sections.map((section) => (
-            // A thin line above each labelled group (Connect, Earn).
-            <div key={section.title} className={cn("flex flex-col gap-1", section.title && "border-t border-border pt-4")}>
-              {section.title && <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>}
+            <div key={section.title} className="flex flex-col gap-1">
+              {section.title && <p className="px-3 pb-1 pt-3 text-sm text-ink-3">{section.title}</p>}
               {section.items.map((item) => {
                 const active = isActive(pathname, item.href);
                 if (item.children) {
@@ -223,12 +222,12 @@ export function DashboardNav({
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors",
-                      active ? "bg-accent font-medium text-white" : "text-ink hover:bg-surface-2",
+                      active ? "bg-border font-medium text-ink" : "text-ink hover:bg-border",
                     )}
                   >
                     <item.icon className="size-[18px] shrink-0" aria-hidden />
                     {item.label}
-                    {item.unread && <UnreadBadge n={unread} active={active} />}
+                    {item.unread && <UnreadBadge n={unread} />}
                   </Link>
                 );
               })}

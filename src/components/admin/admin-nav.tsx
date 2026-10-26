@@ -52,13 +52,13 @@ const SECTIONS: { title: string; items: Item[] }[] = [
 
 const isActive = (pathname: string, href: string) => (href === "/admin" ? pathname === href : pathname.startsWith(href));
 
-function CountBadge({ n, active }: { n: number; active: boolean }) {
+function CountBadge({ n }: { n: number }) {
   if (!n) return null;
   return (
     <span
       className={cn(
         "ml-auto rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
-        active ? "bg-surface/20 text-white" : "bg-accent text-white",
+        "bg-accent text-white",
       )}
     >
       {n > 99 ? "99+" : n}
@@ -104,12 +104,12 @@ export function AdminNav({ counts, placement }: { counts: Counts; placement: "si
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors",
-                      active ? "bg-accent font-medium text-white" : "text-ink hover:bg-surface-2",
+                      active ? "bg-border font-medium text-ink" : "text-ink hover:bg-surface-2",
                     )}
                   >
                     <item.icon className="size-[18px] shrink-0" aria-hidden />
                     {item.label}
-                    {item.count && <CountBadge n={counts[item.count]} active={active} />}
+                    {item.count && <CountBadge n={counts[item.count]} />}
                   </Link>
                 );
               })}
