@@ -7,7 +7,8 @@ import { useEffect, useState } from "react";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 
-export type MenuItem = { href: string; label: string; icon: LucideIcon; badge?: number };
+/** `sub` = indented under the item before it (e.g. Wallet under Mentoring). */
+export type MenuItem = { href: string; label: string; icon: LucideIcon; badge?: number; sub?: boolean };
 export type MenuSection = { title: string; items: MenuItem[] };
 
 /**
@@ -76,11 +77,12 @@ export function MobileMenu({
                       aria-current={active ? "page" : undefined}
                       onClick={() => setOpenOn(null)}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors",
+                        "flex items-center gap-3 rounded-lg px-3 transition-colors",
+                        item.sub ? "ml-6 py-2 text-sm" : "py-2.5 text-[15px]",
                         active ? "bg-accent font-medium text-white" : "text-ink hover:bg-surface-2",
                       )}
                     >
-                      <item.icon className="size-[18px] shrink-0" aria-hidden />
+                      <item.icon className={cn("shrink-0", item.sub ? "size-4" : "size-[18px]")} aria-hidden />
                       {item.label}
                       {!!item.badge && (
                         <span

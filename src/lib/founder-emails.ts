@@ -838,7 +838,7 @@ export function withdrawalSentEmail(args: Common & { amount: string; bank: strin
     before: [
       `Your withdrawal of ${args.amount} has been sent to your ${args.bank} account. It usually arrives within a few hours.`,
     ],
-    cta: { href: `${args.siteUrl}/dashboard/mentor`, label: "View your wallet" },
+    cta: { href: `${args.siteUrl}/dashboard/mentor/wallet`, label: "View your wallet" },
   });
 }
 

@@ -14,7 +14,7 @@ export async function applyAsMentor(): Promise<Result> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };
   const { error } = await (await createClient()).rpc("apply_as_mentor");
   if (error) return { error: error.code === "42501" ? "Finish the checklist first." : "Couldn't send your application." };
-  revalidatePath("/dashboard/mentor");
+  revalidatePath("/dashboard/mentor", "layout");
   return { ok: true };
 }
 
@@ -25,7 +25,7 @@ export async function saveMentorOffer(priceNaira: number, accepting: boolean, fr
   if (!free && !(kobo >= 200000 && kobo <= 2000000)) return { error: "Choose a price between ₦2,000 and ₦20,000." };
   const { error } = await (await createClient()).rpc("set_mentor_offer", { p_price_kobo: kobo, p_accepting: accepting });
   if (error) return { error: "Couldn't save. Please try again." };
-  revalidatePath("/dashboard/mentor");
+  revalidatePath("/dashboard/mentor", "layout");
   return { ok: true };
 }
 
@@ -71,7 +71,7 @@ export async function savePayoutAccount(bankCode: string, bankName: string, acco
     console.error("savePayoutAccount failed", err);
     return { error: "We couldn't add that account. Please try again." };
   }
-  revalidatePath("/dashboard/mentor");
+  revalidatePath("/dashboard/mentor", "layout");
   return { ok: true };
 }
 
@@ -85,7 +85,7 @@ export async function requestWithdrawal(amountNaira: number): Promise<Result> {
     if (error.code === "22023") return { error: error.message.replace(/N(?=\d)/g, "₦") };
     return { error: "Couldn't request the withdrawal. Please try again." };
   }
-  revalidatePath("/dashboard/mentor");
+  revalidatePath("/dashboard/mentor", "layout");
   return { ok: true };
 }
 
