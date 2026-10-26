@@ -24,7 +24,7 @@ type Row = {
 
 /**
  * The one profile score members see (dashboard, Spark page) and get emailed
- * about, the same as public.profile_completeness() (8 items while Spark is paused).
+ * about, the same as public.profile_completeness() (6 items while Spark is paused).
  */
 export function completenessOf(profile: Row, spark = true) {
   return profileCompleteness(

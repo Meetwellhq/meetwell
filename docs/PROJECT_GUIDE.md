@@ -137,7 +137,8 @@ every migration.
   experienced member is told. Up to ~60 members per run on the current Vercel plan.
   Only members with a confirmed account and a profile at least 80% complete are matched or
   recommended (`profile_completeness()` in SQL, `src/lib/matching/completeness.ts` for the page;
-  keep them in step). Members under 80% get a one-time `profile_incomplete` reminder; without a
+  keep them in step). While Spark is off the score counts 6 items (photo, title, organisation, bio, public contact,
+  years; `20261202000000_profile_score_six.sql`), shown as Profile strength on Edit card. Members under 80% get a one-time `profile_incomplete` reminder; without a
   photo, 4+ years get "people want to learn from you" copy, others "a photo gets you matches".
 - **Spark credits (Paystack)**: members under 4 years buy packs on the Spark page (`SparkCredits`,
   `buyCredits` in `src/lib/payments/actions.ts`). Prices live in `public.credit_packs`

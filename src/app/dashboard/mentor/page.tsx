@@ -38,7 +38,7 @@ const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "n
 const CHECKS: { key: string; label: string; where: string }[] = [
   { key: "years", label: "4 or more years of experience", where: "/dashboard/profile" },
   { key: "photo", label: "A profile photo", where: "/dashboard/profile" },
-  { key: "complete", label: "Profile at least 80% complete", where: "/dashboard" },
+  { key: "complete", label: "Profile at least 80% complete", where: "/dashboard/profile" },
   { key: "published", label: "Card published", where: "/dashboard/profile" },
   { key: "confirmed", label: "Email confirmed", where: "/dashboard/settings" },
 ];

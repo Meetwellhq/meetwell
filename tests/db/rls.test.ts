@@ -1831,10 +1831,10 @@ describe("Spark switch", () => {
     expect(p.mentors).toBeGreaterThan(0);
   });
 
-  it("scores the 8 card items while off, and all 10 when on", async () => {
+  it("scores the 6 important items while off, and all 10 when on", async () => {
     const score = async () =>
       (await db.query<{ s: number }>("select public.profile_completeness(p) as s from public.profiles p where p.slug = 'spark-card'")).rows[0].s;
-    expect(await score()).toBe(63); // 5 of 8
+    expect(await score()).toBe(67); // title, organisation, bio, years = 4 of 6 (field and city don't count)
     await as(ADMIN_S, "select public.admin_set_spark_enabled(true)");
     expect(await score()).toBe(60); // 6 of 10, the city counts again
   });

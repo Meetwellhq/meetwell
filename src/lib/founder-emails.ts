@@ -307,9 +307,9 @@ export function finishProfileEmail(args: Common & { spark?: boolean }) {
       "Your profile is nearly there. A few more details and it's complete.",
       spark
         ? `Once it reaches 80%, Spark can start introducing you to people in your field. Your Spark page shows exactly what's missing.`
-        : "A complete card gets saved and answered more often. Your dashboard shows exactly what's missing.",
+        : "A complete card gets saved and answered more often. The Edit card page shows exactly what's missing.",
     ],
-    cta: { href: `${args.siteUrl}${spark ? "/dashboard/matches" : "/dashboard"}`, label: "Finish my profile" },
+    cta: { href: `${args.siteUrl}${spark ? "/dashboard/matches" : "/dashboard/profile"}`, label: "Finish my profile" },
   });
 }
 
@@ -469,7 +469,7 @@ function incompleteProfileNoSpark(
   const { appName, siteUrl, completeness, hasPhoto, experienceYears, fieldName } = args;
   const progress = `Your ${appName} profile is ${completeness}% complete.`;
   const senior = experienceYears !== null && experienceYears >= RECOMMENDABLE_MIN_YEARS;
-  const finish = "Then add the last few details your dashboard lists.";
+  const finish = "Then add the last few details the Edit card page lists.";
 
   if (hasPhoto) {
     return reminder({
@@ -479,9 +479,9 @@ function incompleteProfileNoSpark(
         senior
           ? `${progress} At 80% you can apply to be a mentor on ${appName} and earn from what you know.`
           : `${progress} A complete card gets saved and answered more often.`,
-        "A few more details will get you there, and your dashboard shows exactly what's missing.",
+        "A few more details will get you there, and the Edit card page shows exactly what's missing.",
       ],
-      cta: { href: `${siteUrl}/dashboard`, label: "Complete my profile" },
+      cta: { href: `${siteUrl}/dashboard/profile`, label: "Complete my profile" },
       after: [ONLY_ONCE],
     });
   }

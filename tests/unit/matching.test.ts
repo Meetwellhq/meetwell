@@ -50,11 +50,11 @@ describe("profile completeness", () => {
     expect(thin.ready).toBe(false);
     expect(thin.missing.map((m) => m.label)).toEqual(["Photo", "Bio", "City"]);
     expect(profileCompleteness({ ...full, avatarUrl: null, city: null }).ready).toBe(true); // 80%
-    // While Spark is paused: the 8 card items only, so "looking for" and city don't count.
-    const paused = profileCompleteness({ ...full, lookingFor: [], city: null }, false);
-    expect(paused.items).toHaveLength(8);
+    // While Spark is paused: the 6 important items only (no link, field, "looking for" or city).
+    const paused = profileCompleteness({ ...full, lookingFor: [], city: null, hasPublicLink: false, field: null }, false);
+    expect(paused.items).toHaveLength(6);
     expect(paused.percent).toBe(100);
-    expect(profileCompleteness({ ...full, avatarUrl: null }, false).percent).toBe(88);
+    expect(profileCompleteness({ ...full, avatarUrl: null }, false).percent).toBe(83); // 5 of 6: still enough to mentor
   });
 });
 

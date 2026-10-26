@@ -1,7 +1,7 @@
 /**
  * Profile completeness: ten items, 10% each, while Spark is on; while it's
- * paused, the 8 items that don't need the Spark page ("what you're looking
- * for" and city are asked there). 80% unlocks Spark matches and mentoring.
+ * paused, the 6 that matter most (photo, title, organisation, bio, a public
+ * contact, years of experience). 80% unlocks Spark matches and mentoring.
  * Keep in step with public.profile_completeness() in the database, which
  * enforces it.
  */
@@ -33,11 +33,11 @@ export function profileCompleteness(p: CompletenessInput, spark = true) {
     { label: "Organisation", done: filled(p.organization), where: "card" },
     { label: "Bio", done: filled(p.bio), where: "card" },
     { label: "A public contact (email, WhatsApp or phone)", done: p.hasPublicContact, where: "card" },
-    { label: "A public website or social link", done: p.hasPublicLink, where: "card" },
-    { label: "Your field", done: !!p.field, where: "matching" },
-    { label: "Years of experience", done: p.experienceYears !== null, where: "matching" },
+    { label: "Years of experience", done: p.experienceYears !== null, where: "card" },
     ...(spark
       ? [
+          { label: "A public website or social link", done: p.hasPublicLink, where: "card" as const },
+          { label: "Your field", done: !!p.field, where: "card" as const },
           { label: "What you're looking for", done: p.lookingFor.length > 0, where: "matching" as const },
           { label: "City", done: filled(p.city), where: "matching" as const },
         ]
