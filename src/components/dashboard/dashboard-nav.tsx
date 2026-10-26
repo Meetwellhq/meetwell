@@ -208,7 +208,8 @@ export function DashboardNav({
       <div className="sticky top-[calc(3.75rem+1px)] flex h-[calc(100dvh-3.75rem-1px)] flex-col">
         <nav aria-label="Dashboard" className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-4">
           {sections.map((section) => (
-            <div key={section.title} className="flex flex-col gap-1">
+            // A thin line above each labelled group (Connect, Earn).
+            <div key={section.title} className={cn("flex flex-col gap-1", section.title && "border-t border-border pt-4")}>
               {section.title && <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>}
               {section.items.map((item) => {
                 const active = isActive(pathname, item.href);
