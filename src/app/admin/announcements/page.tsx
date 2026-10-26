@@ -15,6 +15,12 @@ export const maxDuration = 60;
 
 // Newest first.
 const ANNOUNCEMENTS: { kind: AnnouncementKind; title: string; label: string; who?: string }[] = [
+  {
+    kind: "spark_paused",
+    title: "Spark is taking a break until Meetwell has 5,000 members",
+    label: "Spark paused",
+    who: "Only users who turned Spark on",
+  },
   { kind: "publish_card", title: "Your Meetwell card is one tap from going live", label: "Publish card", who: "Only users whose card is still a draft" },
   { kind: "mentoring", title: "Mentoring is open on Meetwell", label: "Mentoring" },
   { kind: "spark_beta", title: "Come and try Spark, our new beta feature", label: "Spark" },
@@ -22,8 +28,9 @@ const ANNOUNCEMENTS: { kind: AnnouncementKind; title: string; label: string; who
 
 export default async function AdminAnnouncementsPage() {
   const supabase = await createClient();
-  // Spark is paused until launch, so its announcement isn't offered.
-  const shown = (await isSparkOn()) ? ANNOUNCEMENTS : ANNOUNCEMENTS.filter((a) => a.kind !== "spark_beta");
+  // While Spark is paused its launch email isn't offered; once it's back, the "paused" email isn't.
+  const spark = await isSparkOn();
+  const shown = ANNOUNCEMENTS.filter((a) => a.kind !== (spark ? "spark_paused" : "spark_beta"));
   const [history, ...results] = await Promise.all([
     supabase.rpc("admin_email_results"),
     ...shown.map((a) => supabase.rpc("admin_announcement_status", { p_kind: a.kind })),

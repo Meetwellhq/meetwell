@@ -10,6 +10,7 @@ import {
   sendPartnerAccessEmail,
   sendPublishCardEmail,
   sendSparkBetaEmail,
+  sendSparkPausedEmail,
   sendWithdrawalSentEmail,
 } from "../email";
 import { refundPayment, sendTransfer } from "../payments/paystack";
@@ -52,6 +53,8 @@ const ANNOUNCEMENTS = {
   mentoring: sendMentoringEmail,
   // Only to people whose card is still a draft (the database picks them).
   publish_card: sendPublishCardEmail,
+  // Only to people who turned Spark on (the database picks them).
+  spark_paused: sendSparkPausedEmail,
 } satisfies Record<string, (to: string, fullName: string | null) => Promise<boolean>>;
 
 export type AnnouncementKind = keyof typeof ANNOUNCEMENTS;

@@ -1839,3 +1839,16 @@ describe("Spark switch", () => {
     expect(await score()).toBe(60); // 6 of 10, the city counts again
   });
 });
+
+describe("Spark paused announcement", () => {
+  it("goes only to members who turned Spark on, once each", async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    await db.query("update public.profiles set matching_opt_in = false");
+    await db.query("update public.profiles set matching_opt_in = true where slug = 'spark-card'");
+    const recipients = await as<{ email: string }>(ALICE, "select email from public.admin_announcement_recipients('spark_paused', 100)");
+    expect(recipients.map((r) => r.email)).toEqual(["sparkcard@test"]);
+    await as(ALICE, "select public.admin_mark_announced('spark_paused', 'sparkcard@test')");
+    const [status] = await as<{ sent: number; remaining: number }>(ALICE, "select * from public.admin_announcement_status('spark_paused')");
+    expect(status).toEqual({ sent: 1, remaining: 0 });
+  });
+});

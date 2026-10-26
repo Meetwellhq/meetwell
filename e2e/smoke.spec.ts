@@ -37,7 +37,7 @@ test("log-in says when an email has no account", async ({ page }) => {
   await expect(page.getByText("We couldn't find an account with that email.", { exact: false })).toBeVisible();
 });
 
-for (const path of ["/about", "/support", "/changelog", "/terms", "/privacy", "/community-rules", "/features/spark"]) {
+for (const path of ["/about", "/support", "/changelog", "/terms", "/privacy", "/community-rules", "/features/mentoring"]) {
   test(`${path} loads`, async ({ page }) => {
     const res = await page.goto(path, { waitUntil: "domcontentloaded" });
     expect(res?.status()).toBe(200);

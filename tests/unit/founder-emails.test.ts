@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, sparkBetaEmail, waitlistEmail } from "@/lib/founder-emails";
+import { inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, sparkBetaEmail, sparkPausedEmail, waitlistEmail } from "@/lib/founder-emails";
 
 const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "support@meetwell.me" };
 
@@ -167,6 +167,17 @@ describe("partner access email", () => {
     expect(text.startsWith("Hi there,")).toBe(true);
     expect(html).toContain('href="https://meetwell.me/dashboard/partner"');
     expect(text).toContain("10% of it for their first 12 months");
+  });
+});
+
+describe("Spark paused email", () => {
+  it("explains the pause, the 5,000 goal, refunds and links to the QR page", () => {
+    const { subject, text, html } = sparkPausedEmail({ ...base, fullName: "Ada Obi" });
+    expect(subject).toBe("Spark is taking a break until Meetwell has 5,000 members");
+    expect(text.startsWith("Hi Ada,")).toBe(true);
+    expect(text).toContain("about as many mentors as mentees");
+    expect(text).toContain("refund");
+    expect(html).toContain('href="https://meetwell.me/dashboard/qr"');
   });
 });
 

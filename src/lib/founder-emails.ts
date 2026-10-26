@@ -254,6 +254,23 @@ export function draftReminderEmail(args: Common) {
 }
 
 /** One-off, sent by the admin to everyone whose card is still a draft. */
+/** One-off: Spark is paused until Meetwell has 5,000 members with about as many mentors as mentees. */
+export function sparkPausedEmail(args: Common) {
+  return note({
+    ...args,
+    subject: `Spark is taking a break until ${args.appName} has 5,000 members`,
+    before: [
+      "A quick update on Spark, our AI introductions.",
+      "Spark works best when there are plenty of experienced people to introduce you to, and plenty of people who want to learn from them. We're not there yet, so I've paused Spark for now. It comes back once Meetwell has 5,000 members, with about as many mentors as mentees.",
+      "Until then you won't get new introductions, and Spark won't show in your dashboard. Everything else works as before: your card, QR code, contacts and messages.",
+      "If you bought Spark credits, reply to this email and I'll refund any you haven't used.",
+      "You can help us get there sooner. Your card works as an invite, so anyone who scans it can join without a code.",
+    ],
+    cta: { href: `${args.siteUrl}/dashboard/qr`, label: "Share my card" },
+    after: ["You'll be the first to know when Spark is back."],
+  });
+}
+
 export function publishCardEmail(args: Common) {
   return note({
     ...args,

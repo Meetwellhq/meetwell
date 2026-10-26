@@ -22,6 +22,7 @@ import {
   publishCardEmail,
   renewalReminderEmail,
   sparkBetaEmail,
+  sparkPausedEmail,
   waitlistEmail,
   withdrawalSentEmail,
 } from "./founder-emails";
@@ -147,6 +148,11 @@ export async function previewCampaignEmail(template: TemplateId, fullName: strin
 /** One-off announcement to draft cards only: publish your card. */
 export function sendPublishCardEmail(to: string, fullName: string | null) {
   return send(to, publishCardEmail(common(fullName)));
+}
+
+/** One-off announcement to members who turned Spark on: Spark is paused until 5,000 members. */
+export function sendSparkPausedEmail(to: string, fullName: string | null) {
+  return send(to, sparkPausedEmail(common(fullName)));
 }
 
 /** One-off announcement: mentoring is open; add your years, and earn as a mentor with 4+. */
