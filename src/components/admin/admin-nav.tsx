@@ -78,6 +78,7 @@ export function AdminNav({ counts, placement }: { counts: Counts; placement: "si
     return (
       <MobileMenu
         label="Admin"
+        beta={false}
         isActive={isActive}
         sections={SECTIONS.map((s) => ({
           title: s.title,

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { signOut } from "@/lib/auth/actions";
+import { Logo } from "@/components/marketing/logo";
 import { cn } from "@/lib/cn";
 import { NavGroup, type NavChild } from "./nav-group";
 
@@ -13,17 +14,20 @@ export type MenuItem = { href: string; label: string; icon: LucideIcon; badge?: 
 export type MenuSection = { title: string; items: MenuItem[] };
 
 /**
- * Phones and tablets: a menu button at the top right that drops down every
- * item the desktop sidebar has, in the same groups, with Log out at the end.
- * Closes on a tap outside, on Escape, or when a page is picked. Sits inside a
- * `relative` header so the drop-down lines up under it.
+ * Phones and tablets: a menu button at the top right that opens a full-height
+ * panel on the left with every item the desktop sidebar has, in the same
+ * groups, and Log out at the end. The page behind dims and can't scroll.
+ * Closes on a tap outside, on Escape, on the close button, or when a page is picked.
  */
 export function MobileMenu({
   sections,
   isActive,
   label,
+  beta = true,
 }: {
   sections: MenuSection[];
+  /** The Beta tag on the logo at the top of the panel (off in admin). */
+  beta?: boolean;
   isActive: (pathname: string, href: string) => boolean;
   label: string;
 }) {
@@ -39,7 +43,13 @@ export function MobileMenu({
       if (e.key === "Escape") setOpenOn(null);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // The page behind stays put while the panel is open.
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflow;
+    };
   }, [open]);
 
   return (
@@ -50,9 +60,10 @@ export function MobileMenu({
         aria-expanded={open}
         aria-controls="mobile-menu"
         aria-label={open ? "Close menu" : "Open menu"}
-        className="relative grid size-10 place-items-center rounded-full text-ink hover:bg-surface-2"
+        // Hidden while open: the panel has its own close button.
+        className={cn("relative grid size-10 place-items-center rounded-full text-ink hover:bg-surface-2", open && "invisible")}
       >
-        {open ? <X className="size-6" aria-hidden /> : <Menu className="size-6" aria-hidden />}
+        <Menu className="size-6" aria-hidden />
         {!open && badges > 0 && (
           <span className="absolute top-1.5 right-1.5 size-2.5 rounded-full bg-danger ring-2 ring-surface" aria-hidden />
         )}
@@ -60,12 +71,23 @@ export function MobileMenu({
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40 bg-ink/20" aria-hidden onClick={() => setOpenOn(null)} />
+          <div className="fixed inset-0 z-40 bg-ink/30" aria-hidden onClick={() => setOpenOn(null)} />
           <nav
             id="mobile-menu"
             aria-label={label}
-            className="absolute inset-x-3 top-full z-50 mt-2 flex max-h-[calc(100dvh-6rem)] flex-col gap-5 overflow-y-auto rounded-2xl border border-border bg-surface p-4 shadow-xl"
+            className="fixed inset-y-0 left-0 z-50 flex h-dvh w-[85vw] max-w-sm flex-col gap-5 overflow-y-auto border-r border-border bg-surface px-4 pb-6 shadow-xl"
           >
+            <div className="-mx-4 flex h-15 shrink-0 items-center justify-between border-b border-border px-4">
+              <Logo large beta={beta} />
+              <button
+                type="button"
+                onClick={() => setOpenOn(null)}
+                aria-label="Close menu"
+                className="grid size-10 place-items-center rounded-full text-ink hover:bg-surface-2"
+              >
+                <X className="size-6" aria-hidden />
+              </button>
+            </div>
             {sections.map((section) => (
               <div key={section.title} className="flex flex-col gap-1">
                 {/* A group can have no title (the first one in the member menu). */}
