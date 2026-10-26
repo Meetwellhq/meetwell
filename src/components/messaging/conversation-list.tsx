@@ -1,11 +1,11 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { Check, EllipsisVertical, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
-import { Input, Select } from "@/components/ui/field";
+import { Input } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/misc";
 import { cn } from "@/lib/cn";
 import type { ConversationRow } from "@/lib/messaging/types";
@@ -19,11 +19,78 @@ const when = (iso: string) => {
   });
 };
 
+type ReadFilterValue = "all" | "unread" | "read";
+const READ_OPTIONS: { value: ReadFilterValue; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "unread", label: "Unread" },
+  { value: "read", label: "Read" },
+];
+
+/** A "more" button beside the search that opens All / Unread / Read. A dot shows while a filter is on. */
+function ReadFilter({ value, onChange }: { value: ReadFilterValue; onChange: (v: ReadFilterValue) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onClick = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onClick);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onClick);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls="read-filter"
+        aria-label={`Show: ${READ_OPTIONS.find((o) => o.value === value)!.label}`}
+        title="Filter"
+        className="relative grid size-10 place-items-center rounded-lg text-ink-2 hover:bg-surface-2 hover:text-ink"
+      >
+        <EllipsisVertical className="size-5" aria-hidden />
+        {value !== "all" && <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-accent" aria-hidden />}
+      </button>
+      {open && (
+        <div
+          id="read-filter"
+          role="radiogroup"
+          aria-label="Show"
+          className="absolute right-0 top-full z-20 mt-1 flex w-36 flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
+        >
+          {READ_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              role="radio"
+              aria-checked={value === o.value}
+              onClick={() => {
+                onChange(o.value);
+                setOpen(false);
+              }}
+              className="flex items-center rounded-lg px-3 py-2 text-sm text-ink hover:bg-surface-2"
+            >
+              {o.label}
+              {value === o.value && <Check className="ml-auto size-4 text-accent" aria-hidden />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Every conversation with a preview of the last message, and a search on top; the open one is highlighted. */
 export function ConversationList({ rows }: { rows: ConversationRow[] }) {
   const pathname = usePathname();
   const [q, setQ] = useState("");
-  const [read, setRead] = useState<"all" | "unread" | "read">("all");
+  const [read, setRead] = useState<ReadFilterValue>("all");
   const needle = q.trim().toLowerCase();
   const shown = rows.filter(
     (c) =>
@@ -52,14 +119,7 @@ export function ConversationList({ rows }: { rows: ConversationRow[] }) {
             </button>
           )}
         </div>
-        {/* Select is full width by default, so the wrapper sets its size. */}
-        <div className="w-[6.5rem] shrink-0">
-          <Select value={read} onChange={(e) => setRead(e.target.value as typeof read)} aria-label="Show" className="h-10">
-            <option value="all">All</option>
-            <option value="unread">Unread</option>
-            <option value="read">Read</option>
-          </Select>
-        </div>
+        <ReadFilter value={read} onChange={setRead} />
       </div>
       {shown.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-3">No one matches.</p>}
     <ul className="divide-y divide-border">
