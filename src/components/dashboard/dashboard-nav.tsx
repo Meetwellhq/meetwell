@@ -117,7 +117,8 @@ function ProfileMenu({ me, pathname }: { me: Me; pathname: string }) {
  * the same items (`menu`). Mentoring shows for 4+ years; Messages only for
  * people who have a conversation, with their unread count; Partner only for
  * people on a partner's team. The sidebar ends with the member's profile,
- * pinned to the bottom (ProfileMenu).
+ * pinned to the bottom (ProfileMenu), which holds Settings and Log out. Phones
+ * have no sidebar, so their menu lists Settings and Log out itself.
  */
 export function DashboardNav({
   placement,
@@ -219,28 +220,6 @@ export function DashboardNav({
               })}
             </div>
           ))}
-          <div className="flex flex-col gap-1 py-4">
-            <Link
-              href="/dashboard/settings"
-              aria-current={isActive(pathname, "/dashboard/settings") ? "page" : undefined}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors",
-                isActive(pathname, "/dashboard/settings") ? "bg-accent font-medium text-white" : "text-ink hover:bg-surface-2",
-              )}
-            >
-              <Settings className="size-[18px] shrink-0" aria-hidden />
-              Settings
-            </Link>
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="flex w-full items-center gap-3 rounded-lg bg-surface-2 px-3 py-2.5 text-[15px] text-danger hover:bg-danger/10"
-              >
-                <LogOut className="size-[18px]" aria-hidden />
-                Log out
-              </button>
-            </form>
-          </div>
         </nav>
         {me && <ProfileMenu me={me} pathname={pathname} />}
       </div>
