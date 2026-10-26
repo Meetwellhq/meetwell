@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, MoveRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { CompletenessItem, CompletenessKey } from "@/lib/matching/completeness";
@@ -49,9 +49,14 @@ export function ProfileStrength({ percent, items }: { percent: number; items: Co
         <p className="text-sm text-ink-2">
           {done === items.length ? "Everything's done. Nice work." : `${done} of ${items.length} done. Mentors need at least 80%.`}
         </p>
-        <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-2 rounded-lg text-sm font-medium text-accent underline-offset-4 hover:underline"
+        >
           {done === items.length ? "View checklist" : "Complete profile"}
-        </Button>
+          <MoveRight className="size-4" aria-hidden />
+        </button>
       </div>
 
       <Dialog open={open} onClose={() => setOpen(false)} title="Your profile checklist" badge={<Badge tone="success" className="tabular-nums">{done}/{items.length}</Badge>}>
