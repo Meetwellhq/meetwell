@@ -1851,6 +1851,21 @@ describe("partner event pages", () => {
     await db.query(`update public.mentor_settings set price_kobo = $1 where user_id = ${owner}`, [price]);
   });
 
+  it("deletes an event only while nothing has come from it", async () => {
+    await as(ALICE, "select public.admin_create_event('techcabal', 'tc-mistake', 'Typo Event', '2026-11-30')");
+    await as(ALICE, "select public.admin_add_event_speaker('tc-mistake', 'partner-speaker')");
+    await expect(as(BOB, "select public.admin_delete_event('tc-mistake')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_delete_event('tc-mistake')")).rejects.toThrow(/permission denied/);
+    await expect(as(ALICE, "select public.admin_delete_event('no-such-event')")).rejects.toThrow(/No such event/);
+    // Events with payments or conversations are kept (tc-summit had a payment, tc-old too).
+    await expect(as(ALICE, "select public.admin_delete_event('tc-summit')")).rejects.toThrow(/has history/);
+    await as(ALICE, "select public.admin_delete_event('tc-mistake')");
+    expect((await db.query("select 1 from public.partner_events where slug = 'tc-mistake'")).rows).toEqual([]);
+    expect(
+      (await db.query("select 1 from public.event_speakers s left join public.partner_events e on e.id = s.event_id where e.id is null")).rows,
+    ).toEqual([]);
+  });
+
   it("shows a partner's team its own events only", async () => {
     const mine = await as<{ name: string; conversations: number }>(TEAM, "select name, conversations from public.my_partner_events()");
     expect(mine.map((e) => e.name)).toEqual(["ThinkUX Day"]);

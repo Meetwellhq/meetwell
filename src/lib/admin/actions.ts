@@ -455,6 +455,19 @@ export async function adminUpdateEvent(eventSlug: string, _: AdminFormState, for
   return { ok: "Saved." };
 }
 
+/** Delete an event that nothing has come from yet (no payments or conversations). Otherwise hide it. */
+export async function adminDeleteEvent(eventSlug: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_delete_event", { p_event_slug: eventSlug });
+  if (error) {
+    if (error.code === "23503") return { error: "This event already has payments or conversations, so it can't be deleted. Hide the page instead." };
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't delete the event." };
+  }
+  revalidatePath("/admin", "layout");
+  revalidatePath(`/e/${eventSlug}`);
+  return {};
+}
+
 /** Add a speaker to an event by their account email or card link. */
 export async function adminAddEventSpeaker(eventSlug: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };

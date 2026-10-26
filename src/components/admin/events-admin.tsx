@@ -1,12 +1,20 @@
 "use client";
 
-import { Download, ExternalLink, Pencil, X } from "lucide-react";
+import { Download, ExternalLink, Pencil, Trash2, X } from "lucide-react";
 import { useActionState, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/field";
 import { Badge } from "@/components/ui/misc";
 import { useToast } from "@/components/ui/toast";
-import { adminAddEventSpeaker, adminCreateEvent, adminRemoveEventSpeaker, adminSetEventActive, adminUpdateEvent } from "@/lib/admin/actions";
+import {
+  adminAddEventSpeaker,
+  adminCreateEvent,
+  adminDeleteEvent,
+  adminRemoveEventSpeaker,
+  adminSetEventActive,
+  adminUpdateEvent,
+} from "@/lib/admin/actions";
 import { cn } from "@/lib/cn";
 
 export type AdminEvent = {
@@ -142,6 +150,53 @@ function RemoveSpeaker({ eventSlug, profileSlug, name }: { eventSlug: string; pr
   );
 }
 
+/** Delete, with a confirm step. Only events nothing has come from yet; the database refuses the rest. */
+function DeleteEvent({ event }: { event: AdminEvent }) {
+  const toast = useToast();
+  const [confirming, setConfirming] = useState(false);
+  const [pending, start] = useTransition();
+  const hasHistory = event.payments > 0 || (event.free_conversations ?? 0) > 0;
+  return (
+    <>
+      <Button size="sm" variant="ghost" icon={<Trash2 className="size-4" />} onClick={() => setConfirming(true)} className="text-danger! hover:text-danger!">
+        Delete
+      </Button>
+      <Dialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        title={`Delete ${event.name}?`}
+        description={
+          hasHistory
+            ? "This event already has payments or conversations, so it can't be deleted: its numbers and the partner's earnings depend on it. Hide the page instead."
+            : "Its page and QR codes stop working, and its speaker list is removed. This can't be undone."
+        }
+      >
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setConfirming(false)}>
+            {hasHistory ? "Close" : "Cancel"}
+          </Button>
+          {!hasHistory && (
+            <Button
+              variant="danger"
+              loading={pending}
+              onClick={() =>
+                start(async () => {
+                  const { error } = await adminDeleteEvent(event.slug);
+                  setConfirming(false);
+                  if (error) toast(error, "error");
+                  else toast(`Deleted ${event.name}.`);
+                })
+              }
+            >
+              Delete event
+            </Button>
+          )}
+        </div>
+      </Dialog>
+    </>
+  );
+}
+
 function ActiveToggle({ event }: { event: AdminEvent }) {
   const toast = useToast();
   const [pending, start] = useTransition();
@@ -191,6 +246,7 @@ export function EventCard({ event, site, dates, revenue }: { event: AdminEvent; 
             </Button>
           )}
           <ActiveToggle event={event} />
+          <DeleteEvent event={event} />
         </div>
       </div>
 
