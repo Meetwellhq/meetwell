@@ -7,16 +7,18 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { InstallApp } from "@/components/pwa/install-app";
 import { getOwnProfile } from "@/lib/profiles/queries";
 import { MessageEmailsSwitch } from "@/components/messaging/message-emails-switch";
+import { SavebackEmailsSwitch } from "@/components/dashboard/saveback-emails-switch";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const [user, profile, emails, payments] = await Promise.all([
+  const [user, profile, emails, savebacks, payments] = await Promise.all([
     getCurrentUser(),
     getOwnProfile(),
     supabase.rpc("my_message_emails"),
+    supabase.rpc("my_saveback_emails"),
     supabase.rpc("my_payments"),
   ]);
   const isLive = profile?.status === "published";
@@ -44,6 +46,16 @@ export default async function SettingsPage() {
           </p>
         </div>
         <MessageEmailsSwitch initial={emails.data !== false} />
+      </Card>
+
+      <Card className="flex items-start justify-between gap-4 p-5 sm:p-6">
+        <div>
+          <h2 className="font-semibold">Save-back emails</h2>
+          <p className="mt-1 text-sm text-ink-2">
+            Get an email when someone whose card you saved saves yours back. At most one a day.
+          </p>
+        </div>
+        <SavebackEmailsSwitch initial={savebacks.data !== false} />
       </Card>
 
       <Card className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center sm:p-6">

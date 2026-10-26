@@ -5,7 +5,9 @@ import {
   sendInviteReminderEmail,
   sendNoScansEmail,
   sendRenewalReminderEmail,
+  sendSavebackEmail,
 } from "@/lib/email";
+import type { Saver } from "@/lib/founder-emails";
 import { createClient } from "@/lib/supabase/server";
 
 // Sending is paced to stay under Resend's rate limit, so allow time for a full batch.
@@ -84,6 +86,18 @@ export async function GET(request: Request) {
       endsOn: new Date(e.access_until).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Africa/Lagos" }),
     });
     const tally = (results.subscription_ending ??= { sent: 0, failed: 0 });
+    if (ok) tally.sent++;
+    else tally.failed++;
+    await pause(600);
+  }
+
+  // "Saved your card back": one email per person, listing everyone new since the last one.
+  const { data: savebacks, error: savebackError } = await supabase.rpc("claim_saveback_emails", { p_token: secret, p_limit: 40 });
+  if (savebackError) console.error("claim_saveback_emails failed", savebackError.code, savebackError.message);
+  for (const s of (savebacks ?? []) as { email: string; full_name: string | null; token: string; savers: Saver[] | null }[]) {
+    if (!s.savers?.length) continue;
+    const ok = await sendSavebackEmail(s.email, s.full_name, s.savers, s.token);
+    const tally = (results.saved_back ??= { sent: 0, failed: 0 });
     if (ok) tally.sent++;
     else tally.failed++;
     await pause(600);

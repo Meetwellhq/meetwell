@@ -23,6 +23,8 @@ import {
   renewalReminderEmail,
   sparkBetaEmail,
   sparkPausedEmail,
+  savebackEmail,
+  type Saver,
   waitlistEmail,
   withdrawalSentEmail,
 } from "./founder-emails";
@@ -148,6 +150,11 @@ export async function previewCampaignEmail(template: TemplateId, fullName: strin
 /** One-off announcement to draft cards only: publish your card. */
 export function sendPublishCardEmail(to: string, fullName: string | null) {
   return send(to, publishCardEmail(common(fullName)));
+}
+
+/** Daily: people whose card this member saved have saved theirs back. */
+export function sendSavebackEmail(to: string, fullName: string | null, savers: Saver[], token: string) {
+  return send(to, savebackEmail({ ...common(fullName), savers, token }));
 }
 
 /** One-off announcement to members who turned Spark on: Spark is paused until 5,000 members. */

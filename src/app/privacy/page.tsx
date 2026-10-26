@@ -56,7 +56,8 @@ export default function PrivacyPage() {
           <strong>Contacts:</strong> when you open someone&apos;s card while logged in, we keep it in your Contacts with
           the date, whether you scanned their QR code, and any note you add. Before you have an account, the cards you
           open are kept only on your own phone, in your browser, and reach us only if you sign up. If you keep
-          someone&apos;s card and you have a card of your own, they can see that you saved them.
+          someone&apos;s card and you have a card of your own, they can see that you saved them. If they had already
+          saved your card, we email them that you saved theirs back (they can turn these emails off).
         </p>
         <p className="mt-3">
           <strong>If you join through a partner&apos;s link</strong> (for example an event you spoke at): we record

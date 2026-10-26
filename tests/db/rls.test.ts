@@ -1852,3 +1852,48 @@ describe("Spark paused announcement", () => {
     expect(status).toEqual({ sent: 1, remaining: 0 });
   });
 });
+
+describe("saved your card back emails", () => {
+  const AMA = "5b5b0000-0000-0000-0000-0000000000a1";
+  const KOFI = "5b5b0000-0000-0000-0000-0000000000a2";
+  const SECRET = "test-secret-that-is-long-enough-1234567890";
+  const claim = () => as<{ email: string; savers: { full_name: string; slug: string }[] }>(null, `select email, savers from public.claim_saveback_emails('${SECRET}', 40)`);
+
+  beforeAll(async () => {
+    await db.exec("insert into public.access_codes (code, max_uses) values ('SAVEBACK-CODE', 2)");
+    for (const [id, email] of [[AMA, "ama@saveback.test"], [KOFI, "kofi@saveback.test"]]) {
+      await db.query("insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values ($1, $2, now(), $3)", [id, email, { access_code: "SAVEBACK-CODE" }]);
+    }
+    await createProfile(AMA, "ama-card");
+    await createProfile(KOFI, "kofi-card");
+    await db.query("insert into public.internal_settings (key, value) values ('cron_secret', $1) on conflict (key) do update set value = excluded.value", [SECRET]);
+  });
+
+  it("tells the first saver once, when the other person saves them back", async () => {
+    await as(AMA, "select public.save_contact('kofi-card')");
+    expect(await claim()).toEqual([]); // one-way so far
+    await as(KOFI, "select public.save_contact('ama-card')");
+    await as(KOFI, "select public.save_contact('ama-card')"); // twice: still one notice
+    const rows = await claim();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].email).toBe("ama@saveback.test");
+    expect(rows[0].savers.map((s) => s.slug)).toEqual(["kofi-card"]);
+    expect(await claim()).toEqual([]); // sent once
+    await expect(as(null, "select * from public.claim_saveback_emails('wrong', 40)")).rejects.toThrow(/Not allowed/);
+    await expect(as(KOFI, "select * from public.saveback_notices")).rejects.toThrow(/permission denied/);
+  });
+
+  it("skips people who turned the emails off", async () => {
+    await as(KOFI, "select public.set_saveback_emails(false)");
+    expect(await as(KOFI, "select public.my_saveback_emails() as on")).toEqual([{ on: false }]);
+    await as(AMA, "select public.remove_contact('kofi-card')").catch(() => {});
+    await db.query("delete from public.saveback_notices");
+    await db.query("delete from public.saved_contacts where user_id in ($1, $2)", [AMA, KOFI]);
+    await as(KOFI, "select public.save_contact('ama-card')");
+    await as(AMA, "select public.save_contact('kofi-card')"); // Ama saved back: Kofi would be told, but he's off
+    expect(await claim()).toEqual([]);
+    const [{ token }] = (await db.query<{ token: string }>("select token from public.email_prefs where user_id = $1", [AMA])).rows;
+    expect(await as(null, "select public.unsubscribe_saveback_emails($1) as ok", [token])).toEqual([{ ok: true }]);
+    expect(await as(AMA, "select public.my_saveback_emails() as on")).toEqual([{ on: false }]);
+  });
+});

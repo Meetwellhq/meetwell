@@ -641,6 +641,64 @@ export function partnerAccessEmail({ fullName, appName, siteUrl, photoUrl, reply
 export const messageEmailsOffUrl = (siteUrl: string, token: string) =>
   `${siteUrl}/unsubscribe/messages?t=${encodeURIComponent(token)}`;
 
+/** Link that turns off "saved your card back" emails (no login needed). */
+export const savebackEmailsOffUrl = (siteUrl: string, token: string) =>
+  `${siteUrl}/unsubscribe/contacts?t=${encodeURIComponent(token)}`;
+
+export type Saver = { full_name: string; slug: string; avatar_url: string | null; title: string | null; organization: string | null };
+
+/**
+ * Daily, when people whose card you saved have saved yours back: one email
+ * listing them, each linking to their card, with a one-click way to turn these off.
+ */
+export function savebackEmail({ fullName, appName, siteUrl, photoUrl, replyEmail, savers, token }: Common & { savers: Saver[]; token: string }) {
+  const firstName = firstNameOf(fullName);
+  const first = savers[0];
+  const firstFirst = firstNameOf(first.full_name);
+  const subject =
+    savers.length === 1 ? `${first.full_name} saved your card back` : `${savers.length} people saved your card back`;
+  const lead =
+    savers.length === 1
+      ? `You saved ${first.full_name}'s card, and now ${firstFirst} has saved yours too. It's a good moment to say hello.`
+      : "You saved their cards, and now they've saved yours too. It's a good moment to say hello.";
+  const line = (s: Saver) => [s.title, s.organization].filter(Boolean).join(" · ");
+  const contacts = `${siteUrl}/dashboard/contacts`;
+  const off = savebackEmailsOffUrl(siteUrl, token);
+  const smallPrint = "You get this when someone saves your card back. Turn these emails off anytime.";
+
+  const text = [
+    `Hi ${firstName},`,
+    lead,
+    ...savers.map((s) => `${s.full_name}${line(s) ? `, ${line(s)}` : ""}: ${siteUrl}/p/${s.slug}`),
+    `Open your contacts: ${contacts}`,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+    `${smallPrint} ${off}`,
+  ].join("\n\n");
+
+  const people = savers
+    .map(
+      (s) => `<tr><td style="padding:10px 0;border-bottom:1px solid #ecebe6">
+        <a href="${siteUrl}/p/${encodeURIComponent(s.slug)}" style="color:#1c1c1a;text-decoration:none;font-weight:600">${escapeHtml(s.full_name)}</a>
+        ${line(s) ? `<br><span style="color:#5c5c57;font-size:14px">${escapeHtml(line(s))}</span>` : ""}
+      </td></tr>`,
+    )
+    .join("");
+  const html = founderLayout({
+    firstName,
+    appName,
+    siteUrl,
+    photoUrl,
+    bodyHtml: [
+      p(lead),
+      `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:8px 0">${people}</table>`,
+      button(contacts, "Open my contacts"),
+      `<p>Questions? Write to me at <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
+    ].join("\n  "),
+    footerHtml: `${escapeHtml(smallPrint)} <a href="${off}" style="color:#5c5c57">Turn off</a>`,
+  });
+  return { subject, text, html };
+}
+
 function initialsOf(name: string) {
   // Only words that start with a letter, so stray symbols don't become initials.
   const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w));

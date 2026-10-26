@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, sparkBetaEmail, sparkPausedEmail, waitlistEmail } from "@/lib/founder-emails";
+import { inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, sparkBetaEmail, sparkPausedEmail, savebackEmail, waitlistEmail } from "@/lib/founder-emails";
 
 const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "support@meetwell.me" };
 
@@ -178,6 +178,21 @@ describe("Spark paused email", () => {
     expect(text).toContain("about as many mentors as mentees");
     expect(text).toContain("refund");
     expect(html).toContain('href="https://meetwell.me/dashboard/qr"');
+  });
+});
+
+describe("saved your card back email", () => {
+  const amaka = { full_name: "Amaka Obi", slug: "amaka", avatar_url: null, title: "Designer", organization: "Paystack" };
+  it("names one person, links their card and has a turn-off link", () => {
+    const { subject, text, html } = savebackEmail({ ...base, fullName: "Tunde Bello", savers: [amaka], token: "11111111-2222-3333-4444-555555555555" });
+    expect(subject).toBe("Amaka Obi saved your card back");
+    expect(text).toContain("now Amaka has saved yours too");
+    expect(html).toContain('href="https://meetwell.me/p/amaka"');
+    expect(html).toContain("/unsubscribe/contacts?t=11111111-2222-3333-4444-555555555555");
+  });
+  it("groups several people", () => {
+    const { subject } = savebackEmail({ ...base, fullName: "Tunde", savers: [amaka, { ...amaka, slug: "b", full_name: "Bisi <b>" }], token: "t" });
+    expect(subject).toBe("2 people saved your card back");
   });
 });
 
