@@ -22,11 +22,8 @@ export function MobileMenu({
   sections,
   isActive,
   label,
-  titles = true,
 }: {
   sections: MenuSection[];
-  /** false = no group titles, just thin lines between the groups (member menu). */
-  titles?: boolean;
   isActive: (pathname: string, href: string) => boolean;
   label: string;
 }) {
@@ -70,8 +67,9 @@ export function MobileMenu({
             className="absolute inset-x-3 top-full z-50 mt-2 flex max-h-[calc(100dvh-6rem)] flex-col gap-5 overflow-y-auto rounded-2xl border border-border bg-surface p-4 shadow-xl"
           >
             {sections.map((section) => (
-              <div key={section.title} className={cn("flex flex-col gap-1", !titles && "border-t border-border pt-4 first:border-t-0 first:pt-0")}>
-                {titles && <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>}
+              <div key={section.title} className="flex flex-col gap-1">
+                {/* A group can have no title (the first one in the member menu). */}
+                {section.title && <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>}
                 {section.items.map((item) => {
                   const active = isActive(pathname, item.href);
                   if (item.children) {

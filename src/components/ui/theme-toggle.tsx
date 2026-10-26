@@ -108,7 +108,7 @@ export function ThemeMenu({ className }: { className?: string }) {
           id="theme-menu"
           role="radiogroup"
           aria-label="Theme"
-          className="absolute bottom-full right-0 z-10 mb-2 flex w-40 flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
+          className="absolute bottom-full left-0 z-10 mb-2 flex w-40 flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
         >
           {OPTIONS.map((o) => (
             <button

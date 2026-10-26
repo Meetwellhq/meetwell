@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
-import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { AccountMenu, DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { DeviceCardsImporter } from "@/components/dashboard/device-cards-importer";
 import { ExperiencePrompt } from "@/components/matching/experience-prompt";
 import { InstallApp } from "@/components/pwa/install-app";
@@ -35,14 +35,17 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         {/* h-15 (60px): the sidebar sticks just under it (see the navs). */}
         <div className="relative flex h-15 items-center justify-between gap-4 px-4 sm:px-5">
           <Logo large />
-          {/* Phones and tablets: the menu button. The profile is at the bottom of the sidebar. */}
-          <DashboardNav placement="menu" {...nav} />
+          <div className="flex items-center gap-2">
+            {/* Laptops and up: the avatar and its menu. Phones and tablets: the menu button. */}
+            <AccountMenu me={{ name, email: user.email ?? null, avatarUrl: profile?.avatar_url ?? null }} className="hidden lg:block" />
+            <DashboardNav placement="menu" {...nav} />
+          </div>
         </div>
       </header>
 
       {/* The sidebar runs down the left edge; the page fills the rest. */}
       <div className="flex flex-1">
-        <DashboardNav placement="sidebar" {...nav} me={{ name, email: user.email ?? null, avatarUrl: profile?.avatar_url ?? null }} />
+        <DashboardNav placement="sidebar" {...nav} />
         {/* Cards in the dashboard are 12px round (Card reads --card-radius). */}
         <main className="flex min-w-0 flex-1 flex-col gap-4 bg-surface p-4 sm:p-6 lg:p-8" style={{ "--card-radius": "0.75rem" } as CSSProperties}>
           <InstallApp variant="banner" />

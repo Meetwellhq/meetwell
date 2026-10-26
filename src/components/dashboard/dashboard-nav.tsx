@@ -4,7 +4,6 @@ import {
   HandHeart,
   BookUser,
   ChartLine,
-  ChevronsUpDown,
   Handshake,
   LayoutDashboard,
   LogOut,
@@ -48,11 +47,13 @@ function UnreadBadge({ n, active }: { n: number; active: boolean }) {
 }
 
 /**
- * The member's photo, name and email at the bottom of the sidebar. Clicking it
- * opens a small menu above it: Profile (the card editor), Settings and Log out. Closes on a
- * click outside, on Escape, or when a page is picked.
+ * The member's avatar at the top right of the header (laptops and up; phones
+ * use the menu button). Clicking it drops down their full name and email, then
+ * Profile (the card editor), Settings and Log out. Closes on a click outside,
+ * on Escape, or when a page is picked.
  */
-function ProfileMenu({ me, pathname }: { me: Me; pathname: string }) {
+export function AccountMenu({ me, className }: { me: Me; className?: string }) {
+  const pathname = usePathname();
   const [openOn, setOpenOn] = useState<string | null>(null);
   const open = openOn === pathname;
   const ref = useRef<HTMLDivElement>(null);
@@ -70,48 +71,46 @@ function ProfileMenu({ me, pathname }: { me: Me; pathname: string }) {
   }, [open]);
 
   const item = "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors";
-  // The profile (with its menu) and the theme button, side by side.
   return (
-    <div className="flex items-center gap-2 border-t border-border p-3">
-      <div ref={ref} className="relative min-w-0 flex-1">
-        {open && (
-          <div
-            id="profile-menu"
-            className="absolute inset-x-0 bottom-full mb-2 flex flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
-          >
-            <Link href="/dashboard/profile" onClick={() => setOpenOn(null)} className={cn(item, "text-ink hover:bg-surface-2")}>
-              <UserRound className="size-[18px] shrink-0" aria-hidden />
-              Profile
-            </Link>
-            <Link href="/dashboard/settings" onClick={() => setOpenOn(null)} className={cn(item, "text-ink hover:bg-surface-2")}>
-              <Settings className="size-[18px] shrink-0" aria-hidden />
-              Settings
-            </Link>
-            <form action={signOut} className="mt-0.5 border-t border-border pt-1">
-              <button type="submit" className={cn(item, "text-danger hover:bg-danger/10")}>
-                <LogOut className="size-[18px] shrink-0" aria-hidden />
-                Log out
-              </button>
-            </form>
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => setOpenOn(open ? null : pathname)}
-          aria-expanded={open}
-          aria-controls="profile-menu"
-          aria-label={`${me.name}: profile menu`}
-          className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-2"
+    <div ref={ref} className={cn("relative", className)}>
+      <button
+        type="button"
+        onClick={() => setOpenOn(open ? null : pathname)}
+        aria-expanded={open}
+        aria-controls="account-menu"
+        aria-label={`${me.name}: account menu`}
+        className="grid place-items-center rounded-full ring-offset-2 ring-offset-surface hover:ring-2 hover:ring-border-strong"
+      >
+        <Avatar name={me.name} src={me.avatarUrl} className="size-9 text-xs" />
+      </button>
+      {open && (
+        <div
+          id="account-menu"
+          className="absolute right-0 top-full z-50 mt-2 flex w-64 flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
         >
-          <Avatar name={me.name} src={me.avatarUrl} className="size-9 shrink-0 text-xs" />
-          <span className="flex min-w-0 flex-1 flex-col leading-tight">
-            <span className="truncate text-sm font-medium text-ink">{me.name}</span>
-            {me.email && <span className="truncate text-xs text-ink-3">{me.email}</span>}
-          </span>
-          <ChevronsUpDown className="size-4 shrink-0 text-ink-3" aria-hidden />
-        </button>
-      </div>
-      <ThemeMenu />
+          <div className="flex items-center gap-3 border-b border-border px-3 pb-3 pt-2">
+            <Avatar name={me.name} src={me.avatarUrl} className="size-10 shrink-0 text-sm" />
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate text-sm font-medium text-ink">{me.name}</span>
+              {me.email && <span className="truncate text-xs text-ink-3">{me.email}</span>}
+            </span>
+          </div>
+          <Link href="/dashboard/profile" onClick={() => setOpenOn(null)} className={cn(item, "mt-1 text-ink hover:bg-surface-2")}>
+            <UserRound className="size-[18px] shrink-0" aria-hidden />
+            Profile
+          </Link>
+          <Link href="/dashboard/settings" onClick={() => setOpenOn(null)} className={cn(item, "text-ink hover:bg-surface-2")}>
+            <Settings className="size-[18px] shrink-0" aria-hidden />
+            Settings
+          </Link>
+          <form action={signOut} className="mt-0.5 border-t border-border pt-1">
+            <button type="submit" className={cn(item, "text-danger hover:bg-danger/10")}>
+              <LogOut className="size-[18px] shrink-0" aria-hidden />
+              Log out
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
@@ -121,9 +120,9 @@ function ProfileMenu({ me, pathname }: { me: Me; pathname: string }) {
  * tablets a menu button at the top right of the header whose drop-down lists
  * the same items (`menu`). Mentoring shows for 4+ years; Messages only for
  * people who have a conversation, with their unread count; Partner only for
- * people on a partner's team. The sidebar ends with the member's profile,
- * pinned to the bottom (ProfileMenu), which holds Settings and Log out. Phones
- * have no sidebar, so their menu lists Settings and Log out itself.
+ * people on a partner's team. The sidebar ends with the theme button, pinned
+ * to the bottom; Profile, Settings and Log out are in the header's AccountMenu,
+ * and phones list them in their menu.
  */
 export function DashboardNav({
   placement,
@@ -131,7 +130,6 @@ export function DashboardNav({
   mentor = false,
   partner = false,
   spark = false,
-  me,
 }: {
   placement: "sidebar" | "menu";
   messages?: { unread: number } | null;
@@ -139,36 +137,47 @@ export function DashboardNav({
   partner?: boolean;
   /** Spark is hidden completely until it launches. */
   spark?: boolean;
-  /** Shown at the bottom of the sidebar. */
-  me?: Me;
 }) {
   const pathname = usePathname();
-  const sections: { title: string; items: Item[] }[] = [
-    {
-      title: "Menu",
-      items: [
-        { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-        { href: "/dashboard/analytics", label: "Analytics", icon: ChartLine },
-        { href: "/dashboard/contacts", label: "Contacts", icon: BookUser },
-        ...(spark ? [{ href: "/dashboard/matches", label: "Spark", icon: Sparkles }] : []),
-        ...(mentor
-          ? [
-              {
-                href: "/dashboard/mentor",
-                label: "Mentoring",
-                icon: HandHeart,
-                children: [
-                  { href: "/dashboard/mentor/wallet", label: "Wallet", icon: WalletIcon },
-                  { href: "/dashboard/mentor/transactions", label: "Transactions", icon: ReceiptText },
-                ],
-              },
-            ]
-          : []),
-        ...(messages ? [{ href: "/dashboard/messages", label: "Messages", icon: MessagesSquare, unread: true }] : []),
-        ...(partner ? [{ href: "/dashboard/partner", label: "Partner", icon: Handshake }] : []),
-      ],
-    },
-  ];
+  // The first group has no label; empty groups are left out.
+  const sections = (
+    [
+      {
+        title: "",
+        items: [
+          { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+          { href: "/dashboard/analytics", label: "Analytics", icon: ChartLine },
+        ],
+      },
+      {
+        title: "Connect",
+        items: [
+          { href: "/dashboard/contacts", label: "Contacts", icon: BookUser },
+          ...(spark ? [{ href: "/dashboard/matches", label: "Spark", icon: Sparkles }] : []),
+          ...(messages ? [{ href: "/dashboard/messages", label: "Messages", icon: MessagesSquare, unread: true }] : []),
+        ],
+      },
+      {
+        title: "Earn",
+        items: [
+          ...(mentor
+            ? [
+                {
+                  href: "/dashboard/mentor",
+                  label: "Mentoring",
+                  icon: HandHeart,
+                  children: [
+                    { href: "/dashboard/mentor/wallet", label: "Wallet", icon: WalletIcon },
+                    { href: "/dashboard/mentor/transactions", label: "Transactions", icon: ReceiptText },
+                  ],
+                },
+              ]
+            : []),
+          ...(partner ? [{ href: "/dashboard/partner", label: "Partner", icon: Handshake }] : []),
+        ],
+      },
+    ] as { title: string; items: Item[] }[]
+  ).filter((s) => s.items.length > 0);
   const unread = messages?.unread ?? 0;
 
   if (placement === "menu") {
@@ -189,19 +198,18 @@ export function DashboardNav({
             ],
           },
         ]}
-        titles={false}
       />
     );
   }
 
   return (
     <aside className="hidden w-60 shrink-0 border-r border-border bg-surface lg:block">
-      {/* Fills the screen under the header: the menu scrolls if it must, the profile stays at the bottom. */}
+      {/* Fills the screen under the header: the menu scrolls if it must, the theme button stays at the bottom. */}
       <div className="sticky top-[calc(3.75rem+1px)] flex h-[calc(100dvh-3.75rem-1px)] flex-col">
-        {/* No group titles: thin lines split the groups. */}
-        <nav aria-label="Dashboard" className="flex min-h-0 flex-1 flex-col divide-y divide-border overflow-y-auto px-4">
+        <nav aria-label="Dashboard" className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-4">
           {sections.map((section) => (
-            <div key={section.title} className="flex flex-col gap-1 py-4">
+            <div key={section.title} className="flex flex-col gap-1">
+              {section.title && <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>}
               {section.items.map((item) => {
                 const active = isActive(pathname, item.href);
                 if (item.children) {
@@ -226,7 +234,9 @@ export function DashboardNav({
             </div>
           ))}
         </nav>
-        {me && <ProfileMenu me={me} pathname={pathname} />}
+        <div className="border-t border-border p-3">
+          <ThemeMenu />
+        </div>
       </div>
     </aside>
   );
