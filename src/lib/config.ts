@@ -4,10 +4,11 @@ export const SUPPORT_EMAIL = "support@meetwell.me";
 /** The main inbox: general hello, reports about people, and security issues. */
 export const INFO_EMAIL = "info@meetwell.me";
 /** Meetwell's own social accounts, shown in the footer. Empty ones are hidden. */
-export const SOCIAL_LINKS: { platform: "linkedin" | "instagram" | "x"; label: string; url: string }[] = [
+export const SOCIAL_LINKS: { platform: "linkedin" | "instagram" | "x" | "youtube"; label: string; url: string }[] = [
   { platform: "linkedin", label: "LinkedIn", url: "https://www.linkedin.com/company/meet-well-me" },
   { platform: "instagram", label: "Instagram", url: "https://www.instagram.com/trymeetwell" },
   { platform: "x", label: "X", url: "https://x.com/trymeetwell" },
+  { platform: "youtube", label: "YouTube", url: "https://www.youtube.com/@trymeetwell" },
 ];
 
 /** The registered company behind Meetwell (CAC, Companies and Allied Matters Act 2020). */
