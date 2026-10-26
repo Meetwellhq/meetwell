@@ -1805,6 +1805,30 @@ describe("partner event pages", () => {
     expect(row.speakers).toEqual([{ slug: "partner-speaker", full_name: "Test Person", status: "published", mentor: true }]);
   });
 
+  it("pays the event's partner for 12 months after the event, then follows the sign-up rule", async () => {
+    const money = async (p: string) =>
+      (await as<{ earned_kobo: number }>(ALICE, "select earned_kobo from public.admin_partner_money($1)", [p]))[0].earned_kobo;
+    const [{ id: thinkux }] = (await db.query<{ id: string }>("select id from public.partners where slug = 'thinkux'")).rows;
+    // An old TechCabal event (ended over a year ago) where the ThinkUX speaker spoke.
+    await as(ALICE, "select public.admin_create_event('techcabal', 'tc-old', 'Old Summit', (current_date - interval '14 months')::date, (current_date - interval '13 months')::date)");
+    await as(ALICE, "select public.admin_add_event_speaker('tc-old', 'partner-speaker')");
+    // The mentor joined through ThinkUX recently (an earlier test moved it back 13 months).
+    const speaker = "(select user_id from public.profiles where slug = 'partner-speaker')";
+    const [{ joined }] = (await db.query<{ joined: string }>(`select created_at::text as joined from public.partner_signups where user_id = ${speaker}`)).rows;
+    await db.query(`update public.partner_signups set created_at = now() - interval '1 month' where user_id = ${speaker}`);
+    const tcBefore = await money(techcabal);
+    const tuxBefore = await money(thinkux);
+
+    const [p] = await as<{ reference: string }>(JUNIOR, "select * from public.start_subscription_purchase('partner-speaker', 'tc-old')");
+    await db.query("update public.payments set status = 'success', paid_at = now() where reference = $1", [p.reference]);
+    // Still tagged with the event, but TechCabal's 12 months are over: ThinkUX (the mentor's sign-up partner) earns.
+    expect((await db.query("select e.slug from public.payments y join public.partner_events e on e.id = y.event_id where y.reference = $1", [p.reference])).rows).toEqual([{ slug: "tc-old" }]);
+    expect(await money(techcabal)).toBe(tcBefore);
+    expect(await money(thinkux)).toBe(tuxBefore + 50000);
+    await as(ALICE, `select public.admin_mark_refunded('${p.reference}')`);
+    await db.query(`update public.partner_signups set created_at = $1 where user_id = ${speaker}`, [joined]);
+  });
+
   it("tags a free mentor's conversation with the event it started from", async () => {
     const owner = "(select user_id from public.profiles where slug = 'partner-speaker')";
     const [{ price }] = (await db.query<{ price: number }>(`select price_kobo as price from public.mentor_settings where user_id = ${owner}`)).rows;

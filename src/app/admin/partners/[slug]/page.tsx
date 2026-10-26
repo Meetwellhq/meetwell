@@ -66,7 +66,7 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
           <h2 className="font-medium text-ink">Their earnings</h2>
           <p className="text-sm text-ink-2">
             10% of what their mentors are paid, for each mentor&apos;s first 12 months, plus 10% of every paid message
-            started from one of their event pages. It comes out of Meetwell&apos;s 20%.
+            started from one of their event pages, for 12 months after each event. It comes out of Meetwell&apos;s 20%.
           </p>
         </div>
         <Stats
@@ -107,7 +107,8 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
           <h2 className="font-medium text-ink">Event pages</h2>
           <p className="text-sm text-ink-2">
             One page per event with every speaker&apos;s card and QR codes for badges and slides. When someone pays to
-            message a speaker from the event page, {partner.name} gets 10%, even if the speaker was already on Meetwell.
+            message a speaker from the event page, {partner.name} gets 10%, even if the speaker was already on Meetwell, for 12
+            months after the event.
           </p>
         </div>
         {eventsError ? (

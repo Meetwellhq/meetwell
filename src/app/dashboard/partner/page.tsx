@@ -129,7 +129,7 @@ export default async function PartnerPage() {
                 <h2 className="font-semibold">Your earnings</h2>
                 <p className="mt-1 text-sm text-ink-2">
                   You earn 10% of what your speakers are paid as mentors on Meetwell, for each speaker&apos;s first 12
-                  months, and 10% of every paid message started from one of your event pages. Meetwell pays you by
+                  months, and 10% of every paid message started from one of your event pages, for 12 months after each event. Meetwell pays you by
                   bank transfer.
                 </p>
               </div>

@@ -199,7 +199,7 @@ every migration.
   Step 3, event pages (`20261128000000_partner_events.sql`): public `/e/<slug>` with every speaker's card, an event QR
   (slides) and per-speaker QR (badges) from `/e/<slug>/qr[?speaker=]`. Speaker links carry `?event=<slug>` to the card,
   `/subscribe/<card>?event=` and `start_subscription_purchase(p_slug, p_event)`, which stores `payments.event_id` only if
-  the mentor speaks at that active event. Such a payment earns the **event's** partner 10% (no 12-month limit), even if
+  the mentor speaks at that active event. Such a payment earns the **event's** partner 10% for 12 months after the event's last day (`20261206000000_event_share_12_months.sql`; after that the normal sign-up rule applies), even if
   the mentor joined through another partner or none. Admins create events and add speakers (email or card link) on
   `/admin/partners/<slug>`; partner teams see their events on the Partner tab (`my_partner_events`).
 - **Outreach tracker**: `/admin/outreach` (`20261113000000_outreach.sql`, `src/lib/outreach.ts`). Rasheed adds
