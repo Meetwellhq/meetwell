@@ -1,24 +1,12 @@
 import { Download } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ContactsList, type Contact } from "@/components/dashboard/contacts-list";
-import { Avatar } from "@/components/ui/avatar";
+import { ContactsList, SavedByList, type Contact, type Saver } from "@/components/dashboard/contacts-list";
 import { buttonClass } from "@/components/ui/button";
-import { Badge, EmptyState } from "@/components/ui/misc";
 import { cn } from "@/lib/cn";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Contacts" };
-
-type Saver = {
-  slug: string;
-  full_name: string;
-  avatar_url: string | null;
-  professional_title: string | null;
-  organization: string | null;
-  saved_at: string;
-  saved_back: boolean;
-};
 
 /** Two tabs: the cards I've kept, and the members who kept mine (`?tab=saved-by`). */
 export default async function ContactsPage({ searchParams }: PageProps<"/dashboard/contacts">) {
@@ -41,9 +29,7 @@ export default async function ContactsPage({ searchParams }: PageProps<"/dashboa
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Contacts</h1>
-          <p className="mt-1 text-ink-2">
-            {savedBy ? "Members who kept your card. Open theirs to save them back." : "Everyone whose card you've scanned or opened, in one place."}
-          </p>
+          <p className="mt-1 text-ink-2">Everyone you&apos;ve met on Meetwell, and everyone who kept your card.</p>
         </div>
         {!savedBy && contacts.length > 0 && (
           <a href="/dashboard/contacts/export" download className={buttonClass({ variant: "secondary" })}>
@@ -65,30 +51,7 @@ export default async function ContactsPage({ searchParams }: PageProps<"/dashboa
         ))}
       </nav>
 
-      {!savedBy ? (
-        <ContactsList contacts={contacts} />
-      ) : savedMe.length === 0 ? (
-        <div className="rounded-xl border border-border">
-          <EmptyState title="No one yet" description="When a member keeps your card, they show up here so you can save them back." />
-        </div>
-      ) : (
-        <ul className="divide-y divide-border rounded-xl border border-border">
-          {savedMe.map((s) => (
-            <li key={s.slug} className="flex items-center gap-3 px-4 py-3">
-              <Avatar name={s.full_name} src={s.avatar_url} className="size-10 shrink-0 text-sm" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-ink">{s.full_name}</p>
-                <p className="truncate text-sm text-ink-2">{[s.professional_title, s.organization].filter(Boolean).join(" · ")}</p>
-              </div>
-              {s.saved_back ? (
-                <Badge tone="success">In your contacts</Badge>
-              ) : (
-                <Link href={`/p/${s.slug}`} className={buttonClass({ size: "sm" })}>Save back</Link>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      {savedBy ? <SavedByList savers={savedMe} /> : <ContactsList contacts={contacts} savedMe={savedMe.map((s) => s.slug)} />}
     </div>
   );
 }
