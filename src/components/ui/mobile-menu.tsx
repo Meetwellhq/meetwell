@@ -3,7 +3,7 @@
 import { LogOut, Menu, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { signOut } from "@/lib/auth/actions";
 import { Logo } from "@/components/marketing/logo";
 import { cn } from "@/lib/cn";
@@ -24,10 +24,13 @@ export function MobileMenu({
   isActive,
   label,
   beta = true,
+  extras,
 }: {
   sections: MenuSection[];
   /** The Beta tag on the logo at the top of the panel (off in admin). */
   beta?: boolean;
+  /** Extra rows above Log out (the member menu: theme and Ideas). Gets a function that closes the panel. */
+  extras?: (close: () => void) => ReactNode;
   isActive: (pathname: string, href: string) => boolean;
   label: string;
 }) {
@@ -125,6 +128,7 @@ export function MobileMenu({
                 })}
               </div>
             ))}
+            {extras && <div className="flex flex-col gap-1">{extras(() => setOpenOn(null))}</div>}
             <form action={signOut}>
               <button
                 type="submit"

@@ -161,6 +161,8 @@ export function DashboardNav({
   spark?: boolean;
 }) {
   const pathname = usePathname();
+  // Phones: Ideas opens from the menu panel, which closes first, so the window lives here.
+  const [ideas, setIdeas] = useState(false);
   // The first group has no label; empty groups are left out.
   const sections = (
     [
@@ -204,23 +206,46 @@ export function DashboardNav({
 
   if (placement === "menu") {
     return (
-      <MobileMenu
-        label="Dashboard"
-        isActive={isActive}
-        sections={[
-          ...sections.map((s) => ({
-            title: s.title,
-            items: s.items.map(({ unread: hasUnread, ...item }) => ({ ...item, badge: hasUnread ? unread : 0 })),
-          })),
-          {
-            title: "General",
-            items: [
-              { href: "/dashboard/profile", label: "Profile", icon: UserRound },
-              { href: "/dashboard/settings", label: "Settings", icon: Settings },
-            ],
-          },
-        ]}
-      />
+      <>
+        <MobileMenu
+          label="Dashboard"
+          isActive={isActive}
+          sections={[
+            ...sections.map((s) => ({
+              title: s.title,
+              items: s.items.map(({ unread: hasUnread, ...item }) => ({ ...item, badge: hasUnread ? unread : 0 })),
+            })),
+            {
+              title: "General",
+              items: [
+                { href: "/dashboard/profile", label: "Profile", icon: UserRound },
+                { href: "/dashboard/settings", label: "Settings", icon: Settings },
+              ],
+            },
+          ]}
+          extras={(close) => (
+            <>
+              <div className="flex items-center gap-3 px-3 py-1.5 text-[15px] text-ink">
+                <SunMoon className="size-[18px] shrink-0" aria-hidden />
+                Theme
+                <ThemeIcons className="ml-auto" />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  setIdeas(true);
+                }}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[15px] text-ink transition-colors hover:bg-surface-2"
+              >
+                <Lightbulb className="size-[18px] shrink-0" aria-hidden />
+                Ideas
+              </button>
+            </>
+          )}
+        />
+        <FeedbackDialog open={ideas} onClose={() => setIdeas(false)} />
+      </>
     );
   }
 
