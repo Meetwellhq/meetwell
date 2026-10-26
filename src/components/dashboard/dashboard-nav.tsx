@@ -3,6 +3,7 @@
 import {
   HandHeart,
   BookUser,
+  ChartLine,
   Handshake,
   IdCard,
   LayoutDashboard,
@@ -66,6 +67,7 @@ export function DashboardNav({
       title: "Menu",
       items: [
         { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+        { href: "/dashboard/analytics", label: "Analytics", icon: ChartLine },
         { href: "/dashboard/profile", label: "Edit card", icon: IdCard },
         { href: "/dashboard/qr", label: "QR code", icon: QrCode },
       ],
