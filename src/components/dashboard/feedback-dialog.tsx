@@ -15,7 +15,7 @@ const KINDS = [
 ] as const;
 
 /**
- * The feedback window, opened from the avatar menu: pick Idea, Problem or Other
+ * The Ideas window (feedback), opened from the avatar menu: pick Idea, Problem or Other
  * from a drop-down, write a message, and it's emailed to support (replying
  * answers the member). The form starts fresh each time it opens.
  */
@@ -24,8 +24,8 @@ export function FeedbackDialog({ open, onClose }: { open: boolean; onClose: () =
     <Dialog
       open={open}
       onClose={onClose}
-      title="Send feedback"
-      description="Tell us what's working, what isn't, or what you'd like to see. It goes straight to the Meetwell team."
+      title="Share an idea"
+      description="Got an idea that would make Meetwell better for you? Tell us. It goes straight to the Meetwell team."
     >
       {open && <FeedbackForm onDone={onClose} />}
     </Dialog>
@@ -42,7 +42,7 @@ function FeedbackForm({ onDone }: { onDone: () => void }) {
   if (state.sent) {
     return (
       <div className="flex flex-col gap-4">
-        <Alert tone="success">Thanks! We read every message, and we&apos;ll reply by email if we have a question.</Alert>
+        <Alert tone="success">Thanks for sharing! We read every idea, and we&apos;ll email you if we have a question.</Alert>
         <div>
           <Button type="button" onClick={onDone}>Close</Button>
         </div>
@@ -74,7 +74,7 @@ function FeedbackForm({ onDone }: { onDone: () => void }) {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             autoFocus
-            placeholder={kind === "problem" ? "What happened, and what did you expect?" : "What's on your mind?"}
+            placeholder={kind === "problem" ? "What happened, and what did you expect?" : kind === "idea" ? "What would you like Meetwell to do?" : "What's on your mind?"}
           />
         )}
       </Field>
