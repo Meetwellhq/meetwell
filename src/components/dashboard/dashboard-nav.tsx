@@ -22,6 +22,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { MobileMenu } from "@/components/ui/mobile-menu";
 import { NavGroup, type NavChild } from "@/components/ui/nav-group";
+import { ThemeMenu } from "@/components/ui/theme-toggle";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 
@@ -69,44 +70,48 @@ function ProfileMenu({ me, pathname }: { me: Me; pathname: string }) {
   }, [open]);
 
   const item = "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors";
+  // The profile (with its menu) and the theme button, side by side.
   return (
-    <div ref={ref} className="relative border-t border-border p-3">
-      {open && (
-        <div
-          id="profile-menu"
-          className="absolute inset-x-3 bottom-full mb-2 flex flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
+    <div className="flex items-center gap-2 border-t border-border p-3">
+      <div ref={ref} className="relative min-w-0 flex-1">
+        {open && (
+          <div
+            id="profile-menu"
+            className="absolute inset-x-0 bottom-full mb-2 flex flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
+          >
+            <Link href="/dashboard/profile" onClick={() => setOpenOn(null)} className={cn(item, "text-ink hover:bg-surface-2")}>
+              <UserRound className="size-[18px] shrink-0" aria-hidden />
+              Profile
+            </Link>
+            <Link href="/dashboard/settings" onClick={() => setOpenOn(null)} className={cn(item, "text-ink hover:bg-surface-2")}>
+              <Settings className="size-[18px] shrink-0" aria-hidden />
+              Settings
+            </Link>
+            <form action={signOut} className="mt-0.5 border-t border-border pt-1">
+              <button type="submit" className={cn(item, "text-danger hover:bg-danger/10")}>
+                <LogOut className="size-[18px] shrink-0" aria-hidden />
+                Log out
+              </button>
+            </form>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => setOpenOn(open ? null : pathname)}
+          aria-expanded={open}
+          aria-controls="profile-menu"
+          aria-label={`${me.name}: profile menu`}
+          className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-2"
         >
-          <Link href="/dashboard/profile" onClick={() => setOpenOn(null)} className={cn(item, "text-ink hover:bg-surface-2")}>
-            <UserRound className="size-[18px] shrink-0" aria-hidden />
-            Profile
-          </Link>
-          <Link href="/dashboard/settings" onClick={() => setOpenOn(null)} className={cn(item, "text-ink hover:bg-surface-2")}>
-            <Settings className="size-[18px] shrink-0" aria-hidden />
-            Settings
-          </Link>
-          <form action={signOut} className="mt-0.5 border-t border-border pt-1">
-            <button type="submit" className={cn(item, "text-danger hover:bg-danger/10")}>
-              <LogOut className="size-[18px] shrink-0" aria-hidden />
-              Log out
-            </button>
-          </form>
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={() => setOpenOn(open ? null : pathname)}
-        aria-expanded={open}
-        aria-controls="profile-menu"
-        aria-label={`${me.name}: profile menu`}
-        className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-2"
-      >
-        <Avatar name={me.name} src={me.avatarUrl} className="size-9 shrink-0 text-xs" />
-        <span className="flex min-w-0 flex-1 flex-col leading-tight">
-          <span className="truncate text-sm font-medium text-ink">{me.name}</span>
-          {me.email && <span className="truncate text-xs text-ink-3">{me.email}</span>}
-        </span>
-        <ChevronsUpDown className="size-4 shrink-0 text-ink-3" aria-hidden />
-      </button>
+          <Avatar name={me.name} src={me.avatarUrl} className="size-9 shrink-0 text-xs" />
+          <span className="flex min-w-0 flex-1 flex-col leading-tight">
+            <span className="truncate text-sm font-medium text-ink">{me.name}</span>
+            {me.email && <span className="truncate text-xs text-ink-3">{me.email}</span>}
+          </span>
+          <ChevronsUpDown className="size-4 shrink-0 text-ink-3" aria-hidden />
+        </button>
+      </div>
+      <ThemeMenu />
     </div>
   );
 }
