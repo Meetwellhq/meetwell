@@ -52,7 +52,7 @@ function ReadFilter({ value, onChange }: { value: ReadFilterValue; onChange: (v:
         aria-controls="read-filter"
         aria-label={`Show: ${READ_OPTIONS.find((o) => o.value === value)!.label}`}
         title="Filter"
-        className="relative grid size-10 place-items-center rounded-full border border-border-strong text-ink-2 hover:bg-surface-2 hover:text-ink"
+        className="relative grid size-10 place-items-center rounded-full bg-surface-2 text-ink-2 hover:bg-border hover:text-ink"
       >
         <EllipsisVertical className="size-5" aria-hidden />
         {value !== "all" && <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-accent ring-2 ring-surface" aria-hidden />}
