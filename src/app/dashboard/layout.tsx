@@ -24,12 +24,13 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   if (isAdmin === true) redirect("/admin");
 
   const name = profile?.full_name?.trim() || user.email || "You";
+  const nav = { messages, mentor: isMentor(profile?.experience_years), partner: (partners.data ?? []).length > 0 };
 
   return (
     <div className="flex-1 bg-surface-2/60">
-      {/* Bottom padding on phones so the bottom bar never covers the page. */}
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 pt-4 pb-28 sm:px-5 sm:pt-6 lg:pb-6">
-        <header className="flex items-center justify-between gap-4 rounded-2xl bg-surface px-4 py-3 sm:px-5">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 py-4 sm:px-5 sm:py-6">
+        {/* relative: the phone menu drops down under the header. */}
+        <header className="relative flex items-center justify-between gap-4 rounded-2xl bg-surface px-4 py-3 sm:px-5">
           <Logo />
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-3">
@@ -39,18 +40,14 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
                 <span className="max-w-[14rem] truncate text-xs text-ink-3">{user.email}</span>
               </span>
             </div>
+            <DashboardNav placement="menu" {...nav} />
           </div>
         </header>
 
         <InstallApp variant="banner" />
 
         <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
-          <DashboardNav
-            messages={messages}
-            mentor={isMentor(profile?.experience_years)}
-            partner={(partners.data ?? []).length > 0}
-            avatar={{ name, src: profile?.avatar_url ?? null }}
-          />
+          <DashboardNav placement="sidebar" {...nav} />
           <main className="min-w-0 rounded-2xl bg-surface p-4 sm:p-6">{children}</main>
         </div>
       </div>

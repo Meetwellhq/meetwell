@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MobileMenu } from "@/components/ui/mobile-menu";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 
@@ -65,35 +66,29 @@ function CountBadge({ n, active }: { n: number; active: boolean }) {
   );
 }
 
-/** Admin sidebar on large screens; a scrollable row of tabs on small ones. */
-export function AdminNav({ counts }: { counts: Counts }) {
+/**
+ * The admin menu: the sidebar on large screens (`sidebar`), and on phones and
+ * tablets a menu button at the top right whose drop-down lists the same groups
+ * with their counts (`menu`).
+ */
+export function AdminNav({ counts, placement }: { counts: Counts; placement: "sidebar" | "menu" }) {
   const pathname = usePathname();
-  const all = SECTIONS.flatMap((s) => s.items);
+
+  if (placement === "menu") {
+    return (
+      <MobileMenu
+        label="Admin"
+        isActive={isActive}
+        sections={SECTIONS.map((s) => ({
+          title: s.title,
+          items: s.items.map(({ count, ...item }) => ({ ...item, badge: count ? counts[count] : 0 })),
+        }))}
+      />
+    );
+  }
 
   return (
     <>
-      {/* Small screens: one scrollable row. */}
-      <nav aria-label="Admin" className="flex gap-1.5 overflow-x-auto rounded-2xl bg-surface p-2 lg:hidden">
-        {all.map((item) => {
-          const active = isActive(pathname, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm",
-                active ? "bg-accent font-medium text-white" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
-              )}
-            >
-              <item.icon className="size-4" aria-hidden />
-              {item.label}
-              {item.count && <CountBadge n={counts[item.count]} active={active} />}
-            </Link>
-          );
-        })}
-      </nav>
-
       {/* Large screens: the sidebar. */}
       <aside className="hidden lg:block">
         <nav aria-label="Admin" className="sticky top-6 flex flex-col gap-6 rounded-2xl bg-surface p-4">
