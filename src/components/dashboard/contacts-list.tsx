@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, ChevronLeft, ChevronRight, Pencil, Search, Trash2, UserRoundPlus } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Pencil, Search, Trash2, UserRoundPlus, X } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition, type ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
@@ -88,7 +88,17 @@ function Toolbar<F extends string>({
     <div className="flex flex-col gap-2 sm:flex-row">
       <div className="relative flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-3" aria-hidden />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} aria-label="Search" className="pl-9" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} aria-label="Search" className="pl-9 pr-10" />
+        {q && (
+          <button
+            type="button"
+            onClick={() => setQ("")}
+            aria-label="Clear search"
+            className="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-full text-ink-3 hover:bg-surface-2 hover:text-ink"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-2 sm:flex">
         <Select value={filter} onChange={(e) => setFilter(e.target.value as F)} aria-label="Filter" className="sm:w-44">
