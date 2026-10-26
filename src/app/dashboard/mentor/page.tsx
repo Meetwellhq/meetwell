@@ -2,7 +2,6 @@ import { Check, Circle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ApplyButton, OfferForm } from "@/components/mentors/mentor-controls";
-import { buttonClass } from "@/components/ui/button";
 import { Alert, Card } from "@/components/ui/misc";
 import { publicProfilePath, SUPPORT_EMAIL } from "@/lib/config";
 import { requireMentor } from "@/lib/mentors/wallet";
@@ -18,7 +17,7 @@ const CHECKS: { key: string; label: string; where: string }[] = [
 ];
 
 export default async function MentorPage() {
-  const { status: s, slug, approved } = await requireMentor();
+  const { status: s, slug } = await requireMentor();
   const ready = CHECKS.every((c) => s.checks?.[c.key]);
 
   return (
@@ -97,18 +96,6 @@ export default async function MentorPage() {
         </Card>
       )}
 
-      {approved && (
-        <Card className="flex flex-wrap items-center justify-between gap-3 p-5 sm:p-6">
-          <div>
-            <h2 className="font-semibold">Your money</h2>
-            <p className="mt-1 text-sm text-ink-2">Your earnings, withdrawals and bank account.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/dashboard/mentor/wallet" className={buttonClass({ size: "sm" })}>Wallet</Link>
-            <Link href="/dashboard/mentor/transactions" className={buttonClass({ size: "sm", variant: "secondary" })}>Transactions</Link>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }
