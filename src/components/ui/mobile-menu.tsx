@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
+import { NavGroup, type NavChild } from "./nav-group";
 
-/** `sub` = indented under the item before it (e.g. Wallet under Mentoring). */
-export type MenuItem = { href: string; label: string; icon: LucideIcon; badge?: number; sub?: boolean };
+/** `children` = pages under the item, shown in a group that opens and closes (see NavGroup). */
+export type MenuItem = { href: string; label: string; icon: LucideIcon; badge?: number; children?: NavChild[] };
 export type MenuSection = { title: string; items: MenuItem[] };
 
 /**
@@ -70,6 +71,9 @@ export function MobileMenu({
                 <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>
                 {section.items.map((item) => {
                   const active = isActive(pathname, item.href);
+                  if (item.children) {
+                    return <NavGroup key={item.href} {...item} items={item.children} pathname={pathname} onNavigate={() => setOpenOn(null)} />;
+                  }
                   return (
                     <Link
                       key={item.href}
@@ -77,12 +81,11 @@ export function MobileMenu({
                       aria-current={active ? "page" : undefined}
                       onClick={() => setOpenOn(null)}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 transition-colors",
-                        item.sub ? "ml-6 py-2 text-sm" : "py-2.5 text-[15px]",
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors",
                         active ? "bg-accent font-medium text-white" : "text-ink hover:bg-surface-2",
                       )}
                     >
-                      <item.icon className={cn("shrink-0", item.sub ? "size-4" : "size-[18px]")} aria-hidden />
+                      <item.icon className="size-[18px] shrink-0" aria-hidden />
                       {item.label}
                       {!!item.badge && (
                         <span

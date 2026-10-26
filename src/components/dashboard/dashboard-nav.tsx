@@ -18,14 +18,14 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MobileMenu } from "@/components/ui/mobile-menu";
+import { NavGroup, type NavChild } from "@/components/ui/nav-group";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 
-type Item = { href: string; label: string; icon: LucideIcon; unread?: boolean; sub?: boolean };
+type Item = { href: string; label: string; icon: LucideIcon; unread?: boolean; children?: NavChild[] };
 
-// Overview and Mentoring only light up on their own page (Mentoring has Wallet and Transactions under it).
 const isActive = (pathname: string, href: string) =>
-  href === "/dashboard" || href === "/dashboard/mentor" ? pathname === href : pathname.startsWith(href);
+  href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
 function UnreadBadge({ n, active }: { n: number; active: boolean }) {
   if (!n) return null;
@@ -80,9 +80,15 @@ export function DashboardNav({
         ...(spark ? [{ href: "/dashboard/matches", label: "Spark", icon: Sparkles }] : []),
         ...(mentor
           ? [
-              { href: "/dashboard/mentor", label: "Mentoring", icon: HandHeart },
-              { href: "/dashboard/mentor/wallet", label: "Wallet", icon: WalletIcon, sub: true },
-              { href: "/dashboard/mentor/transactions", label: "Transactions", icon: ReceiptText, sub: true },
+              {
+                href: "/dashboard/mentor",
+                label: "Mentoring",
+                icon: HandHeart,
+                children: [
+                  { href: "/dashboard/mentor/wallet", label: "Wallet", icon: WalletIcon },
+                  { href: "/dashboard/mentor/transactions", label: "Transactions", icon: ReceiptText },
+                ],
+              },
             ]
           : []),
         ...(messages ? [{ href: "/dashboard/messages", label: "Messages", icon: MessagesSquare, unread: true }] : []),
@@ -116,18 +122,20 @@ export function DashboardNav({
             <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>
             {section.items.map((item) => {
               const active = isActive(pathname, item.href);
+              if (item.children) {
+                return <NavGroup key={item.href} {...item} items={item.children} pathname={pathname} />;
+              }
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 transition-colors",
-                    item.sub ? "ml-6 py-2 text-sm" : "py-2.5 text-[15px]",
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors",
                     active ? "bg-accent font-medium text-white" : "text-ink hover:bg-surface-2",
                   )}
                 >
-                  <item.icon className={cn("shrink-0", item.sub ? "size-4" : "size-[18px]")} aria-hidden />
+                  <item.icon className="size-[18px] shrink-0" aria-hidden />
                   {item.label}
                   {item.unread && <UnreadBadge n={unread} active={active} />}
                 </Link>
