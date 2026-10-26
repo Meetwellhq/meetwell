@@ -33,9 +33,10 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 py-4 sm:px-5 sm:py-6">
         {/* relative: the phone menu drops down under the header. */}
         <header className="relative flex items-center justify-between gap-4 rounded-2xl bg-surface px-4 py-3 sm:px-5">
-          <Logo />
+          <Logo large />
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-3">
+            {/* Phones show only the menu button here. */}
+            <div className="hidden items-center gap-3 sm:flex">
               <Avatar name={name} src={profile?.avatar_url} className="size-8 text-xs" />
               <span className="hidden flex-col leading-tight sm:flex">
                 <span className="max-w-[14rem] truncate text-sm font-medium text-ink">{name}</span>

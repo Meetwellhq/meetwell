@@ -15,12 +15,13 @@ export function LogoMark({ className, inverted = false }: { className?: string; 
   );
 }
 
-export function Logo({ href = "/home", className }: { href?: string; className?: string }) {
+/** `large` = bigger on phones (the dashboard and admin headers), the usual size from the laptop layout up. */
+export function Logo({ href = "/home", className, large = false }: { href?: string; className?: string; large?: boolean }) {
   return (
     // A plain link: /home is a redirect (dashboard if signed in, landing page otherwise).
     <a href={href} className={cn("inline-flex items-center gap-2 font-semibold tracking-tight text-ink", className)}>
-      <LogoMark />
-      <span className="text-[17px]">{APP_NAME}</span>
+      <LogoMark className={large ? "size-8 lg:size-6" : undefined} />
+      <span className={large ? "text-[22px] lg:text-[17px]" : "text-[17px]"}>{APP_NAME}</span>
       {/* Remove once the product leaves beta testing. */}
       <span className="rounded-full border border-accent/25 bg-accent-soft px-1.5 py-px text-[10px] font-semibold uppercase leading-4 tracking-wider text-accent">
         Beta
