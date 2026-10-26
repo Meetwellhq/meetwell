@@ -21,7 +21,6 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { MobileMenu } from "@/components/ui/mobile-menu";
 import { NavGroup, type NavChild } from "@/components/ui/nav-group";
-import { ThemeMenu } from "@/components/ui/theme-toggle";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 
@@ -120,9 +119,8 @@ export function AccountMenu({ me, className }: { me: Me; className?: string }) {
  * tablets a menu button at the top right of the header whose drop-down lists
  * the same items (`menu`). Mentoring shows for 4+ years; Messages only for
  * people who have a conversation, with their unread count; Partner only for
- * people on a partner's team. The sidebar ends with the theme button, pinned
- * to the bottom; Profile, Settings and Log out are in the header's AccountMenu,
- * and phones list them in their menu.
+ * people on a partner's team. Profile, Settings and Log out are in the
+ * header's AccountMenu, and phones list them in their menu.
  */
 export function DashboardNav({
   placement,
@@ -204,7 +202,7 @@ export function DashboardNav({
 
   return (
     <aside className="hidden w-60 shrink-0 border-r border-border bg-surface lg:block">
-      {/* Fills the screen under the header: the menu scrolls if it must, the theme button stays at the bottom. */}
+      {/* Fills the screen under the header; the menu scrolls if it must. */}
       <div className="sticky top-[calc(3.75rem+1px)] flex h-[calc(100dvh-3.75rem-1px)] flex-col">
         <nav aria-label="Dashboard" className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-4">
           {sections.map((section) => (
@@ -234,9 +232,6 @@ export function DashboardNav({
             </div>
           ))}
         </nav>
-        <div className="border-t border-border p-3">
-          <ThemeMenu />
-        </div>
       </div>
     </aside>
   );

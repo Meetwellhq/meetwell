@@ -77,8 +77,8 @@ export function ThemeToggle({ className }: { className?: string }) {
 }
 
 /**
- * The same choice as a small square button showing the current theme's icon;
- * clicking it opens a menu above it (sidebar). Closes on a click outside, on
+ * The same choice as a small round button showing the current theme's icon;
+ * clicking it opens a menu below it (dashboard header). Closes on a click outside, on
  * Escape, or after picking.
  */
 export function ThemeMenu({ className }: { className?: string }) {
@@ -108,7 +108,7 @@ export function ThemeMenu({ className }: { className?: string }) {
           id="theme-menu"
           role="radiogroup"
           aria-label="Theme"
-          className="absolute bottom-full left-0 z-10 mb-2 flex w-40 flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
+          className="absolute right-0 top-full z-50 mt-2 flex w-40 flex-col gap-0.5 rounded-xl border border-border bg-surface p-1.5 shadow-xl"
         >
           {OPTIONS.map((o) => (
             <button
@@ -136,7 +136,7 @@ export function ThemeMenu({ className }: { className?: string }) {
         aria-controls="theme-menu"
         aria-label="Theme"
         title="Theme"
-        className="grid size-9 place-items-center rounded-lg bg-surface-2 text-ink-2 hover:text-ink"
+        className="grid size-9 place-items-center rounded-full bg-surface-2 text-ink-2 hover:bg-border hover:text-ink"
       >
         <Current className="size-4" aria-hidden />
       </button>
