@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         {/* relative: the phone menu drops down under the header. */}
         <header className="relative flex items-center justify-between gap-4 rounded-2xl bg-surface px-4 py-3 sm:px-5">
           <div className="flex items-center gap-3">
-            <Logo large />
+            <Logo large beta={false} />
             <span className="rounded-full bg-ink px-2 py-0.5 text-xs font-medium text-bg">Admin</span>
           </div>
           <div className="flex items-center gap-2">
