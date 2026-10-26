@@ -1,7 +1,9 @@
 /**
- * Profile completeness for Spark (AI matching): ten items, 10% each. Members
- * need 80% to get matches or be recommended. Keep in step with
- * public.profile_completeness() in the database, which enforces it.
+ * Profile completeness: ten items, 10% each, while Spark is on; while it's
+ * paused, the 8 items that don't need the Spark page ("what you're looking
+ * for" and city are asked there). 80% unlocks Spark matches and mentoring.
+ * Keep in step with public.profile_completeness() in the database, which
+ * enforces it.
  */
 
 export const MATCHING_MIN_COMPLETENESS = 80;
@@ -24,7 +26,7 @@ export type CompletenessItem = { label: string; done: boolean; where: "card" | "
 
 const filled = (v: string | null) => !!v && v.trim() !== "";
 
-export function profileCompleteness(p: CompletenessInput) {
+export function profileCompleteness(p: CompletenessInput, spark = true) {
   const items: CompletenessItem[] = [
     { label: "Photo", done: !!p.avatarUrl, where: "card" },
     { label: "Job title", done: filled(p.title), where: "card" },
@@ -34,9 +36,13 @@ export function profileCompleteness(p: CompletenessInput) {
     { label: "A public website or social link", done: p.hasPublicLink, where: "card" },
     { label: "Your field", done: !!p.field, where: "matching" },
     { label: "Years of experience", done: p.experienceYears !== null, where: "matching" },
-    { label: "What you're looking for", done: p.lookingFor.length > 0, where: "matching" },
-    { label: "City", done: filled(p.city), where: "matching" },
+    ...(spark
+      ? [
+          { label: "What you're looking for", done: p.lookingFor.length > 0, where: "matching" as const },
+          { label: "City", done: filled(p.city), where: "matching" as const },
+        ]
+      : []),
   ];
-  const percent = items.filter((i) => i.done).length * 10;
+  const percent = Math.round((items.filter((i) => i.done).length * 100) / items.length);
   return { percent, items, missing: items.filter((i) => !i.done), ready: percent >= MATCHING_MIN_COMPLETENESS };
 }

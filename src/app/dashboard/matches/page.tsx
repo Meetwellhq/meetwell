@@ -1,6 +1,7 @@
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ExperienceForm } from "@/components/matching/experience-form";
 import { MatchingPrefsForm } from "@/components/matching/matching-prefs-form";
 import { MentorStatus } from "@/components/matching/mentor-status";
@@ -12,6 +13,7 @@ import { Alert, EmptyState } from "@/components/ui/misc";
 import { publicProfilePath } from "@/lib/config";
 import { MATCHING_MIN_COMPLETENESS } from "@/lib/matching/completeness";
 import { completenessOf } from "@/lib/matching/my-completeness";
+import { isSparkOn } from "@/lib/spark";
 import { fieldLabel, isMentor, MENTOR_MIN_YEARS, SPARK_FREE_PER_MONTH } from "@/lib/matching/constants";
 import { paymentsEnabled } from "@/lib/payments/paystack";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
@@ -39,6 +41,8 @@ const PAYMENT_NOTICE = {
 } as const;
 
 export default async function MatchesPage({ searchParams }: PageProps<"/dashboard/matches">) {
+  // Spark is paused until launch (admin Overview): hidden completely, old email links land on the dashboard.
+  if (!(await isSparkOn())) redirect("/dashboard");
   const { credits: paid } = await searchParams;
   const notice = typeof paid === "string" && paid in PAYMENT_NOTICE ? PAYMENT_NOTICE[paid as keyof typeof PAYMENT_NOTICE] : null;
   const user = await getCurrentUser();

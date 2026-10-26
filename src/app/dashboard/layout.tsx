@@ -4,6 +4,7 @@ import { DeviceCardsImporter } from "@/components/dashboard/device-cards-importe
 import { ExperiencePrompt } from "@/components/matching/experience-prompt";
 import { InstallApp } from "@/components/pwa/install-app";
 import { isMentor } from "@/lib/matching/constants";
+import { isSparkOn } from "@/lib/spark";
 import { Logo } from "@/components/marketing/logo";
 import { Avatar } from "@/components/ui/avatar";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
@@ -12,19 +13,20 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in?next=/dashboard");
   const supabase = await createClient();
-  const [{ data: isAdmin }, { data: profile }, conversations, unread, partners] = await Promise.all([
+  const [{ data: isAdmin }, { data: profile }, conversations, unread, partners, spark] = await Promise.all([
     supabase.rpc("is_admin"),
     supabase.from("profiles").select("field, experience_years, full_name, avatar_url").eq("user_id", user.id).maybeSingle(),
     supabase.rpc("my_conversations"),
     supabase.rpc("my_unread_messages"),
     supabase.rpc("my_partners"),
+    isSparkOn(),
   ]);
   const messages = (conversations.data ?? []).length > 0 ? { unread: Number(unread.data ?? 0) } : null;
   // Admin accounts are only for running Meetwell: they live in /admin, not here.
   if (isAdmin === true) redirect("/admin");
 
   const name = profile?.full_name?.trim() || user.email || "You";
-  const nav = { messages, mentor: isMentor(profile?.experience_years), partner: (partners.data ?? []).length > 0 };
+  const nav = { messages, mentor: isMentor(profile?.experience_years), partner: (partners.data ?? []).length > 0, spark };
 
   return (
     <div className="flex-1 bg-surface-2/60">
@@ -51,7 +53,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
           <main className="min-w-0 rounded-2xl bg-surface p-4 sm:p-6">{children}</main>
         </div>
       </div>
-      {profile && profile.experience_years === null && <ExperiencePrompt initialField={profile.field} />}
+      {profile && profile.experience_years === null && <ExperiencePrompt initialField={profile.field} spark={spark} />}
       <DeviceCardsImporter />
     </div>
   );

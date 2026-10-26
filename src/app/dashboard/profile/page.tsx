@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ProfileEditor } from "@/components/editor/profile-editor";
+import { isSparkOn } from "@/lib/spark";
 import { getSiteUrl } from "@/lib/config";
 import { getOwnProfile } from "@/lib/profiles/queries";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
@@ -23,6 +24,7 @@ export default async function EditProfilePage() {
     <>
       <h1 className="mb-6 text-2xl font-semibold tracking-tight">Edit your card</h1>
       <ProfileEditor
+        spark={await isSparkOn()}
         // Remount after a save so the form reflects the server-normalised values.
         key={profile.updatedAt}
         mode="edit"

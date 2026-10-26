@@ -5,6 +5,7 @@ import { AnnounceButton } from "@/components/admin/announce-button";
 import { EmailResultCard, HowToRead, type EmailResult } from "@/components/admin/email-results";
 import { ButtonLink } from "@/components/ui/button";
 import type { AnnouncementKind } from "@/lib/admin/actions";
+import { isSparkOn } from "@/lib/spark";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Announcements · Admin" };
@@ -21,9 +22,11 @@ const ANNOUNCEMENTS: { kind: AnnouncementKind; title: string; label: string; who
 
 export default async function AdminAnnouncementsPage() {
   const supabase = await createClient();
+  // Spark is paused until launch, so its announcement isn't offered.
+  const shown = (await isSparkOn()) ? ANNOUNCEMENTS : ANNOUNCEMENTS.filter((a) => a.kind !== "spark_beta");
   const [history, ...results] = await Promise.all([
     supabase.rpc("admin_email_results"),
-    ...ANNOUNCEMENTS.map((a) => supabase.rpc("admin_announcement_status", { p_kind: a.kind })),
+    ...shown.map((a) => supabase.rpc("admin_announcement_status", { p_kind: a.kind })),
   ]);
   const sends = (history.data ?? []) as EmailResult[];
   const failed = results.some((r) => r.error);
@@ -60,7 +63,7 @@ export default async function AdminAnnouncementsPage() {
         <NotReady what="Announcements" />
       ) : (
         <div className="flex flex-col gap-3">
-          {ANNOUNCEMENTS.map((a, i) => {
+          {shown.map((a, i) => {
             const status = ((results[i].data ?? []) as { sent: number; remaining: number }[])[0] ?? { sent: 0, remaining: 0 };
             return (
               <div

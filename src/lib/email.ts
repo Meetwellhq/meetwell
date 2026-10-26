@@ -1,5 +1,6 @@
 import "server-only";
 import { APP_NAME, getSiteUrl, SUPPORT_EMAIL } from "./config";
+import { isSparkOn } from "./spark";
 import { fieldLabel } from "./matching/constants";
 import type { TemplateId } from "./admin/campaigns";
 import {
@@ -101,15 +102,16 @@ export function sendMatchEmail(to: string, fullName: string | null, match: Match
   return send(to, matchEmail({ ...common(fullName), match, reason }));
 }
 
-/** Profile under 80%: finish it (and add a photo) to get matches. Sent once. */
-export function sendIncompleteProfileEmail(
+/** Profile under 80%: finish it (and add a photo). Sent once. Mentions Spark only while it's switched on. */
+export async function sendIncompleteProfileEmail(
   to: string,
   fullName: string | null,
   details: { completeness: number; hasPhoto: boolean; experienceYears: number | null; field: string | null },
 ) {
+  const spark = await isSparkOn();
   return send(
     to,
-    incompleteProfileEmail({ ...common(fullName), ...details, fieldName: fieldLabel(details.field) }),
+    incompleteProfileEmail({ ...common(fullName), ...details, fieldName: fieldLabel(details.field), spark }),
   );
 }
 
@@ -133,13 +135,13 @@ const CAMPAIGN_EMAILS = {
 } satisfies Record<TemplateId, unknown>;
 
 /** Returns whether it went out, and Resend's id for its delivery and click events. */
-export function sendCampaignEmail(template: TemplateId, to: string, fullName: string | null) {
-  return deliver(to, CAMPAIGN_EMAILS[template](common(fullName)));
+export async function sendCampaignEmail(template: TemplateId, to: string, fullName: string | null) {
+  return deliver(to, CAMPAIGN_EMAILS[template]({ ...common(fullName), spark: await isSparkOn() }));
 }
 
 /** The email as it will look, for the preview on the New email page. */
-export function previewCampaignEmail(template: TemplateId, fullName: string | null) {
-  return CAMPAIGN_EMAILS[template](common(fullName));
+export async function previewCampaignEmail(template: TemplateId, fullName: string | null) {
+  return CAMPAIGN_EMAILS[template]({ ...common(fullName), spark: await isSparkOn() });
 }
 
 /** One-off announcement to draft cards only: publish your card. */

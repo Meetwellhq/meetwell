@@ -51,11 +51,14 @@ export function DashboardNav({
   messages,
   mentor = false,
   partner = false,
+  spark = false,
 }: {
   placement: "sidebar" | "menu";
   messages?: { unread: number } | null;
   mentor?: boolean;
   partner?: boolean;
+  /** Spark is hidden completely until it launches. */
+  spark?: boolean;
 }) {
   const pathname = usePathname();
   const sections: { title: string; items: Item[] }[] = [
@@ -71,7 +74,7 @@ export function DashboardNav({
       title: "Connect",
       items: [
         { href: "/dashboard/contacts", label: "Contacts", icon: BookUser },
-        { href: "/dashboard/matches", label: "Spark", icon: Sparkles },
+        ...(spark ? [{ href: "/dashboard/matches", label: "Spark", icon: Sparkles }] : []),
         ...(mentor ? [{ href: "/dashboard/mentor", label: "Mentoring", icon: BadgeCheck }] : []),
         ...(messages ? [{ href: "/dashboard/messages", label: "Messages", icon: MessagesSquare, unread: true }] : []),
         ...(partner ? [{ href: "/dashboard/partner", label: "Partner", icon: Handshake }] : []),

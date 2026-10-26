@@ -24,7 +24,7 @@ export const TEMPLATES = [
   {
     id: "finish_profile",
     label: "Finish your profile",
-    about: "For profiles under 80%, so Spark can introduce them.",
+    about: "For profiles under 80%.",
     did: "Reached 80%",
     didSentence: "finished their profile (80% or more)",
     defaults: { card: "published", under80: true },

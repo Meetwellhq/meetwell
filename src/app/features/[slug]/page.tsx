@@ -14,7 +14,8 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink } from "@/components/ui/button";
 import { getSiteUrl, isSupabaseConfigured, JOIN_CTA } from "@/lib/config";
-import { FEATURES, featureBySlug, type FeatureSlug } from "@/lib/features";
+import { FEATURES, featureBySlug, visibleFeatures, type FeatureSlug } from "@/lib/features";
+import { isSparkOn } from "@/lib/spark";
 import { qrSvg } from "@/lib/qr";
 import { getCurrentUser } from "@/lib/supabase/server";
 
@@ -57,11 +58,13 @@ async function Visual({ slug }: { slug: FeatureSlug }) {
 
 export default async function FeaturePage({ params }: PageProps<"/features/[slug]">) {
   const feature = featureBySlug((await params).slug);
-  if (!feature) notFound();
+  const spark = await isSparkOn();
+  // The Spark page is hidden until Spark launches.
+  if (!feature || (feature.slug === "spark" && !spark)) notFound();
   const signedIn = await isSignedIn();
   const cta = signedIn ? "/dashboard" : JOIN_CTA.href;
   const ctaLabel = signedIn ? "Go to your dashboard" : JOIN_CTA.label;
-  const others = FEATURES.filter((f) => f.slug !== feature.slug);
+  const others = visibleFeatures(spark).filter((f) => f.slug !== feature.slug);
 
   return (
     <div className="flex min-h-full flex-col bg-surface">

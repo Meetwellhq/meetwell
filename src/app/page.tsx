@@ -26,6 +26,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Alert } from "@/components/ui/misc";
 import { getSiteUrl, isSupabaseConfigured, JOIN_CTA, SIGNUPS_OPEN } from "@/lib/config";
 import { qrSvg } from "@/lib/qr";
+import { isSparkOn } from "@/lib/spark";
 import { getCurrentUser } from "@/lib/supabase/server";
 
 async function isSignedIn() {
@@ -59,10 +60,11 @@ const useCases = [
 ];
 
 export default async function LandingPage({ searchParams }: PageProps<"/">) {
-  const [signedIn, qr, { deleted }] = await Promise.all([
+  const [signedIn, qr, { deleted }, spark] = await Promise.all([
     isSignedIn(),
     qrSvg(getSiteUrl(), { margin: 1 }),
     searchParams,
+    isSparkOn(),
   ]);
   const cta = signedIn ? "/dashboard" : JOIN_CTA.href;
   const ctaLabel = signedIn ? "Go to your dashboard" : JOIN_CTA.label;
@@ -94,7 +96,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           </div>
 
           <div className="mt-12">
-            <HighlightsStrip items={highlights} />
+            <HighlightsStrip items={spark ? highlights : highlights.filter((h) => h.label !== "AI introductions")} />
           </div>
 
           {/* Phone illustration below the text; hidden on mobile. */}
@@ -164,8 +166,8 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           />
         </Panel>
 
-        {/* Spark */}
-        <Panel>
+        {/* Spark: hidden until it launches (admin Overview). */}
+        {spark && <Panel>
           <Feature
             reverse
             title={<>Meet people a few steps ahead.</>}
@@ -182,11 +184,12 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             visual={<SparkPreview />}
             visualClassName="bg-clay"
           />
-        </Panel>
+        </Panel>}
 
-        {/* Mentoring */}
+        {/* Mentoring: flips sides while Spark is hidden, so the sections keep alternating. */}
         <Panel>
           <Feature
+            reverse={!spark}
             title={<>Get paid for what you know.</>}
             body={
               <p>

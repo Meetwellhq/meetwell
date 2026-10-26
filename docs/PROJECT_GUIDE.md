@@ -118,6 +118,14 @@ every migration.
   "Your experience", `saveExperience` in `src/lib/matching/actions.ts`) or on the Spark page if
   missing. 4+ members see a checklist and how often they were introduced (`my_spark_mentor_stats`).
   A manual review of 4+ members is planned before paid features; not built yet.
+- **Spark is PAUSED** (26 Oct 2026) until Meetwell has 5,000 users with about as many mentors as mentees (1:1;
+  `SPARK_LAUNCH_USERS` in `src/lib/spark.ts`). One switch: `public.spark_enabled()` (`20261129000000_spark_switch.sql`),
+  flipped by the "Spark launch" card on the admin Overview (`admin_set_spark_enabled`, progress from
+  `admin_spark_progress`; it rebuilds every page). Read it with `isSparkOn()`. While off, Spark is hidden completely:
+  menu, `/dashboard/matches` (redirects to /dashboard), landing, feature pages (`visibleFeatures`), footer, About,
+  Support, the Spark emails in admin; the matching job skips; credits can't be bought; experience wording and profile
+  emails have Spark-free versions; and the profile score counts the 8 card items (no "looking for" or city), in SQL and
+  in `profileCompleteness(p, spark)`. Database tests switch it on in setup. Terms and Privacy still describe Spark.
 - **Spark (AI Network Matching)**: `/dashboard/matches` (shown to members as "Spark"; the URL stays /matches so old email links work) (opt-in + private fields: field, experience,
   looking for, city; list of matches). Recommends only people with 4+ years, a profile
   photo and more experience than the member, in the same or a related field

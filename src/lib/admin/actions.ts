@@ -13,6 +13,7 @@ import {
   sendWithdrawalSentEmail,
 } from "../email";
 import { refundPayment, sendTransfer } from "../payments/paystack";
+import { isSparkOn } from "../spark";
 import { createClient, getCurrentUser } from "../supabase/server";
 import { parseOutreachList, xHandle } from "../outreach";
 import { emailSchema } from "../validation";
@@ -64,6 +65,7 @@ export type AnnouncementKind = keyof typeof ANNOUNCEMENTS;
 export async function sendAnnouncement(kind: AnnouncementKind): Promise<AnnounceState> {
   const sendOne = ANNOUNCEMENTS[kind];
   if (!sendOne) return { error: "Unknown announcement." };
+  if (kind === "spark_beta" && !(await isSparkOn())) return { error: "Spark is paused, so this email can't be sent yet." };
   if (!(await getCurrentUser())) return { error: "Please log in again." };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_announcement_recipients", { p_kind: kind, p_limit: 40 });
@@ -101,6 +103,7 @@ export async function sendAnnouncement(kind: AnnouncementKind): Promise<Announce
 export async function sendCampaign(params: Record<string, string>): Promise<AnnounceState> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };
   const audience = parseAudience({ ...params, role: params.role ?? "all" });
+  if (audience.template === "spark_beta" && !(await isSparkOn())) return { error: "Spark is paused, so this email can't be sent yet." };
   const args = audienceArgs(audience);
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_email_audience", { ...args, p_limit: 40 });
@@ -472,4 +475,13 @@ export async function adminRecordPartnerPayout(partnerId: string, _: AdminFormSt
   }
   revalidatePath("/admin", "layout");
   return { ok: "Payout recorded." };
+}
+
+/** Launch Spark (or pause it again) from the admin Overview. Every page is rebuilt so it shows or hides Spark at once. */
+export async function adminSetSparkEnabled(enabled: boolean): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_set_spark_enabled", { p_enabled: enabled });
+  if (error) return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't change Spark." };
+  revalidatePath("/", "layout");
+  return {};
 }

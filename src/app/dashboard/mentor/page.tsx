@@ -38,7 +38,7 @@ const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "n
 const CHECKS: { key: string; label: string; where: string }[] = [
   { key: "years", label: "4 or more years of experience", where: "/dashboard/profile" },
   { key: "photo", label: "A profile photo", where: "/dashboard/profile" },
-  { key: "complete", label: "Profile at least 80% complete", where: "/dashboard/matches" },
+  { key: "complete", label: "Profile at least 80% complete", where: "/dashboard" },
   { key: "published", label: "Card published", where: "/dashboard/profile" },
   { key: "confirmed", label: "Email confirmed", where: "/dashboard/settings" },
 ];
@@ -63,7 +63,7 @@ export default async function MentorPage() {
   const user = await getCurrentUser();
   const supabase = await createClient();
   const { data: profile } = await supabase.from("profiles").select("slug, experience_years").eq("user_id", user!.id).maybeSingle();
-  if (!isMentor(profile?.experience_years)) redirect("/dashboard/matches");
+  if (!isMentor(profile?.experience_years)) redirect("/dashboard");
 
   const [{ data: statusRows }, { data: walletRows }, { data: withdrawals }, { data: activity }] = await Promise.all([
     supabase.rpc("my_mentor_status"),

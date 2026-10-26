@@ -2,7 +2,8 @@ import Link from "next/link";
 import { SocialIcon } from "@/components/icons/social-icon";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { APP_NAME, COMPANY_NAME, COMPANY_RC, SOCIAL_LINKS } from "@/lib/config";
-import { FEATURES } from "@/lib/features";
+import { visibleFeatures } from "@/lib/features";
+import { isSparkOn } from "@/lib/spark";
 import { LogoMark } from "./logo";
 
 const COLUMN_LINK = "text-[15px] text-ink-2 transition-colors hover:text-ink";
@@ -10,7 +11,7 @@ const COLUMN_LINK = "text-[15px] text-ink-2 transition-colors hover:text-ink";
 /**
  * Footer: logo and socials on the left, Features and About columns on the right.
  */
-export function SiteFooter({ wide = false }: { wide?: boolean }) {
+export async function SiteFooter({ wide = false }: { wide?: boolean }) {
   const socials = SOCIAL_LINKS.filter((s) => s.url);
   const about = [
     { href: "/about", label: "About" },
@@ -52,7 +53,7 @@ export function SiteFooter({ wide = false }: { wide?: boolean }) {
         <div className="grid grid-cols-2 gap-x-16 gap-y-10 sm:gap-x-24">
           <nav aria-label="Features" className="flex flex-col gap-3.5">
             <p className="mb-1 font-display text-2xl">Features</p>
-            {FEATURES.map((f) => (
+            {visibleFeatures(await isSparkOn()).map((f) => (
               <Link key={f.slug} href={`/features/${f.slug}`} className={COLUMN_LINK}>
                 {f.name}
               </Link>

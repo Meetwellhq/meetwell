@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { getSiteUrl } from "../config";
 import { rateLimit } from "../rate-limit";
+import { isSparkOn } from "../spark";
 import { createClient, getCurrentUser } from "../supabase/server";
 import { initializeTransaction, paymentsEnabled } from "./paystack";
 
@@ -12,7 +13,7 @@ export type BuyState = { error?: string };
 export async function buyCredits(_: BuyState, formData: FormData): Promise<BuyState> {
   const user = await getCurrentUser();
   if (!user) return { error: "Please log in again." };
-  if (!paymentsEnabled()) return { error: "Buying credits isn't open yet." };
+  if (!paymentsEnabled() || !(await isSparkOn())) return { error: "Buying credits isn't open yet." };
   if (!rateLimit(`buy-credits:${user.id}`, 5, 60_000)) return { error: "Please wait a moment and try again." };
 
   const supabase = await createClient();

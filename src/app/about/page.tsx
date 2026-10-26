@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink } from "@/components/ui/button";
 import { APP_NAME, COMPANY_NAME, COMPANY_RC, isSupabaseConfigured, INFO_EMAIL, JOIN_CTA, SOCIAL_LINKS, SUPPORT_EMAIL } from "@/lib/config";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { isSparkOn } from "@/lib/spark";
 
 export const metadata: Metadata = {
   title: "About",
@@ -32,7 +33,9 @@ const whatWeDo = [
 ];
 
 export default async function AboutPage() {
-  const signedIn = await isSignedIn();
+  const [signedIn, spark] = await Promise.all([isSignedIn(), isSparkOn()]);
+  // Spark is left out until it launches.
+  const offer = spark ? whatWeDo : whatWeDo.filter((w) => w.title !== "Spark introductions");
   const cta = signedIn ? "/dashboard" : JOIN_CTA.href;
   const ctaLabel = signedIn ? "Go to your dashboard" : JOIN_CTA.label;
   const socials = SOCIAL_LINKS.filter((s) => s.url);
@@ -78,7 +81,7 @@ export default async function AboutPage() {
         <Panel>
           <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">What {APP_NAME} does</h2>
           <ul className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {whatWeDo.map((w) => (
+            {offer.map((w) => (
               <li key={w.title} className="rounded-[1rem] border border-border bg-surface p-6">
                 <span className="grid size-10 place-items-center rounded-full bg-accent-soft text-accent">
                   <w.icon className="size-5" aria-hidden />

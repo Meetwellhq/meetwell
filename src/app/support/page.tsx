@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { APP_NAME, COMPANY_NAME, COMPANY_RC, INFO_EMAIL, isSupabaseConfigured, SUPPORT_EMAIL } from "@/lib/config";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { isSparkOn } from "@/lib/spark";
 
 export const metadata: Metadata = {
   title: "Support",
@@ -55,7 +56,7 @@ function Items({ items }: { items: { label: string; body: ReactNode }[] }) {
 }
 
 export default async function SupportPage() {
-  const signedIn = await isSignedIn();
+  const [signedIn, spark] = await Promise.all([isSignedIn(), isSparkOn()]);
 
   return (
     <div className="flex min-h-full flex-col bg-surface">
@@ -91,7 +92,9 @@ export default async function SupportPage() {
               { label: "Joining and logging in", body: "Access codes, joining through someone's card, confirming your email and resetting your password." },
               { label: "Your card and QR code", body: "Editing your card, publishing it, and QR codes or saved contacts that don't work as expected." },
               { label: "Contacts", body: "Cards that didn't show up in your Contacts, or exporting them to your phone." },
-              { label: "Spark", body: "Introductions you didn't get, your free introductions each month, and Spark credits." },
+              ...(spark
+                ? [{ label: "Spark", body: "Introductions you didn't get, your free introductions each month, and Spark credits." }]
+                : []),
               { label: "Mentoring and payments", body: "Becoming a mentor, paying to message a mentor, refunds, earnings and withdrawals." },
               { label: "Messages and safety", body: "Blocking, reporting someone, or anything that broke our community rules." },
               {
@@ -112,7 +115,7 @@ export default async function SupportPage() {
 
         <Section title="Refunds">
           <p>
-            Unused Spark credits bought in the last 14 days can be refunded. If a mentor doesn&apos;t reply within 7
+            {spark && "Unused Spark credits bought in the last 14 days can be refunded. "}If a mentor doesn&apos;t reply within 7
             days of your payment, you get a full refund. Email {mail} with your payment reference. Our{" "}
             <Link href="/terms" className="text-ink underline decoration-border-strong underline-offset-4">
               Terms

@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isSparkOn } from "../spark";
 import { profileCompleteness } from "./completeness";
 
 /** The columns profileCompleteness() needs, for selecting from profiles. */
@@ -23,25 +24,31 @@ type Row = {
 
 /**
  * The one profile score members see (dashboard, Spark page) and get emailed
- * about: ten items, 10% each, the same as public.profile_completeness().
+ * about, the same as public.profile_completeness() (8 items while Spark is paused).
  */
-export function completenessOf(profile: Row) {
-  return profileCompleteness({
-    avatarUrl: profile.avatar_url,
-    title: profile.professional_title,
-    organization: profile.organization,
-    bio: profile.bio,
-    hasPublicContact: (profile.contact_methods ?? []).some((c) => c.is_public),
-    hasPublicLink: (profile.social_links ?? []).some((l) => l.is_public) || (!!profile.website_url && profile.website_is_public),
-    field: profile.field,
-    experienceYears: profile.experience_years,
-    lookingFor: profile.looking_for ?? [],
-    city: profile.city,
-  });
+export function completenessOf(profile: Row, spark = true) {
+  return profileCompleteness(
+    {
+      avatarUrl: profile.avatar_url,
+      title: profile.professional_title,
+      organization: profile.organization,
+      bio: profile.bio,
+      hasPublicContact: (profile.contact_methods ?? []).some((c) => c.is_public),
+      hasPublicLink: (profile.social_links ?? []).some((l) => l.is_public) || (!!profile.website_url && profile.website_is_public),
+      field: profile.field,
+      experienceYears: profile.experience_years,
+      lookingFor: profile.looking_for ?? [],
+      city: profile.city,
+    },
+    spark,
+  );
 }
 
 /** The signed-in member's score, or null if they have no card yet. */
 export async function myCompleteness(supabase: SupabaseClient, userId: string) {
-  const { data } = await supabase.from("profiles").select(COMPLETENESS_COLUMNS).eq("user_id", userId).maybeSingle();
-  return data ? completenessOf(data as unknown as Row) : null;
+  const [{ data }, spark] = await Promise.all([
+    supabase.from("profiles").select(COMPLETENESS_COLUMNS).eq("user_id", userId).maybeSingle(),
+    isSparkOn(),
+  ]);
+  return data ? completenessOf(data as unknown as Row, spark) : null;
 }

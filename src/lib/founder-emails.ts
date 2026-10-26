@@ -280,16 +280,19 @@ export function addPhotoEmail(args: Common) {
   });
 }
 
-/** Sent from the admin's New email page to members whose profile is under 80%. */
-export function finishProfileEmail(args: Common) {
+/** Sent from the admin's New email page to members whose profile is under 80%. `spark` = Spark switched on. */
+export function finishProfileEmail(args: Common & { spark?: boolean }) {
+  const spark = args.spark ?? true;
   return note({
     ...args,
     subject: `A few details to finish your ${args.appName} profile`,
     before: [
       "Your profile is nearly there. A few more details and it's complete.",
-      `Once it reaches 80%, Spark can start introducing you to people in your field. Your Spark page shows exactly what's missing.`,
+      spark
+        ? `Once it reaches 80%, Spark can start introducing you to people in your field. Your Spark page shows exactly what's missing.`
+        : "A complete card gets saved and answered more often. Your dashboard shows exactly what's missing.",
     ],
-    cta: { href: `${args.siteUrl}/dashboard/matches`, label: "Finish my profile" },
+    cta: { href: `${args.siteUrl}${spark ? "/dashboard/matches" : "/dashboard"}`, label: "Finish my profile" },
   });
 }
 
@@ -386,9 +389,17 @@ export const RECOMMENDABLE_MIN_YEARS = 4;
  * else hears that a photo is the first step to getting Spark introductions.
  */
 export function incompleteProfileEmail(
-  args: Common & { completeness: number; hasPhoto: boolean; experienceYears: number | null; fieldName: string | null },
+  args: Common & {
+    completeness: number;
+    hasPhoto: boolean;
+    experienceYears: number | null;
+    fieldName: string | null;
+    /** Spark switched on. While it's paused the email talks about the card and mentoring instead. */
+    spark?: boolean;
+  },
 ) {
   const { appName, siteUrl, completeness, hasPhoto, experienceYears, fieldName } = args;
+  if (args.spark === false) return incompleteProfileNoSpark(args);
   const progress = `Your ${appName} profile is ${completeness}% complete.`;
   const finish = "Then add the last few details listed on your Spark page.";
 
@@ -428,6 +439,56 @@ export function incompleteProfileEmail(
     before: [
       `${progress} Once it reaches 80%, Spark will start recommending experienced people in your field for you to meet and learn from, one a month.`,
       "The best first step is a clear photo of you. Experienced members are far more likely to reply when they can see who's reaching out.",
+    ],
+    cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },
+    after: [finish, ONLY_ONCE],
+  });
+}
+
+/** The profile reminder while Spark is paused: no Spark, links to the dashboard. */
+function incompleteProfileNoSpark(
+  args: Common & { completeness: number; hasPhoto: boolean; experienceYears: number | null; fieldName: string | null },
+) {
+  const { appName, siteUrl, completeness, hasPhoto, experienceYears, fieldName } = args;
+  const progress = `Your ${appName} profile is ${completeness}% complete.`;
+  const senior = experienceYears !== null && experienceYears >= RECOMMENDABLE_MIN_YEARS;
+  const finish = "Then add the last few details your dashboard lists.";
+
+  if (hasPhoto) {
+    return reminder({
+      ...args,
+      subject: `Your ${appName} profile is ${completeness}% done`,
+      before: [
+        senior
+          ? `${progress} At 80% you can apply to be a mentor on ${appName} and earn from what you know.`
+          : `${progress} A complete card gets saved and answered more often.`,
+        "A few more details will get you there, and your dashboard shows exactly what's missing.",
+      ],
+      cta: { href: `${siteUrl}/dashboard`, label: "Complete my profile" },
+      after: [ONLY_ONCE],
+    });
+  }
+
+  if (senior) {
+    const inField = fieldName ? ` in ${fieldName.toLowerCase()}` : "";
+    return reminder({
+      ...args,
+      subject: "People want to learn from you. Add your photo",
+      before: [
+        `With ${experienceYears} years${inField}, you're exactly the kind of person people earlier in their careers want to learn from. As a mentor on ${appName}, you can earn from what you know.`,
+        `A clear photo makes all the difference: people are far more likely to save your contact and reach out when they can see who they're meeting. ${progress} Add your photo and finish your profile to apply as a mentor.`,
+      ],
+      cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },
+      after: [finish, ONLY_ONCE],
+    });
+  }
+
+  return reminder({
+    ...args,
+    subject: `Add a photo to your ${appName} card`,
+    before: [
+      `${progress} The best first step is a clear photo of you.`,
+      "People are far more likely to save your contact and reply when they can see who they're meeting.",
     ],
     cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },
     after: [finish, ONLY_ONCE],

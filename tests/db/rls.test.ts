@@ -51,6 +51,8 @@ beforeAll(async () => {
   for (const file of readdirSync(dir).sort()) {
     await db.exec(readFileSync(join(dir, file), "utf8"));
   }
+  // Spark is paused in production (20261129000000_spark_switch.sql); the Spark tests below run with it on.
+  await db.exec("update public.internal_settings set value = 'true' where key = 'spark_enabled'");
   await db.exec("insert into public.access_codes (code, max_uses) values ('SETUP-CODE', 2)");
   await db.query(
     `insert into auth.users (id, email, raw_user_meta_data)
@@ -1797,5 +1799,43 @@ describe("partner event pages", () => {
     expect(mine.map((e) => e.name)).toEqual(["ThinkUX Day"]);
     expect(await as(BOB, "select * from public.my_partner_events()")).toEqual([]);
     await expect(as(null, "select * from public.my_partner_events()")).rejects.toThrow(/permission denied/);
+  });
+});
+
+describe("Spark switch", () => {
+  const ADMIN_S = "5a5a0000-0000-0000-0000-00000000000a";
+  const CARD_S = "5a5a0000-0000-0000-0000-00000000000b";
+  beforeAll(async () => {
+    await db.exec("insert into public.access_codes (code, max_uses) values ('SPARK-CODE', 2)");
+    for (const [id, email] of [[ADMIN_S, "sparkadmin@test"], [CARD_S, "sparkcard@test"]]) {
+      await db.query("insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values ($1, $2, now(), $3)", [id, email, { access_code: "SPARK-CODE" }]);
+    }
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ADMIN_S]);
+    // Title, organisation, bio, field, years = 5 card items; plus a city (Spark only).
+    await db.query(
+      "insert into public.profiles (user_id, slug, full_name, professional_title, organization, bio, field, experience_years, city) values ($1, 'spark-card', 'Sam', 'Designer', 'Studio', 'Hi', 'product_design', 5, 'Lagos')",
+      [CARD_S],
+    );
+  });
+
+  it("is readable by anyone, and only admins can flip it", async () => {
+    expect(await as(null, "select public.spark_enabled() as on")).toEqual([{ on: true }]);
+    await expect(as(BOB, "select public.admin_set_spark_enabled(false)")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_set_spark_enabled(false)")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.admin_spark_progress()")).rejects.toThrow(/Not allowed/);
+    await as(ADMIN_S, "select public.admin_set_spark_enabled(false)");
+    expect(await as(null, "select public.spark_enabled() as on")).toEqual([{ on: false }]);
+    const [p] = await as<{ enabled: boolean; users: number; mentors: number }>(ADMIN_S, "select * from public.admin_spark_progress()");
+    expect(p.enabled).toBe(false);
+    expect(p.users).toBeGreaterThan(0);
+    expect(p.mentors).toBeGreaterThan(0);
+  });
+
+  it("scores the 8 card items while off, and all 10 when on", async () => {
+    const score = async () =>
+      (await db.query<{ s: number }>("select public.profile_completeness(p) as s from public.profiles p where p.slug = 'spark-card'")).rows[0].s;
+    expect(await score()).toBe(63); // 5 of 8
+    await as(ADMIN_S, "select public.admin_set_spark_enabled(true)");
+    expect(await score()).toBe(60); // 6 of 10, the city counts again
   });
 });

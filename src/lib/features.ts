@@ -102,3 +102,6 @@ export const FEATURES: FeaturePage[] = [
 ];
 
 export const featureBySlug = (slug: string) => FEATURES.find((f) => f.slug === slug);
+
+/** The features to show: Spark is left out until it launches (admin Overview). */
+export const visibleFeatures = (spark: boolean) => FEATURES.filter((f) => spark || f.slug !== "spark");
