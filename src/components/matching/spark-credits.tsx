@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { buyCredits } from "@/lib/payments/actions";
@@ -68,11 +67,7 @@ export function SparkCredits({ balance, packs, freeLeft }: { balance: number; pa
         })}
       </div>
       <p className="mt-3 text-xs text-ink-3">
-        Payments are handled by Paystack. We never see your card details.{" "}
-        <Link href="/dashboard/settings#payments" className="underline">
-          See your payment history
-        </Link>
-        .
+        Payments are handled by Paystack. We never see your card details.
       </p>
     </section>
   );
