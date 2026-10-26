@@ -71,40 +71,38 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <p className="mt-2 text-xs text-ink-3">PNG for sharing and slides · SVG for print</p>
         </Card>
 
-        <div className="flex flex-col gap-6">
-          <Card className="p-5 sm:p-6">
-            <h2 className="font-semibold">Your link</h2>
-            <p className="mt-1 text-sm text-ink-2">Your QR code opens this address, so it always shows your latest card and privacy settings.</p>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <LinkField url={url} />
-              <div className="flex gap-2">
-                <CopyLinkButton url={url} variant="primary" />
-                <ShareButton url={url} title={`${profile.fullName} on Meetwell`} />
-              </div>
+        <Card className="flex flex-col p-5 sm:p-6">
+          <h2 className="font-semibold">Your link</h2>
+          <p className="mt-1 text-sm text-ink-2">Your QR code opens this address, so it always shows your latest card and privacy settings.</p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <LinkField url={url} />
+            <div className="flex gap-2">
+              <CopyLinkButton url={url} variant="primary" />
+              <ShareButton url={url} title={`${profile.fullName} on Meetwell`} />
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {isLive && (
-                <a href={publicProfilePath(profile.slug)} target="_blank" rel="noopener noreferrer" className={buttonClass({ variant: "ghost", size: "sm" })}>
-                  View public card <ArrowUpRight className="size-4" aria-hidden />
-                </a>
-              )}
-              <a href="/dashboard/vcard" download className={buttonClass({ variant: "ghost", size: "sm" })}>
-                <Download className="size-4" aria-hidden /> Download my vCard
+          </div>
+          <div className="mt-auto flex flex-wrap gap-2 pt-4">
+            {isLive && (
+              <a href={publicProfilePath(profile.slug)} target="_blank" rel="noopener noreferrer" className={buttonClass({ variant: "ghost", size: "sm" })}>
+                View public card <ArrowUpRight className="size-4" aria-hidden />
               </a>
-            </div>
-          </Card>
-          <Card className="p-5 sm:p-6">
-            <h2 className="font-semibold">How to use your QR code</h2>
-            <ul className="mt-3 flex flex-col gap-2.5 text-[15px] text-ink-2">
-              {tips.map((t) => (
-                <li key={t} className="flex gap-2.5">
-                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </div>
+            )}
+            <a href="/dashboard/vcard" download className={buttonClass({ variant: "ghost", size: "sm" })}>
+              <Download className="size-4" aria-hidden /> Download my vCard
+            </a>
+          </div>
+        </Card>
+        <Card className="p-5 sm:p-6 lg:col-span-2">
+          <h2 className="font-semibold">How to use your QR code</h2>
+          <ul className="mt-3 flex flex-col gap-2.5 text-[15px] text-ink-2">
+            {tips.map((t) => (
+              <li key={t} className="flex gap-2.5">
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+                {t}
+              </li>
+            ))}
+          </ul>
+        </Card>
       </div>
     </div>
   );
