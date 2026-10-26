@@ -289,3 +289,15 @@ describe("logo in emails", () => {
     ).toContain(logo);
   });
 });
+
+describe("feedback email", () => {
+  it("names the kind and sender, keeps the message, and escapes HTML", async () => {
+    const { feedbackEmail } = await import("@/lib/founder-emails");
+    const e = feedbackEmail({ kind: "problem", message: "The <QR> page\nis slow", name: "Ada Obi", email: "ada@x.com", page: "/dashboard", appName: "Meetwell" });
+    expect(e.subject).toBe("Problem from Ada Obi");
+    expect(e.text).toContain("The <QR> page\nis slow");
+    expect(e.html).toContain("The &lt;QR&gt; page");
+    expect(e.html).not.toContain("<QR>");
+    expect(e.text).toContain("Page: /dashboard");
+  });
+});

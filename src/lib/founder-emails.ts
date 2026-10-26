@@ -865,3 +865,21 @@ export function messageFromLine(senderName: string, appName: string) {
   const name = senderName.replace(/\s+/g, " ").replace(/["<>\\]/g, "").trim().slice(0, 80) || `A ${appName} member`;
   return `"${name} via ${appName}" <messages-noreply@meetwell.me>`;
 }
+
+export const FEEDBACK_KINDS = ["idea", "problem", "other"] as const;
+export type FeedbackKind = (typeof FEEDBACK_KINDS)[number];
+const FEEDBACK_LABEL: Record<FeedbackKind, string> = { idea: "Idea", problem: "Problem", other: "Feedback" };
+
+/** A member's feedback from the dashboard, sent to the support inbox. Reply goes to the member. */
+export function feedbackEmail(args: { kind: FeedbackKind; message: string; name: string; email: string; page: string; appName: string }) {
+  const label = FEEDBACK_LABEL[args.kind];
+  const subject = `${label} from ${args.name.replace(/\s+/g, " ").trim().slice(0, 60) || "a member"}`;
+  const text = `${args.message}\n\n${args.name} <${args.email}>\nPage: ${args.page}\n\nReply to this email to answer them.`;
+  const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1c1c1a">
+  <p style="margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#5c5c57">${escapeHtml(label)} · ${escapeHtml(args.appName)}</p>
+  <p style="white-space:pre-wrap;margin:0 0 16px">${escapeHtml(args.message)}</p>
+  <p style="margin:0;color:#5c5c57;font-size:14px">${escapeHtml(args.name)} &lt;${escapeHtml(args.email)}&gt;<br>Page: ${escapeHtml(args.page)}</p>
+  <p style="margin:16px 0 0;color:#5c5c57;font-size:13px">Reply to this email to answer them.</p>
+</div>`;
+  return { subject, text, html };
+}

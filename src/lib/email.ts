@@ -6,6 +6,8 @@ import type { TemplateId } from "./admin/campaigns";
 import {
   addPhotoEmail,
   draftReminderEmail,
+  feedbackEmail,
+  type FeedbackKind,
   finishProfileEmail,
   incompleteProfileEmail,
   FOUNDER_NAME,
@@ -226,5 +228,13 @@ export function sendReplyReminderEmail(
   return send(to, newMessageEmail({ ...common(fullName), ...details, senderName, reminder: true }), {
     from: messageFromLine(senderName, APP_NAME),
     replyTo: null,
+  });
+}
+
+/** A member's feedback from the dashboard, to the support inbox. Replying answers the member. */
+export function sendFeedbackEmail(kind: FeedbackKind, message: string, from: { name: string; email: string }, page: string) {
+  return send(SUPPORT_EMAIL, feedbackEmail({ kind, message, page, appName: APP_NAME, ...from }), {
+    from: `${APP_NAME} feedback <noreply@meetwell.me>`,
+    replyTo: from.email,
   });
 }
