@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/misc";
 import { getSiteUrl } from "@/lib/config";
 import { eventDates } from "@/lib/events";
 import { createClient } from "@/lib/supabase/server";
+import { PaginatedList } from "@/components/ui/paginated-list";
 
 export const metadata: Metadata = { title: "Partner · Admin" };
 
@@ -78,7 +79,7 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
         />
         <RecordPayout partnerId={partner.id} availableKobo={money.available_kobo} />
         {ledger.length > 0 && (
-          <ul className="divide-y divide-border border-t border-border">
+          <PaginatedList className="divide-y divide-border border-t border-border">
             {ledger.map((l, i) => (
               <li key={i} className="flex items-center justify-between gap-3 py-2.5 text-sm">
                 <span className="min-w-0">
@@ -97,7 +98,7 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
                 </span>
               </li>
             ))}
-          </ul>
+          </PaginatedList>
         )}
       </section>
 
@@ -145,7 +146,7 @@ function PeopleSection({ title, people, empty }: { title: string; people: Person
       {people.length === 0 ? (
         <p className="px-4 py-6 text-center text-sm text-ink-2">{empty}</p>
       ) : (
-        <ul className="divide-y divide-border">
+        <PaginatedList className="divide-y divide-border">
           {people.map((p) => (
             <li key={p.email} className="flex items-center gap-3 px-4 py-3">
               <Avatar name={p.full_name ?? p.email} src={p.avatar_url} className="size-10 text-sm" />
@@ -167,7 +168,7 @@ function PeopleSection({ title, people, empty }: { title: string; people: Person
               <span className="hidden shrink-0 text-xs text-ink-3 sm:inline">Joined {date(p.joined_at)}</span>
             </li>
           ))}
-        </ul>
+        </PaginatedList>
       )}
     </section>
   );

@@ -1,12 +1,13 @@
 "use client";
 
-import { ArrowUpRight, ChevronLeft, ChevronRight, Pencil, Search, Trash2, UserRoundPlus, X } from "lucide-react";
+import { ArrowUpRight, Pencil, Search, Trash2, UserRoundPlus, X } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition, type ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
 import { Badge, EmptyState } from "@/components/ui/misc";
+import { Pager } from "@/components/ui/paginated-list";
 import { cn } from "@/lib/cn";
 import { useToast } from "@/components/ui/toast";
 import { removeContact, setContactNote } from "@/lib/contacts/actions";
@@ -113,49 +114,6 @@ function Toolbar<F extends string>({
         </Select>
       </div>
     </div>
-  );
-}
-
-/** "Showing 1 to 10 of 24" and the page buttons (the same look as the admin Users page). */
-function Pager({ page, total, setPage }: { page: number; total: number; setPage: (n: number) => void }) {
-  const pages = Math.ceil(total / PER_PAGE);
-  if (pages <= 1) return null;
-  const go = (n: number) => {
-    setPage(n);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  const cls = "grid h-9 min-w-9 place-items-center rounded-lg border px-2 text-sm tabular-nums transition-colors";
-  const idle = "border-border text-ink-2 hover:border-border-strong hover:text-ink disabled:pointer-events-none disabled:opacity-50";
-  return (
-    <nav className="flex flex-col items-center justify-between gap-3 sm:flex-row" aria-label="Pages">
-      <p className="text-sm text-ink-2">
-        Showing {(page - 1) * PER_PAGE + 1} to {Math.min(page * PER_PAGE, total)} of {total}
-      </p>
-      <div className="flex items-center gap-1">
-        <button type="button" className={cn(cls, idle)} disabled={page === 1} onClick={() => go(page - 1)} aria-label="Previous page">
-          <ChevronLeft className="size-4" aria-hidden />
-        </button>
-        {Array.from({ length: pages }, (_, i) => i + 1)
-          .filter((n) => n === 1 || n === pages || Math.abs(n - page) <= 1)
-          .map((n, i, list) => (
-            <span key={n} className="flex items-center gap-1">
-              {i > 0 && n - list[i - 1] > 1 && <span className="px-1 text-ink-3">…</span>}
-              <button
-                type="button"
-                onClick={() => go(n)}
-                aria-label={`Page ${n}`}
-                aria-current={n === page ? "page" : undefined}
-                className={cn(cls, n === page ? "border-accent bg-accent-soft font-medium text-accent" : idle)}
-              >
-                {n}
-              </button>
-            </span>
-          ))}
-        <button type="button" className={cn(cls, idle)} disabled={page === pages} onClick={() => go(page + 1)} aria-label="Next page">
-          <ChevronRight className="size-4" aria-hidden />
-        </button>
-      </div>
-    </nav>
   );
 }
 

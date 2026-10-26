@@ -3,6 +3,7 @@ import { date, naira, NotReady, PageTitle, type PaymentRow, Stats } from "@/comp
 import { Badge, EmptyState } from "@/components/ui/misc";
 import { getUsdRate, usdFromKobo } from "@/lib/fx";
 import { createClient } from "@/lib/supabase/server";
+import { PaginatedList } from "@/components/ui/paginated-list";
 
 export const metadata: Metadata = { title: "Payments · Admin" };
 
@@ -44,7 +45,7 @@ export default async function AdminPaymentsPage() {
               <EmptyState title="No payments yet" description="Credit purchases will show up here." />
             </div>
           ) : (
-            <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+            <PaginatedList className="divide-y divide-border rounded-xl border border-border bg-surface">
               {payments.map((p) => (
                 <li key={p.reference} className="flex items-center justify-between gap-4 px-4 py-3.5">
                   <div className="min-w-0">
@@ -57,7 +58,7 @@ export default async function AdminPaymentsPage() {
                   <Badge tone={(PAYMENT_BADGE[p.status] ?? UNKNOWN).tone}>{(PAYMENT_BADGE[p.status] ?? UNKNOWN).label}</Badge>
                 </li>
               ))}
-            </ul>
+            </PaginatedList>
           )}
         </>
       )}

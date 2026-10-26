@@ -5,6 +5,7 @@ import { MentorDecision, RefundButton, WithdrawalActions } from "@/components/ad
 import { Badge, EmptyState } from "@/components/ui/misc";
 import { publicProfilePath } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
+import { PaginatedList } from "@/components/ui/paginated-list";
 
 export const metadata: Metadata = { title: "Mentors · Admin" };
 
@@ -106,7 +107,7 @@ export default async function AdminMentorsPage() {
             <EmptyState title="No withdrawals yet" description="When a mentor asks to withdraw, it shows here for you to approve." />
           </div>
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+          <PaginatedList className="divide-y divide-border rounded-xl border border-border bg-surface">
             {ws.map((w) => {
               const b = W_STATUS[w.status] ?? W_STATUS.requested;
               return (
@@ -131,7 +132,7 @@ export default async function AdminMentorsPage() {
                 </li>
               );
             })}
-          </ul>
+          </PaginatedList>
         )}
         <p className="text-xs text-ink-3">
           Check the account name matches the mentor before sending. Paystack charges a small fee per transfer, paid by
@@ -146,7 +147,7 @@ export default async function AdminMentorsPage() {
             <EmptyState title="No applications yet" description="Users with 4+ years can apply from their Mentoring page." />
           </div>
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+          <PaginatedList className="divide-y divide-border rounded-xl border border-border bg-surface">
             {ms.map((m) => {
               const st = STATUS[m.status];
               const missing = Object.entries(m.checks ?? {}).filter(([, ok]) => !ok).map(([k]) => k);
@@ -176,7 +177,7 @@ export default async function AdminMentorsPage() {
                 </li>
               );
             })}
-          </ul>
+          </PaginatedList>
         )}
       </section>
 
@@ -187,7 +188,7 @@ export default async function AdminMentorsPage() {
             <EmptyState title="No subscriptions yet" description="Paid 30-day subscriptions show here." />
           </div>
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+          <PaginatedList className="divide-y divide-border rounded-xl border border-border bg-surface">
             {ss.map((s) => (
               <li key={s.reference} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5">
                 <div className="min-w-0">
@@ -211,7 +212,7 @@ export default async function AdminMentorsPage() {
                 </div>
               </li>
             ))}
-          </ul>
+          </PaginatedList>
         )}
       </section>
     </div>

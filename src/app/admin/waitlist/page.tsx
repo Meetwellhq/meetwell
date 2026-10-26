@@ -3,6 +3,7 @@ import { date, NotReady, PageTitle, ReminderBadges, Stats, type WaitlistRow } fr
 import { InviteButton } from "@/components/admin/invite-button";
 import { Badge, EmptyState } from "@/components/ui/misc";
 import { createClient } from "@/lib/supabase/server";
+import { PaginatedList } from "@/components/ui/paginated-list";
 
 export const metadata: Metadata = { title: "Waiting list · Admin" };
 
@@ -34,7 +35,7 @@ export default async function AdminWaitlistPage() {
               <EmptyState title="No one on the waiting list yet" description="People who join early access will show up here." />
             </div>
           ) : (
-            <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+            <PaginatedList className="divide-y divide-border rounded-xl border border-border bg-surface">
               {rows.map((r) => (
                 <li key={r.email} className="flex items-center justify-between gap-4 px-4 py-3.5">
                   <div className="min-w-0">
@@ -62,7 +63,7 @@ export default async function AdminWaitlistPage() {
                   )}
                 </li>
               ))}
-            </ul>
+            </PaginatedList>
           )}
         </>
       )}

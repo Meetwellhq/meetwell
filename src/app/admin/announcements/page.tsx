@@ -7,6 +7,7 @@ import { ButtonLink } from "@/components/ui/button";
 import type { AnnouncementKind } from "@/lib/admin/actions";
 import { isSparkOn } from "@/lib/spark";
 import { createClient } from "@/lib/supabase/server";
+import { PaginatedList } from "@/components/ui/paginated-list";
 
 export const metadata: Metadata = { title: "Announcements · Admin" };
 
@@ -57,11 +58,11 @@ export default async function AdminAnnouncementsPage() {
             <p className="mt-0.5 text-sm text-ink-2">Newest first. Each one shows how far people got, from receiving it to doing what it asked.</p>
           </div>
           <HowToRead />
-          <ul className="flex flex-col gap-3">
+          <PaginatedList className="flex flex-col gap-3">
             {sends.map((s) => (
               <EmailResultCard key={`${s.template}-${s.sent_on}`} result={s} />
             ))}
-          </ul>
+          </PaginatedList>
         </section>
       )}
 
