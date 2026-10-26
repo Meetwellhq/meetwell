@@ -675,13 +675,22 @@ export function savebackEmail({ fullName, appName, siteUrl, photoUrl, replyEmail
     `${smallPrint} ${off}`,
   ].join("\n\n");
 
+  // Their photo (or initials in a green circle), name and title, each linking to their card.
+  const face = (s: Saver) =>
+    s.avatar_url
+      ? `<img src="${escapeHtml(s.avatar_url)}" width="44" height="44" alt="" style="display:block;width:44px;height:44px;border-radius:50%;object-fit:cover">`
+      : `<div style="width:44px;height:44px;border-radius:50%;background:#e8f0ec;color:#1f4d3f;font-weight:600;font-size:16px;line-height:44px;text-align:center">${escapeHtml(initialsOf(s.full_name))}</div>`;
   const people = savers
-    .map(
-      (s) => `<tr><td style="padding:10px 0;border-bottom:1px solid #ecebe6">
-        <a href="${siteUrl}/p/${encodeURIComponent(s.slug)}" style="color:#1c1c1a;text-decoration:none;font-weight:600">${escapeHtml(s.full_name)}</a>
-        ${line(s) ? `<br><span style="color:#5c5c57;font-size:14px">${escapeHtml(line(s))}</span>` : ""}
-      </td></tr>`,
-    )
+    .map((s) => {
+      const card = `${siteUrl}/p/${encodeURIComponent(s.slug)}`;
+      return `<tr>
+        <td width="56" style="width:56px;padding:10px 0;border-bottom:1px solid #ecebe6;vertical-align:middle"><a href="${card}" style="text-decoration:none">${face(s)}</a></td>
+        <td style="padding:10px 0;border-bottom:1px solid #ecebe6;vertical-align:middle">
+          <a href="${card}" style="color:#1c1c1a;text-decoration:none;font-weight:600">${escapeHtml(s.full_name)}</a>
+          ${line(s) ? `<br><span style="color:#5c5c57;font-size:14px">${escapeHtml(line(s))}</span>` : ""}
+        </td>
+      </tr>`;
+    })
     .join("");
   const html = founderLayout({
     firstName,
