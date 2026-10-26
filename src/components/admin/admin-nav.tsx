@@ -104,7 +104,7 @@ export function AdminNav({ counts, placement }: { counts: Counts; placement: "si
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors",
-                      active ? "bg-border font-medium text-ink" : "text-ink hover:bg-surface-2",
+                      active ? "bg-surface-2 font-medium text-ink" : "text-ink hover:bg-surface-2",
                     )}
                   >
                     <item.icon className="size-[18px] shrink-0" aria-hidden />

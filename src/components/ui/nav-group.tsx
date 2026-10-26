@@ -39,7 +39,7 @@ export function NavGroup({
       <div
         className={cn(
           "flex items-center rounded-lg transition-colors",
-          here ? "bg-border text-ink" : "text-ink hover:bg-border",
+          here ? "bg-surface-2 text-ink" : "text-ink hover:bg-surface-2",
         )}
       >
         <Link
@@ -57,7 +57,7 @@ export function NavGroup({
           aria-expanded={open}
           aria-controls={listId}
           aria-label={open ? `Hide ${label} pages` : `Show ${label} pages`}
-          className={cn("mr-1 grid size-8 place-items-center rounded-md", "hover:bg-border-strong")}
+          className={cn("mr-1 grid size-8 place-items-center rounded-md", "hover:bg-border")}
         >
           {open ? <ChevronDown className="size-4" aria-hidden /> : <ChevronRight className="size-4" aria-hidden />}
         </button>
@@ -74,7 +74,7 @@ export function NavGroup({
                 onClick={onNavigate}
                 className={cn(
                   "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
-                  active ? "bg-border font-medium text-ink" : "text-ink-2 hover:bg-border hover:text-ink",
+                  active ? "bg-surface-2 font-medium text-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
                 )}
               >
                 <c.icon className="size-4 shrink-0" aria-hidden />
