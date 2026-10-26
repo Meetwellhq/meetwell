@@ -1,5 +1,6 @@
-import { ArrowUpRight, Download, Pencil } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Download, Pencil } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CopyLinkButton, LinkField, ShareButton } from "@/components/dashboard/share-actions";
 import { PublishButton } from "@/components/dashboard/publish-controls";
@@ -7,7 +8,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
 import { Alert, Badge, Card } from "@/components/ui/misc";
 import { publicProfilePath, publicProfileUrl, qrTargetUrl } from "@/lib/config";
-import { getOwnProfile } from "@/lib/profiles/queries";
+import { rate } from "@/lib/profiles/analytics";
+import { getOwnProfile, getOwnProfileStats } from "@/lib/profiles/queries";
 import { qrSvg } from "@/lib/qr";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -24,9 +26,16 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const profile = await getOwnProfile();
   if (!profile) redirect("/onboarding");
 
-  const [{ published, password }, qr] = await Promise.all([searchParams, qrSvg(qrTargetUrl(profile.slug))]);
+  const [{ published, password }, qr, stats] = await Promise.all([searchParams, qrSvg(qrTargetUrl(profile.slug)), getOwnProfileStats(30)]);
   const isLive = profile.status === "published";
   const url = publicProfileUrl(profile.slug);
+  // A quick look at the last 30 days; the Analytics page has the rest.
+  const insights = [
+    { label: "Profile views", value: stats.views },
+    { label: "QR scans", value: stats.qrScans },
+    { label: "Contacts saved", value: stats.saves },
+    { label: "Save rate", value: `${rate(stats.saves, stats.views)}%` },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -57,7 +66,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       )}
 
       <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
-        <Card className="flex flex-col items-center p-5 sm:p-6">
+        <Card className="flex flex-col items-center p-5 sm:p-6 lg:row-span-2">
           <h2 className="self-start font-semibold">Your QR code</h2>
           <div className="mt-4 w-full max-w-[16rem] rounded-2xl border border-border bg-surface p-3 [&>svg]:h-auto [&>svg]:w-full" role="img" aria-label={`QR code linking to ${url}`} dangerouslySetInnerHTML={{ __html: qr }} />
           <div className="mt-5 grid w-full grid-cols-2 gap-2">
@@ -71,7 +80,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <p className="mt-2 text-xs text-ink-3">PNG for sharing and slides · SVG for print</p>
         </Card>
 
-        <Card className="flex flex-col p-5 sm:p-6">
+        <Card className="p-5 sm:p-6">
           <h2 className="font-semibold">Your link</h2>
           <p className="mt-1 text-sm text-ink-2">Your QR code opens this address, so it always shows your latest card and privacy settings.</p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -81,7 +90,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
               <ShareButton url={url} title={`${profile.fullName} on Meetwell`} />
             </div>
           </div>
-          <div className="mt-auto flex flex-wrap gap-2 pt-4">
+          <div className="mt-3 flex flex-wrap gap-2">
             {isLive && (
               <a href={publicProfilePath(profile.slug)} target="_blank" rel="noopener noreferrer" className={buttonClass({ variant: "ghost", size: "sm" })}>
                 View public card <ArrowUpRight className="size-4" aria-hidden />
@@ -91,6 +100,22 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
               <Download className="size-4" aria-hidden /> Download my vCard
             </a>
           </div>
+        </Card>
+        <Card className="p-5 sm:p-6">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="font-semibold">Last 30 days</h2>
+            <Link href="/dashboard/analytics" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
+              All analytics <ArrowRight className="size-3.5" aria-hidden />
+            </Link>
+          </div>
+          <dl className="mt-4 grid grid-cols-2 gap-3">
+            {insights.map((s) => (
+              <div key={s.label} className="rounded-xl bg-surface-2 p-4">
+                <dt className="truncate text-sm text-ink-2">{s.label}</dt>
+                <dd className="mt-1 text-2xl font-semibold tabular-nums">{s.value}</dd>
+              </div>
+            ))}
+          </dl>
         </Card>
         <Card className="p-5 sm:p-6 lg:col-span-2">
           <h2 className="font-semibold">How to use your QR code</h2>
