@@ -119,10 +119,11 @@ export function Thread({
     });
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <Link href="/dashboard/messages" aria-label="All messages" className="-ml-2 rounded-full p-2 text-ink-2 hover:bg-surface-2">
+          {/* Phones only: the list is beside the conversation from laptops up. */}
+          <Link href="/dashboard/messages" aria-label="All messages" className="-ml-2 rounded-full p-2 text-ink-2 hover:bg-surface-2 lg:hidden">
             <ArrowLeft className="size-5" />
           </Link>
           <Avatar name={conversation.other_name} src={conversation.other_avatar} className="size-10 shrink-0 text-sm" />
@@ -161,7 +162,7 @@ export function Thread({
         </Alert>
       )}
 
-      <div className="flex min-h-[50vh] flex-col gap-2 rounded-xl border border-border bg-surface p-4">
+      <div className="flex min-h-[50vh] flex-col gap-2 overflow-y-auto rounded-xl border border-border bg-surface p-4 lg:h-[calc(100dvh-26rem)] lg:min-h-80">
         {messages.length === 0 && (
           <p className="m-auto max-w-xs text-center text-sm text-ink-3">
             {conversation.role === "member"
