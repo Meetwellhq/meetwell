@@ -7,6 +7,7 @@ import {
   Handshake,
   LayoutDashboard,
   LogOut,
+  MessageSquareText,
   MessagesSquare,
   ReceiptText,
   Wallet as WalletIcon,
@@ -23,6 +24,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { MobileMenu } from "@/components/ui/mobile-menu";
 import { NavGroup, type NavChild } from "@/components/ui/nav-group";
 import { ThemeIcons } from "@/components/ui/theme-toggle";
+import { FeedbackDialog } from "./feedback-dialog";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 
@@ -50,7 +52,8 @@ function UnreadBadge({ n }: { n: number }) {
 /**
  * The member's avatar at the top right of the header (laptops and up; phones
  * use the menu button). Clicking it drops down their full name and email, then
- * Profile (the card editor), Settings, the theme (System, Light, Dark) and Log out. Closes on a click outside,
+ * Profile (the card editor), Settings, the theme (System, Light, Dark), Send
+ * feedback and Log out. Closes on a click outside,
  * on Escape, or when a page is picked.
  */
 export function AccountMenu({ me, className }: { me: Me; className?: string }) {
@@ -58,6 +61,7 @@ export function AccountMenu({ me, className }: { me: Me; className?: string }) {
   const [openOn, setOpenOn] = useState<string | null>(null);
   const open = openOn === pathname;
   const ref = useRef<HTMLDivElement>(null);
+  const [feedback, setFeedback] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -74,6 +78,8 @@ export function AccountMenu({ me, className }: { me: Me; className?: string }) {
   const item = "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors";
   return (
     <div ref={ref} className={cn("relative", className)}>
+      {/* Outside the drop-down, so it stays open after the menu closes. */}
+      <FeedbackDialog open={feedback} onClose={() => setFeedback(false)} />
       <button
         type="button"
         onClick={() => setOpenOn(open ? null : pathname)}
@@ -109,6 +115,17 @@ export function AccountMenu({ me, className }: { me: Me; className?: string }) {
             Theme
             <ThemeIcons className="ml-auto" />
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              setOpenOn(null);
+              setFeedback(true);
+            }}
+            className={cn(item, "text-left text-ink hover:bg-surface-2")}
+          >
+            <MessageSquareText className="size-[18px] shrink-0" aria-hidden />
+            Send feedback
+          </button>
           <form action={signOut} className="mt-0.5 border-t border-border pt-1">
             <button type="submit" className={cn(item, "text-danger hover:bg-danger/10")}>
               <LogOut className="size-[18px] shrink-0" aria-hidden />

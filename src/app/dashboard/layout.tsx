@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { AccountMenu, DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { DeviceCardsImporter } from "@/components/dashboard/device-cards-importer";
-import { FeedbackButton } from "@/components/dashboard/feedback-button";
 import { ExperiencePrompt } from "@/components/matching/experience-prompt";
 import { InstallApp } from "@/components/pwa/install-app";
 import { isMentor } from "@/lib/matching/constants";
@@ -37,8 +36,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         <div className="relative flex h-15 items-center justify-between gap-4 px-4 sm:px-5">
           <Logo large />
           <div className="flex items-center gap-2">
-            {/* Laptops and up: feedback, then the avatar and its menu. Phones and tablets: the menu button. */}
-            <FeedbackButton className="hidden lg:block" />
+            {/* Laptops and up: the avatar and its menu. Phones and tablets: the menu button. */}
             <AccountMenu me={{ name, email: user.email ?? null, avatarUrl: profile?.avatar_url ?? null }} className="hidden lg:block" />
             <DashboardNav placement="menu" {...nav} />
           </div>
