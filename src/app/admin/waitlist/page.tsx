@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { date, NotReady, PageTitle, ReminderBadges, Stats, type WaitlistRow } from "@/components/admin/admin-ui";
-import { InviteButton } from "@/components/admin/invite-button";
-import { Badge, EmptyState } from "@/components/ui/misc";
+import { NotReady, PageTitle, Stats, type WaitlistRow } from "@/components/admin/admin-ui";
+import { WaitlistTable } from "@/components/admin/waitlist-table";
+import { EmptyState } from "@/components/ui/misc";
 import { createClient } from "@/lib/supabase/server";
-import { PaginatedList } from "@/components/ui/paginated-list";
 
 export const metadata: Metadata = { title: "Waiting list · Admin" };
 
@@ -37,35 +36,7 @@ export default async function AdminWaitlistPage() {
               <EmptyState title="No one on the waiting list yet" description="People who join early access will show up here." />
             </div>
           ) : (
-            <PaginatedList className="divide-y divide-border rounded-xl border border-border bg-surface">
-              {rows.map((r) => (
-                <li key={r.email} className="flex items-center justify-between gap-4 px-4 py-3.5">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-ink">{r.full_name || "No name"}</p>
-                    <p className="truncate text-sm text-ink-2">{r.email}</p>
-                    <p className="mt-1 text-xs text-ink-3">
-                      Joined {date(r.joined_at)}
-                      {r.invited_at && <> · Invited {date(r.invited_at)}</>}
-                    </p>
-                    {!!r.reminders?.length && (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        <ReminderBadges reminders={r.reminders} />
-                      </div>
-                    )}
-                  </div>
-                  {r.signed_up ? (
-                    <Badge tone={r.confirmed === false ? "warning" : "success"}>
-                      {r.confirmed === false ? "Email not confirmed" : "Signed up"}
-                    </Badge>
-                  ) : (
-                    <div className="flex flex-col items-end gap-1">
-                      {r.code_used && <span className="text-xs text-warning">Code used up · Resend sends a new one</span>}
-                      <InviteButton email={r.email} fullName={r.full_name} invited={!!r.invited_at} />
-                    </div>
-                  )}
-                </li>
-              ))}
-            </PaginatedList>
+            <WaitlistTable rows={rows} />
           )}
         </>
       )}
