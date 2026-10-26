@@ -91,7 +91,7 @@ export function AdminNav({ counts, placement }: { counts: Counts; placement: "si
     <>
       {/* Large screens: the sidebar. */}
       <aside className="hidden w-60 shrink-0 border-r border-border bg-surface lg:block">
-        <nav aria-label="Admin" className="sticky top-0 flex flex-col gap-6 p-4">
+        <nav aria-label="Admin" className="sticky top-[calc(3.75rem+1px)] flex max-h-[calc(100dvh-3.75rem-1px)] flex-col gap-6 overflow-y-auto p-4">
           {SECTIONS.map((section) => (
             <div key={section.title} className="flex flex-col gap-1">
               <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>

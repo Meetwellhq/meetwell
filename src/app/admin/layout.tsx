@@ -33,10 +33,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-surface-2/60">
-      {/* Full width, edge to edge; relative: the phone menu drops down under it. */}
-      <header className="border-b border-border bg-surface">
-        <div className="relative flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+    <div className="flex flex-1 flex-col bg-surface">
+      {/* Full width, edge to edge, and stays at the top; the phone menu drops down under it. */}
+      <header className="sticky top-0 z-30 border-b border-border bg-surface">
+        {/* h-15 (60px): the sidebar sticks just under it (see the navs). */}
+        <div className="relative flex h-15 items-center justify-between gap-4 px-4 sm:px-5">
           <div className="flex items-center gap-3">
             <Logo large beta={false} />
             <span className="rounded-full bg-ink px-2 py-0.5 text-xs font-medium text-bg">Admin</span>
@@ -57,12 +58,10 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         </div>
       </header>
 
-      {/* The sidebar runs down the left edge; the page sits in its card beside it. */}
+      {/* The sidebar runs down the left edge; the page fills the rest. */}
       <div className="flex flex-1">
         <AdminNav counts={counts} placement="sidebar" />
-        <div className="flex min-w-0 flex-1 flex-col gap-4 px-3 py-4 sm:px-5 sm:py-6">
-          <main className="mx-auto w-full max-w-6xl min-w-0 rounded-2xl bg-surface p-4 sm:p-6">{children}</main>
-        </div>
+        <main className="min-w-0 flex-1 bg-surface p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

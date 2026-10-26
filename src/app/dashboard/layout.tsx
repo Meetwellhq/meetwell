@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import type { CSSProperties } from "react";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { DeviceCardsImporter } from "@/components/dashboard/device-cards-importer";
 import { ExperiencePrompt } from "@/components/matching/experience-prompt";
@@ -6,7 +7,6 @@ import { InstallApp } from "@/components/pwa/install-app";
 import { isMentor } from "@/lib/matching/constants";
 import { isSparkOn } from "@/lib/spark";
 import { Logo } from "@/components/marketing/logo";
-import { Avatar } from "@/components/ui/avatar";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
@@ -29,32 +29,25 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const nav = { messages, mentor: isMentor(profile?.experience_years), partner: (partners.data ?? []).length > 0, spark };
 
   return (
-    <div className="flex flex-1 flex-col bg-surface-2/60">
-      {/* Full width, edge to edge; relative: the phone menu drops down under it. */}
-      <header className="border-b border-border bg-surface">
-        <div className="relative flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+    <div className="flex flex-1 flex-col bg-surface">
+      {/* Full width, edge to edge, and stays at the top; the phone menu drops down under it. */}
+      <header className="sticky top-0 z-30 border-b border-border bg-surface">
+        {/* h-15 (60px): the sidebar sticks just under it (see the navs). */}
+        <div className="relative flex h-15 items-center justify-between gap-4 px-4 sm:px-5">
           <Logo large />
-          <div className="flex items-center gap-2">
-            {/* Phones show only the menu button here. */}
-            <div className="hidden items-center gap-3 sm:flex">
-              <Avatar name={name} src={profile?.avatar_url} className="size-8 text-xs" />
-              <span className="hidden flex-col leading-tight sm:flex">
-                <span className="max-w-[14rem] truncate text-sm font-medium text-ink">{name}</span>
-                <span className="max-w-[14rem] truncate text-xs text-ink-3">{user.email}</span>
-              </span>
-            </div>
-            <DashboardNav placement="menu" {...nav} />
-          </div>
+          {/* Phones and tablets: the menu button. The profile is at the bottom of the sidebar. */}
+          <DashboardNav placement="menu" {...nav} />
         </div>
       </header>
 
-      {/* The sidebar runs down the left edge; the page sits in its card beside it. */}
+      {/* The sidebar runs down the left edge; the page fills the rest. */}
       <div className="flex flex-1">
-        <DashboardNav placement="sidebar" {...nav} />
-        <div className="flex min-w-0 flex-1 flex-col gap-4 px-3 py-4 sm:px-5 sm:py-6">
+        <DashboardNav placement="sidebar" {...nav} me={{ name, email: user.email ?? null, avatarUrl: profile?.avatar_url ?? null }} />
+        {/* Cards in the dashboard are 12px round (Card reads --card-radius). */}
+        <main className="flex min-w-0 flex-1 flex-col gap-4 bg-surface p-4 sm:p-6 lg:p-8" style={{ "--card-radius": "0.75rem" } as CSSProperties}>
           <InstallApp variant="banner" />
-          <main className="mx-auto w-full max-w-6xl min-w-0 rounded-2xl bg-surface p-4 sm:p-6">{children}</main>
-        </div>
+          <div>{children}</div>
+        </main>
       </div>
       {profile && profile.experience_years === null && <ExperiencePrompt initialField={profile.field} spark={spark} />}
       <DeviceCardsImporter />

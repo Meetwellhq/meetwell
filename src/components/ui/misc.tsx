@@ -2,7 +2,8 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 export function Card({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("rounded-2xl border border-border bg-surface", className)} {...props} />;
+  // 16px, or --card-radius where a layout sets one (the dashboard uses 12px).
+  return <div className={cn("rounded-[var(--card-radius,1rem)] border border-border bg-surface", className)} {...props} />;
 }
 
 type BadgeTone = "neutral" | "accent" | "success" | "warning" | "danger" | "mentee";
