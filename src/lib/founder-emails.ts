@@ -266,7 +266,7 @@ export function sparkPausedEmail(args: Common) {
       "If you bought Spark credits, reply to this email and I'll refund any you haven't used.",
       "You can help us get there sooner. Your card works as an invite, so anyone who scans it can join without a code.",
     ],
-    cta: { href: `${args.siteUrl}/dashboard/qr`, label: "Share my card" },
+    cta: { href: `${args.siteUrl}/dashboard`, label: "Share my card" },
     after: ["You'll be the first to know when Spark is back."],
   });
 }
@@ -322,7 +322,7 @@ export function noScansEmail(args: Common) {
       "Your card is live. The best way to use it is in person, the next time you meet someone.",
       "A simple trick: save your QR code to your phone's photos, or set it as your lock screen. When someone asks for your number, just show it. They scan it with their camera and save your details in one tap.",
     ],
-    cta: { href: `${args.siteUrl}/dashboard/qr`, label: "Open my QR code" },
+    cta: { href: `${args.siteUrl}/dashboard`, label: "Open my QR code" },
     after: [ONLY_ONCE],
   });
 }

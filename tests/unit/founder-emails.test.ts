@@ -50,7 +50,7 @@ describe("reminder emails", () => {
   it("draft and no-scan reminders point to the right dashboard pages", async () => {
     const { draftReminderEmail, noScansEmail } = await import("@/lib/founder-emails");
     expect(draftReminderEmail({ ...base, fullName: null }).html).toContain('href="https://meetwell.me/dashboard/profile"');
-    expect(noScansEmail({ ...base, fullName: "Quinn" }).html).toContain('href="https://meetwell.me/dashboard/qr"');
+    expect(noScansEmail({ ...base, fullName: "Quinn" }).html).toContain('href="https://meetwell.me/dashboard"');
   });
 });
 
@@ -177,7 +177,7 @@ describe("Spark paused email", () => {
     expect(text.startsWith("Hi Ada,")).toBe(true);
     expect(text).toContain("about as many mentors as mentees");
     expect(text).toContain("refund");
-    expect(html).toContain('href="https://meetwell.me/dashboard/qr"');
+    expect(html).toContain('href="https://meetwell.me/dashboard"');
   });
 });
 
