@@ -6,8 +6,8 @@ import {
   ChartLine,
   Handshake,
   LayoutDashboard,
+  Lightbulb,
   LogOut,
-  MessageSquareText,
   MessagesSquare,
   ReceiptText,
   Wallet as WalletIcon,
@@ -52,8 +52,8 @@ function UnreadBadge({ n }: { n: number }) {
 /**
  * The member's avatar at the top right of the header (laptops and up; phones
  * use the menu button). Clicking it drops down their full name and email, then
- * Profile (the card editor), Settings, the theme (System, Light, Dark), Send
- * feedback and Log out. Closes on a click outside,
+ * Profile (the card editor), Settings, the theme (System, Light, Dark), Ideas
+ * (the feedback window) and Log out. Closes on a click outside,
  * on Escape, or when a page is picked.
  */
 export function AccountMenu({ me, className }: { me: Me; className?: string }) {
@@ -123,8 +123,8 @@ export function AccountMenu({ me, className }: { me: Me; className?: string }) {
             }}
             className={cn(item, "text-left text-ink hover:bg-surface-2")}
           >
-            <MessageSquareText className="size-[18px] shrink-0" aria-hidden />
-            Send feedback
+            <Lightbulb className="size-[18px] shrink-0" aria-hidden />
+            Ideas
           </button>
           <form action={signOut} className="mt-0.5 border-t border-border pt-1">
             <button type="submit" className={cn(item, "text-danger hover:bg-danger/10")}>
