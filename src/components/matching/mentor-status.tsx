@@ -42,7 +42,7 @@ export function MentorStatus({
             {!c.done &&
               (c.where === "card" ? (
                 <Link href="/dashboard/profile" className="shrink-0 font-medium text-accent hover:underline">
-                  Edit card
+                  Edit profile
                 </Link>
               ) : (
                 <span className="shrink-0 text-ink-3">Below</span>

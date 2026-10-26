@@ -9,7 +9,7 @@ import { Button, buttonClass } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Badge, Card } from "@/components/ui/misc";
 
-/** A short tip for each item, and the Edit card section (or Spark page) where it's filled in. */
+/** A short tip for each item, and the Profile page section (or Spark page) where it's filled in. */
 const GUIDE: Record<CompletenessKey, { tip: string; section?: string }> = {
   photo: { tip: "A clear photo of you. People save and reply far more when they can see who they met.", section: "edit-about" },
   title: { tip: "What you do, in a few words, so people can place you.", section: "edit-about" },
@@ -24,7 +24,7 @@ const GUIDE: Record<CompletenessKey, { tip: string; section?: string }> = {
   city: { tip: "Where you're based, for introductions near you." },
 };
 
-/** Profile strength on the Edit card page: the score, and a checklist of what's done and what's left. */
+/** Profile strength on the Profile page: the score, and a checklist of what's done and what's left. */
 export function ProfileStrength({ percent, items }: { percent: number; items: CompletenessItem[] }) {
   const [open, setOpen] = useState(false);
   const done = items.filter((i) => i.done).length;

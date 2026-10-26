@@ -8,7 +8,7 @@ import { getSiteUrl } from "@/lib/config";
 import { getOwnProfile } from "@/lib/profiles/queries";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Edit card" };
+export const metadata: Metadata = { title: "Profile" };
 
 export default async function EditProfilePage() {
   const user = await getCurrentUser();
@@ -27,7 +27,7 @@ export default async function EditProfilePage() {
 
   return (
     <>
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight">Edit your card</h1>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight">Profile</h1>
       {completeness && (
         <div className="mb-6">
           <ProfileStrength percent={completeness.percent} items={completeness.items} />

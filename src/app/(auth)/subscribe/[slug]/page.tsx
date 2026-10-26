@@ -49,9 +49,9 @@ export default async function SubscribePage({ params, searchParams }: PageProps<
   else if (me?.experience_years == null)
     blocker = (
       <>
-        Add your years of experience first, in{" "}
+        Add your years of experience first, in your{" "}
         <Link href="/dashboard/profile" className="underline">
-          Edit card
+          Profile
         </Link>
         .
       </>
