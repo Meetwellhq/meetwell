@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ConversationList, MessagesShell } from "@/components/messaging/conversation-list";
 import type { ConversationRow } from "@/lib/messaging/types";
 import { createClient } from "@/lib/supabase/server";
@@ -10,16 +9,7 @@ export default async function MessagesLayout({ children }: LayoutProps<"/dashboa
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">Messages</h1>
-        <p className="mt-1 text-ink-2">
-          Private conversations with people you&apos;re connected to on Meetwell. Please keep to our{" "}
-          <Link href="/community-rules" className="text-accent underline">
-            community rules
-          </Link>
-          .
-        </p>
-      </div>
+      <h1 className="text-2xl font-semibold tracking-tight text-ink">Messages</h1>
       <MessagesShell list={<ConversationList rows={rows} />}>{children}</MessagesShell>
     </div>
   );

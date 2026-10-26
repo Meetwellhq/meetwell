@@ -1,8 +1,11 @@
 "use client";
 
+import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
+import { Input, Select } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/misc";
 import { cn } from "@/lib/cn";
 import type { ConversationRow } from "@/lib/messaging/types";
@@ -16,17 +19,51 @@ const when = (iso: string) => {
   });
 };
 
-/** Every conversation with a preview of the last message; the open one is highlighted. */
+/** Every conversation with a preview of the last message, and a search on top; the open one is highlighted. */
 export function ConversationList({ rows }: { rows: ConversationRow[] }) {
   const pathname = usePathname();
+  const [q, setQ] = useState("");
+  const [read, setRead] = useState<"all" | "unread" | "read">("all");
+  const needle = q.trim().toLowerCase();
+  const shown = rows.filter(
+    (c) =>
+      (!needle || [c.other_name, c.other_title, c.last_message].some((v) => v?.toLowerCase().includes(needle))) &&
+      (read === "all" || (read === "unread" ? c.unread > 0 : c.unread === 0)),
+  );
 
   if (rows.length === 0) {
     return <EmptyState title="No conversations yet" description="When a conversation starts, it will show up here." />;
   }
 
   return (
+    <div>
+      <div className="sticky top-0 z-10 flex gap-2 border-b border-border bg-surface p-3">
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-3" aria-hidden />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" aria-label="Search messages" className="h-10 pl-9 pr-10" />
+          {q && (
+            <button
+              type="button"
+              onClick={() => setQ("")}
+              aria-label="Clear search"
+              className="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-full text-ink-3 hover:bg-surface-2 hover:text-ink"
+            >
+              <X className="size-4" aria-hidden />
+            </button>
+          )}
+        </div>
+        {/* Select is full width by default, so the wrapper sets its size. */}
+        <div className="w-[6.5rem] shrink-0">
+          <Select value={read} onChange={(e) => setRead(e.target.value as typeof read)} aria-label="Show" className="h-10">
+            <option value="all">All</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+          </Select>
+        </div>
+      </div>
+      {shown.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-3">No one matches.</p>}
     <ul className="divide-y divide-border">
-      {rows.map((c) => {
+      {shown.map((c) => {
         const href = `/dashboard/messages/${c.id}`;
         const active = pathname === href;
         return (
@@ -65,6 +102,7 @@ export function ConversationList({ rows }: { rows: ConversationRow[] }) {
         );
       })}
     </ul>
+    </div>
   );
 }
 
