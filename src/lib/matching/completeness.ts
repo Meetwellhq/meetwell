@@ -24,30 +24,38 @@ export type CompletenessInput = {
 };
 
 /** Where each item is filled in: the card editor or the matching details on the Spark page. */
-export type CompletenessItem = { label: string; done: boolean; where: "card" | "matching" };
+export type CompletenessKey = "photo" | "title" | "organisation" | "bio" | "contact" | "link" | "social" | "field" | "years" | "lookingFor" | "city";
+export type CompletenessItem = { key: CompletenessKey; label: string; done: boolean; where: "card" | "matching" };
 
 const filled = (v: string | null) => !!v && v.trim() !== "";
 
 export function profileCompleteness(p: CompletenessInput, spark = true) {
-  const photo: CompletenessItem = { label: "Photo", done: !!p.avatarUrl, where: "card" };
-  const title: CompletenessItem = { label: "Job title", done: filled(p.title), where: "card" };
-  const bio: CompletenessItem = { label: "Bio", done: filled(p.bio), where: "card" };
-  const contact: CompletenessItem = { label: "A public contact (email, WhatsApp or phone)", done: p.hasPublicContact, where: "card" };
-  const years: CompletenessItem = { label: "Years of experience", done: p.experienceYears !== null, where: "card" };
+  const photo: CompletenessItem = { key: "photo", label: "Photo", done: !!p.avatarUrl, where: "card" };
+  const title: CompletenessItem = { key: "title", label: "Job title", done: filled(p.title), where: "card" };
+  const bio: CompletenessItem = { key: "bio", label: "Bio", done: filled(p.bio), where: "card" };
+  const contact: CompletenessItem = { key: "contact", label: "A public contact (email, WhatsApp or phone)", done: p.hasPublicContact, where: "card" };
+  const years: CompletenessItem = { key: "years", label: "Years of experience", done: p.experienceYears !== null, where: "card" };
   const items: CompletenessItem[] = spark
     ? [
         photo,
         title,
-        { label: "Organisation", done: filled(p.organization), where: "card" },
+        { key: "organisation", label: "Organisation", done: filled(p.organization), where: "card" },
         bio,
         contact,
-        { label: "A public website or social link", done: p.hasPublicLink, where: "card" },
-        { label: "Your field", done: !!p.field, where: "card" },
+        { key: "link", label: "A public website or social link", done: p.hasPublicLink, where: "card" },
+        { key: "field", label: "Your field", done: !!p.field, where: "card" },
         years,
-        { label: "What you're looking for", done: p.lookingFor.length > 0, where: "matching" },
-        { label: "City", done: filled(p.city), where: "matching" },
+        { key: "lookingFor", label: "What you're looking for", done: p.lookingFor.length > 0, where: "matching" },
+        { key: "city", label: "City", done: filled(p.city), where: "matching" },
       ]
-    : [photo, title, bio, contact, { label: "A social media link (Instagram, TikTok, YouTube…)", done: p.hasPublicSocial, where: "card" }, years];
+    : [
+        photo,
+        title,
+        bio,
+        contact,
+        { key: "social", label: "A social media link (Instagram, TikTok, YouTube…)", done: p.hasPublicSocial, where: "card" },
+        years,
+      ];
   const percent = Math.round((items.filter((i) => i.done).length * 100) / items.length);
   return { percent, items, missing: items.filter((i) => !i.done), ready: percent >= MATCHING_MIN_COMPLETENESS };
 }

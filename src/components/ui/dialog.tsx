@@ -8,12 +8,15 @@ export function Dialog({
   open,
   onClose,
   title,
+  badge,
   description,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** Shown beside the title, e.g. a "5 of 6" count. */
+  badge?: ReactNode;
   description?: ReactNode;
   children: ReactNode;
 }) {
@@ -36,9 +39,12 @@ export function Dialog({
     >
       <div className="p-6">
         <div className="flex items-start justify-between gap-4">
-          <h2 id="dialog-title" className="text-lg font-semibold">
-            {title}
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 id="dialog-title" className="text-lg font-semibold">
+              {title}
+            </h2>
+            {badge}
+          </div>
           <button
             type="button"
             onClick={onClose}
