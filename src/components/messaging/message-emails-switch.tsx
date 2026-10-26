@@ -14,6 +14,7 @@ export function MessageEmailsSwitch({ initial }: { initial: boolean }) {
       checked={on}
       disabled={pending}
       label="Email me about new conversations"
+      showState={false}
       onChange={(next) =>
         start(async () => {
           setOn(next);

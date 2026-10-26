@@ -14,6 +14,7 @@ export function SavebackEmailsSwitch({ initial }: { initial: boolean }) {
       checked={on}
       disabled={pending}
       label="Email me when someone saves my card back"
+      showState={false}
       onChange={(next) =>
         start(async () => {
           setOn(next);
