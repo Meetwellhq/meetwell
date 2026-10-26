@@ -52,10 +52,10 @@ function ReadFilter({ value, onChange }: { value: ReadFilterValue; onChange: (v:
         aria-controls="read-filter"
         aria-label={`Show: ${READ_OPTIONS.find((o) => o.value === value)!.label}`}
         title="Filter"
-        className="relative grid size-10 place-items-center rounded-lg text-ink-2 hover:bg-surface-2 hover:text-ink"
+        className="relative grid size-10 place-items-center rounded-full border border-border-strong text-ink-2 hover:bg-surface-2 hover:text-ink"
       >
         <EllipsisVertical className="size-5" aria-hidden />
-        {value !== "all" && <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-accent" aria-hidden />}
+        {value !== "all" && <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-accent ring-2 ring-surface" aria-hidden />}
       </button>
       {open && (
         <div
