@@ -35,6 +35,7 @@ export function completenessOf(profile: Row, spark = true) {
       bio: profile.bio,
       hasPublicContact: (profile.contact_methods ?? []).some((c) => c.is_public),
       hasPublicLink: (profile.social_links ?? []).some((l) => l.is_public) || (!!profile.website_url && profile.website_is_public),
+      hasPublicSocial: (profile.social_links ?? []).some((l) => l.is_public),
       field: profile.field,
       experienceYears: profile.experience_years,
       lookingFor: profile.looking_for ?? [],

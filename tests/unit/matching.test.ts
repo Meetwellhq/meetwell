@@ -41,7 +41,7 @@ describe("profile completeness", () => {
     const { profileCompleteness } = await import("@/lib/matching/completeness");
     const full = {
       avatarUrl: "https://x/p.jpg", title: "Designer", organization: "Studio", bio: "Hi",
-      hasPublicContact: true, hasPublicLink: true, field: "product_design", experienceYears: 1,
+      hasPublicContact: true, hasPublicLink: true, hasPublicSocial: true, field: "product_design", experienceYears: 1,
       lookingFor: ["mentor"], city: "Lagos",
     };
     expect(profileCompleteness(full).percent).toBe(100);
@@ -50,10 +50,13 @@ describe("profile completeness", () => {
     expect(thin.ready).toBe(false);
     expect(thin.missing.map((m) => m.label)).toEqual(["Photo", "Bio", "City"]);
     expect(profileCompleteness({ ...full, avatarUrl: null, city: null }).ready).toBe(true); // 80%
-    // While Spark is paused: the 6 important items only (no link, field, "looking for" or city).
-    const paused = profileCompleteness({ ...full, lookingFor: [], city: null, hasPublicLink: false, field: null }, false);
+    // While Spark is paused: the 6 important items only (no organisation, website, field, "looking for" or city).
+    const paused = profileCompleteness({ ...full, organization: null, lookingFor: [], city: null, hasPublicLink: false, field: null }, false);
     expect(paused.items).toHaveLength(6);
     expect(paused.percent).toBe(100);
+    expect(profileCompleteness({ ...full, hasPublicSocial: false }, false).missing.map((m) => m.label)).toEqual([
+      "A social media link (Instagram, TikTok, YouTube…)",
+    ]);
     expect(profileCompleteness({ ...full, avatarUrl: null }, false).percent).toBe(83); // 5 of 6: still enough to mentor
   });
 });

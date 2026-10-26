@@ -124,7 +124,7 @@ every migration.
   `admin_spark_progress`; it rebuilds every page). Read it with `isSparkOn()`. While off, Spark is hidden completely:
   menu, `/dashboard/matches` (redirects to /dashboard), landing, feature pages (`visibleFeatures`), footer, About,
   Support, the Spark emails in admin; the matching job skips; credits can't be bought; experience wording and profile
-  emails have Spark-free versions; and the profile score counts 6 items (photo, title, organisation, bio, public contact, years), in SQL and
+  emails have Spark-free versions; and the profile score counts 6 items (photo, title, bio, public contact, a social media link, years), in SQL and
   in `profileCompleteness(p, spark)`. Database tests switch it on in setup. Terms and Privacy still describe Spark.
 - **Spark (AI Network Matching)**: `/dashboard/matches` (shown to members as "Spark"; the URL stays /matches so old email links work) (opt-in + private fields: field, experience,
   looking for, city; list of matches). Recommends only people with 4+ years, a profile
@@ -137,8 +137,8 @@ every migration.
   experienced member is told. Up to ~60 members per run on the current Vercel plan.
   Only members with a confirmed account and a profile at least 80% complete are matched or
   recommended (`profile_completeness()` in SQL, `src/lib/matching/completeness.ts` for the page;
-  keep them in step). While Spark is off the score counts 6 items (photo, title, organisation, bio, public contact,
-  years; `20261202000000_profile_score_six.sql`), shown as Profile strength on Edit card. Members under 80% get a one-time `profile_incomplete` reminder; without a
+  keep them in step). While Spark is off the score counts 6 items (photo, title, bio, public contact, a social
+  media link, years; `20261203000000_profile_score_social.sql`), shown as Profile strength on Edit card. Members under 80% get a one-time `profile_incomplete` reminder; without a
   photo, 4+ years get "people want to learn from you" copy, others "a photo gets you matches".
 - **Spark credits (Paystack)**: members under 4 years buy packs on the Spark page (`SparkCredits`,
   `buyCredits` in `src/lib/payments/actions.ts`). Prices live in `public.credit_packs`

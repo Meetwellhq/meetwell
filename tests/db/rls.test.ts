@@ -1834,9 +1834,13 @@ describe("Spark switch", () => {
   it("scores the 6 important items while off, and all 10 when on", async () => {
     const score = async () =>
       (await db.query<{ s: number }>("select public.profile_completeness(p) as s from public.profiles p where p.slug = 'spark-card'")).rows[0].s;
-    expect(await score()).toBe(67); // title, organisation, bio, years = 4 of 6 (field and city don't count)
+    expect(await score()).toBe(50); // title, bio, years = 3 of 6 (organisation, field and city don't count)
+    await db.query(
+      "insert into public.social_links (profile_id, platform, url) select id, 'instagram', 'https://instagram.com/sam' from public.profiles where slug = 'spark-card'",
+    );
+    expect(await score()).toBe(67); // a social link counts: 4 of 6
     await as(ADMIN_S, "select public.admin_set_spark_enabled(true)");
-    expect(await score()).toBe(60); // 6 of 10, the city counts again
+    expect(await score()).toBe(70); // 7 of 10: organisation, the link, field and city count again
   });
 });
 
