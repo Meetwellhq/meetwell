@@ -59,7 +59,7 @@ export default async function SupportPage() {
   const [signedIn, spark] = await Promise.all([isSignedIn(), isSparkOn()]);
 
   return (
-    <div className="flex min-h-full flex-col bg-surface">
+    <div className="light-only flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-14 sm:py-20">
         <h1 className="font-display text-4xl leading-none tracking-tight text-ink sm:text-5xl">Support</h1>

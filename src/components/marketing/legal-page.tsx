@@ -17,7 +17,7 @@ async function isSignedIn() {
 export async function LegalPage({ title, updated, intro, children }: { title: string; updated?: string; intro?: ReactNode; children: ReactNode }) {
   const signedIn = await isSignedIn();
   return (
-    <div className="flex min-h-full flex-col bg-surface">
+    <div className="light-only flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-14 sm:py-20">
         <h1 className="font-display text-4xl leading-none tracking-tight text-ink sm:text-5xl">{title}</h1>

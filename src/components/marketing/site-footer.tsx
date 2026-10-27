@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { SocialIcon } from "@/components/icons/social-icon";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { APP_NAME, COMPANY_NAME, COMPANY_RC, SOCIAL_LINKS } from "@/lib/config";
 import { visibleFeatures } from "@/lib/features";
 import { isSparkOn } from "@/lib/spark";
@@ -71,7 +70,6 @@ export async function SiteFooter({ wide = false }: { wide?: boolean }) {
       </div>
       <div className={`mx-auto flex flex-wrap items-center justify-between gap-4 border-t border-border py-6 text-sm text-ink-3 ${wide ? "max-w-[90rem] px-5 sm:px-8" : "max-w-6xl px-4 sm:px-6"}`}>
         <span>© {new Date().getFullYear()} {COMPANY_NAME} ({COMPANY_RC}). All rights reserved.</span>
-        <ThemeToggle />
       </div>
     </footer>
   );

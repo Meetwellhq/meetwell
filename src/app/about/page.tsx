@@ -41,7 +41,7 @@ export default async function AboutPage() {
   const socials = SOCIAL_LINKS.filter((s) => s.url);
 
   return (
-    <div className="flex min-h-full flex-col bg-surface">
+    <div className="light-only flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
         {/* Intro */}

@@ -2,7 +2,7 @@
 
 /*
  * Design tokens. Restrained, warm neutrals with a single pine accent.
- * .light-only keeps a page in these light colours even in dark mode (the landing page, for now).
+ * .light-only keeps a page in these light colours even in dark mode (the public pages, for now).
  */
 :root,
 .light-only {

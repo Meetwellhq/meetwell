@@ -73,7 +73,7 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
   const others = visibleFeatures(spark).filter((f) => f.slug !== feature.slug);
 
   return (
-    <div className="flex min-h-full flex-col bg-surface">
+    <div className="light-only flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
         <Panel>

@@ -34,7 +34,7 @@ export default async function EventPage({ params }: PageProps<"/e/[slug]">) {
   ]);
 
   return (
-    <div className="flex min-h-full flex-col bg-surface-2">
+    <div className="light-only flex min-h-full flex-col bg-surface-2">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
         <section className="grid gap-8 rounded-[1.5rem] bg-surface p-6 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
