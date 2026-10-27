@@ -7,8 +7,8 @@ import { cn } from "@/lib/cn";
 
 type UseCase = { icon: LucideIcon; title: string; body: string; more: string; tags: [string, string]; photo: string };
 
-// Photos in public/landing: Unsplash (free licence), except founder and student from Magnific (free licence,
-// credit required: shown under the carousel). Stock people, never shown as members or quoted.
+// Photos in public/landing: professional from Unsplash (free licence), the rest from Magnific (free licence,
+// credit required: shown under the carousel; originals in brand/magnific). Stock people, never shown as members or quoted.
 const USE_CASES: UseCase[] = [
   {
     icon: Briefcase,
@@ -32,7 +32,7 @@ const USE_CASES: UseCase[] = [
     body: "Send new clients straight to your work.",
     more: "Your portfolio and socials are one scan away, and new clients save you in one tap.",
     tags: ["Links on your card", "One-tap save"],
-    photo: "/landing/creator.webp",
+    photo: "/landing/creator-vlog.webp",
   },
   {
     icon: Ticket,
@@ -40,7 +40,7 @@ const USE_CASES: UseCase[] = [
     body: "Swap details in seconds.",
     more: "Scan, save and follow up before the next talk starts. Speakers get their own badge QR.",
     tags: ["Badge QR", "Contacts"],
-    photo: "/landing/event.webp",
+    photo: "/landing/event-panel.webp",
   },
   {
     icon: GraduationCap,
@@ -51,6 +51,14 @@ const USE_CASES: UseCase[] = [
     photo: "/landing/students-campus.webp",
   },
 ];
+
+// Credit for the Magnific photos: [shown name, author page].
+const MAGNIFIC_AUTHORS = [
+  ["magnific", "magnific"],
+  ["DC Studio", "dcstudio"],
+  ["rawpixel.com", "rawpixel-com"],
+  ["ASphotofamily", "asphotofamily"],
+] as const;
 
 const STEP_MS = 4500;
 
@@ -92,26 +100,23 @@ export function UseCaseCarousel({ children }: { children?: ReactNode }) {
             <div key={u.title} className="flex shrink-0 items-center">
               {i > 0 && <span className="-ml-3 mr-0 h-8 w-3 shrink-0 rounded-sm bg-surface/80" aria-hidden />}
               {open ? (
-                <article className="grid w-[var(--open)] shrink-0 gap-5 rounded-[1.5rem] bg-surface p-4 shadow-sm sm:grid-cols-[1fr_15rem] sm:gap-6 sm:p-5 lg:grid-cols-[1fr_19rem]">
-                  <div className="flex flex-col justify-between gap-6 p-1 sm:p-3">
-                    <div>
-                      <span className="grid size-10 place-items-center rounded-full bg-accent-soft text-accent">
-                        <u.icon className="size-5" aria-hidden />
-                      </span>
-                      <h3 className="mt-4 font-display text-3xl leading-[1.05] tracking-tight text-ink sm:text-4xl">{u.title}</h3>
-                      <p className="mt-2 text-[17px] font-medium text-ink">{u.body}</p>
+                // The photo fills the whole card; the words sit on a dark fade at the bottom.
+                <article className="relative h-[26rem] w-[var(--open)] shrink-0 overflow-hidden rounded-[1.5rem] shadow-sm sm:h-[28rem]">
+                  {/* Each photo has a wide crop for the open card next to the tall one: name-wide.webp. */}
+                  <Image src={u.photo.replace(".webp", "-wide.webp")} alt="" fill sizes="(min-width: 768px) 46rem, 80vw" className="object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 via-45% to-transparent" aria-hidden />
+                  <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-8">
+                    <span className="grid size-10 place-items-center rounded-full bg-white/15 backdrop-blur-sm">
+                      <u.icon className="size-5" aria-hidden />
+                    </span>
+                    <h3 className="mt-3 font-display text-3xl leading-[1.05] tracking-tight sm:text-4xl">{u.title}</h3>
+                    <p className="mt-1.5 text-[17px] font-medium">{u.body}</p>
+                    <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-white/80">{u.more}</p>
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {u.tags.map((t) => (
+                        <span key={t} className="rounded-md bg-white/15 px-2.5 py-1 text-xs font-medium backdrop-blur-sm">{t}</span>
+                      ))}
                     </div>
-                    <div>
-                      <p className="font-display text-xl leading-snug text-ink-2 sm:text-2xl">{u.more}</p>
-                      <div className="mt-4 flex flex-wrap gap-1.5">
-                        {u.tags.map((t) => (
-                          <span key={t} className="rounded-md bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-2">{t}</span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-[1.1rem] sm:aspect-auto sm:h-[22rem] lg:h-[24rem]">
-                    <Image src={u.photo} alt="" fill sizes="(min-width: 1024px) 19rem, (min-width: 640px) 15rem, 80vw" className="object-cover" />
                   </div>
                 </article>
               ) : (
@@ -147,8 +152,13 @@ export function UseCaseCarousel({ children }: { children?: ReactNode }) {
 
       <p className="mt-5 text-center text-[11px] text-ink-3">
         Photos from Unsplash, and by{" "}
-        <a href="https://www.magnific.com/author/magnific" className="underline">magnific</a> and{" "}
-        <a href="https://www.magnific.com/author/asphotofamily" className="underline">ASphotofamily</a> on Magnific
+        {MAGNIFIC_AUTHORS.map(([name, slug], i) => (
+          <span key={slug}>
+            {i > 0 && (i === MAGNIFIC_AUTHORS.length - 1 ? " and " : ", ")}
+            <a href={`https://www.magnific.com/author/${slug}`} className="underline">{name}</a>
+          </span>
+        ))}{" "}
+        on Magnific
       </p>
     </div>
   );
