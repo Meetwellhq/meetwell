@@ -1,31 +1,17 @@
-import { ArrowRight } from "lucide-react";
-import { ButtonLink } from "@/components/ui/button";
-import { JOIN_CTA } from "@/lib/config";
+import { visibleFeatures } from "@/lib/features";
+import { isSparkOn } from "@/lib/spark";
 import { Logo } from "./logo";
+import { SiteNav } from "./site-nav";
 
-export function SiteHeader({ signedIn }: { signedIn: boolean }) {
+/** Header for the public pages: logo, menus and buttons (after Calendly's). */
+export async function SiteHeader({ signedIn }: { signedIn: boolean }) {
+  const features = visibleFeatures(await isSparkOn()).map(({ slug, name, title }) => ({ slug, name, title }));
+  // Solid, no backdrop blur: a blur would trap the phone menu panel (position: fixed) inside the header.
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-surface/90 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-[90rem] items-center justify-between px-4 sm:px-8">
+    <header className="sticky top-0 z-40 bg-surface">
+      <div className="mx-auto flex h-16 max-w-[90rem] items-center px-4 sm:px-8">
         <Logo />
-        <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
-          {signedIn ? (
-            <ButtonLink href="/dashboard" size="sm">
-              Dashboard
-            </ButtonLink>
-          ) : (
-            <>
-              <ButtonLink href="/sign-in" variant="secondary" size="sm" className="max-sm:px-2.5!">
-                Log in
-              </ButtonLink>
-              <ButtonLink href={JOIN_CTA.href} size="sm">
-                <span className="sm:hidden">{JOIN_CTA.short}</span>
-                <span className="hidden sm:inline">{JOIN_CTA.label}</span>
-                <ArrowRight className="size-4" aria-hidden />
-              </ButtonLink>
-            </>
-          )}
-        </nav>
+        <SiteNav signedIn={signedIn} features={features} />
       </div>
     </header>
   );
