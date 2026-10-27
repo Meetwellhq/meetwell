@@ -145,9 +145,6 @@ export function SiteNav({
         ))}
       </nav>
       <div className="ml-auto hidden items-center gap-2 lg:flex">
-        <Link href="/support" className="px-3 py-2 text-[15px] font-medium text-ink hover:text-accent">
-          Contact us
-        </Link>
         {actions}
       </div>
 
@@ -190,9 +187,6 @@ export function SiteNav({
               </ul>
             </details>
           ))}
-          <Link href="/support" className="block border-b border-border py-4 text-[17px] font-medium text-ink">
-            Contact us
-          </Link>
           {!signedIn && (
             <div className="mt-6 flex flex-col gap-2 [&>a]:w-full">
               {actions}
