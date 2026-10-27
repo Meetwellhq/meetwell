@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AddEvent, EventCard, type AdminEvent } from "@/components/admin/events-admin";
+import { AddEventPanel, EventCard, type AdminEvent } from "@/components/admin/events-admin";
 import { CopyPartnerLink } from "@/components/dashboard/copy-partner-link";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, Card } from "@/components/ui/misc";
@@ -182,15 +182,7 @@ export default async function PartnerPage() {
                 );
               })()}
               {partner.active && (
-                <details className="group rounded-xl border border-border">
-                  <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-medium text-ink [&::-webkit-details-marker]:hidden">
-                    Add an event
-                    <span className="text-sm text-ink-3 group-open:hidden">Name, dates, venue</span>
-                  </summary>
-                  <div className="border-t border-border p-4">
-                    <AddEvent partnerSlug={partner.slug} who="team" />
-                  </div>
-                </details>
+                <AddEventPanel partnerSlug={partner.slug} />
               )}
             </Card>
 

@@ -88,7 +88,7 @@ function EventDetails({ event }: { event?: AdminEvent }) {
 }
 
 /** New event page for this partner: name, date, venue, a short description. */
-export function AddEvent({ partnerSlug, who = "admin" }: { partnerSlug: string; who?: Who }) {
+export function AddEvent({ partnerSlug, who = "admin", onCancel }: { partnerSlug: string; who?: Who; onCancel?: () => void }) {
   const [state, action, pending] = useActionState(ACTIONS[who].create.bind(null, partnerSlug), {});
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
@@ -108,11 +108,41 @@ export function AddEvent({ partnerSlug, who = "admin" }: { partnerSlug: string; 
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" loading={pending}>Add event</Button>
+        {onCancel && (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
         {(state.error || state.ok) && (
           <p className={cn("text-sm", state.error ? "text-danger" : "text-success")}>{state.error ?? state.ok}</p>
         )}
       </div>
     </form>
+  );
+}
+
+/** "Add an event" that opens into the form, with Cancel to close it again (Partner tab). */
+export function AddEventPanel({ partnerSlug, who = "team" }: { partnerSlug: string; who?: Who }) {
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex items-center justify-between rounded-xl border border-border px-4 py-3 text-left font-medium text-ink transition-colors hover:bg-surface-2"
+      >
+        Add an event
+        <span className="text-sm font-normal text-ink-3">Name, date, venue</span>
+      </button>
+    );
+  }
+  return (
+    <div className="rounded-xl border border-border">
+      <p className="border-b border-border px-4 py-3 font-medium text-ink">Add an event</p>
+      <div className="p-4">
+        <AddEvent partnerSlug={partnerSlug} who={who} onCancel={() => setOpen(false)} />
+      </div>
+    </div>
   );
 }
 
