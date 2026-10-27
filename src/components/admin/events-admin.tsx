@@ -129,24 +129,40 @@ function AddSpeaker({ eventSlug }: { eventSlug: string }) {
   );
 }
 
-function RemoveSpeaker({ eventSlug, profileSlug, name }: { eventSlug: string; profileSlug: string; name: string }) {
+/**
+ * One speaker on an event. Remove hides the row at once (the save takes a moment)
+ * and says so; if it fails, the row comes back with the error.
+ */
+function SpeakerRow({ eventSlug, speaker: s }: { eventSlug: string; speaker: AdminEvent["speakers"][number] }) {
   const toast = useToast();
-  const [pending, start] = useTransition();
+  const [removed, setRemoved] = useState(false);
+  const [, start] = useTransition();
+  if (removed) return null;
   return (
-    <button
-      type="button"
-      disabled={pending}
-      aria-label={`Remove ${name}`}
-      onClick={() =>
-        start(async () => {
-          const { error } = await adminRemoveEventSpeaker(eventSlug, profileSlug);
-          if (error) toast(error, "error");
-        })
-      }
-      className="rounded p-1 text-ink-3 hover:bg-surface-2 hover:text-ink disabled:opacity-50"
-    >
-      <X className="size-4" aria-hidden />
-    </button>
+    <li className="flex items-center gap-2 px-3 py-2">
+      <span className="min-w-0 flex-1 truncate text-sm text-ink">{s.full_name}</span>
+      {s.mentor && <Badge tone="accent">Mentor</Badge>}
+      {s.status !== "published" && <Badge tone="warning">Card not published</Badge>}
+      <a href={`/e/${eventSlug}/qr?speaker=${encodeURIComponent(s.slug)}`} className="text-xs text-ink-3 hover:text-ink">Badge QR</a>
+      <button
+        type="button"
+        aria-label={`Remove ${s.full_name}`}
+        onClick={() => {
+          setRemoved(true);
+          start(async () => {
+            const { error } = await adminRemoveEventSpeaker(eventSlug, s.slug);
+            if (error) {
+              setRemoved(false);
+              toast(error, "error");
+            } else toast(`Removed ${s.full_name}.`);
+          });
+        }}
+        className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-ink-3 hover:bg-danger-soft hover:text-danger"
+      >
+        <X className="size-3.5" aria-hidden />
+        Remove
+      </button>
+    </li>
   );
 }
 
@@ -262,13 +278,7 @@ export function EventCard({ event, site, dates, revenue }: { event: AdminEvent; 
         {event.speakers.length > 0 && (
           <ul className="divide-y divide-border rounded-lg border border-border">
             {event.speakers.map((s) => (
-              <li key={s.slug} className="flex items-center gap-2 px-3 py-2">
-                <span className="min-w-0 flex-1 truncate text-sm text-ink">{s.full_name}</span>
-                {s.mentor && <Badge tone="accent">Mentor</Badge>}
-                {s.status !== "published" && <Badge tone="warning">Card not published</Badge>}
-                <a href={`/e/${event.slug}/qr?speaker=${encodeURIComponent(s.slug)}`} className="text-xs text-ink-3 hover:text-ink">Badge QR</a>
-                <RemoveSpeaker eventSlug={event.slug} profileSlug={s.slug} name={s.full_name} />
-              </li>
+              <SpeakerRow key={s.slug} eventSlug={event.slug} speaker={s} />
             ))}
           </ul>
         )}

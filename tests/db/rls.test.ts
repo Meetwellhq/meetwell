@@ -1865,6 +1865,18 @@ describe("partner event pages", () => {
     await as(ALICE, "select public.admin_delete_event('tc-mail')");
   });
 
+  it("removes a speaker from an event (admins only)", async () => {
+    await as(ALICE, "select public.admin_create_event('techcabal', 'tc-remove', 'Remove Summit', '2026-11-30')");
+    await as(ALICE, "select * from public.admin_add_event_speaker_details('tc-remove', 'partner-speaker')");
+    const speakers = async () =>
+      (await as<{ speakers: { slug: string }[] }>(ALICE, "select speakers from public.admin_partner_events('techcabal') where slug = 'tc-remove'"))[0].speakers;
+    expect((await speakers()).map((s) => s.slug)).toEqual(["partner-speaker"]);
+    await expect(as(BOB, "select public.admin_remove_event_speaker('tc-remove', 'partner-speaker')")).rejects.toThrow(/Not allowed/);
+    await as(ALICE, "select public.admin_remove_event_speaker('tc-remove', 'partner-speaker')");
+    expect(await speakers()).toEqual([]);
+    await as(ALICE, "select public.admin_delete_event('tc-remove')");
+  });
+
   it("deletes an event only while nothing has come from it", async () => {
     await as(ALICE, "select public.admin_create_event('techcabal', 'tc-mistake', 'Typo Event', '2026-11-30')");
     await as(ALICE, "select public.admin_add_event_speaker('tc-mistake', 'partner-speaker')");
