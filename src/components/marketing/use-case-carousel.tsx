@@ -62,8 +62,8 @@ const STEP_MS = 4500;
 
 /**
  * "Made for people who meet people", after Calendly's customer stories: one
- * open card (words and a big photo), slim photo cards either side, linked by
- * small connectors. It moves to the next group every few seconds, so the row
+ * open card (a big photo with the words on it) and slim photo cards either side.
+ * It moves to the next group every few seconds, so the row
  * slides left; hovering pauses it, and clicking a slim card opens it.
  */
 export function UseCaseCarousel({ className, children }: { className?: string; children?: ReactNode }) {
@@ -96,7 +96,6 @@ export function UseCaseCarousel({ className, children }: { className?: string; c
           const open = i === active;
           return (
             <div key={u.title} className="flex shrink-0 items-center">
-              {i > 0 && <span className="-ml-3 mr-0 h-8 w-3 shrink-0 rounded-sm bg-surface/80" aria-hidden />}
               {open ? (
                 // The photo fills the whole card; the words sit on a dark fade at the bottom.
                 <article className="relative h-[26rem] w-[var(--open)] shrink-0 overflow-hidden rounded-[1.5rem] shadow-sm sm:h-[28rem]">

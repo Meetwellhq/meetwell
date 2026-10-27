@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
-/* Design tokens. Restrained, warm neutrals with a single pine accent. */
-:root {
+/*
+ * Design tokens. Restrained, warm neutrals with a single pine accent.
+ * .light-only keeps a page in these light colours even in dark mode (the landing page, for now).
+ */
+:root,
+.light-only {
   --bg: #fafaf8;
   --surface: #ffffff;
   --surface-2: #f3f3ef;
@@ -36,6 +40,9 @@
   --chart-2: #4f9474;
   --chart-3: #a3d1b8;
   --meter-low: #c58a2b;
+}
+.light-only {
+  color-scheme: light;
 }
 
 /*
