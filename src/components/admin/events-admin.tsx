@@ -88,12 +88,25 @@ function EventDetails({ event }: { event?: AdminEvent }) {
 }
 
 /** New event page for this partner: name, date, venue, a short description. */
-export function AddEvent({ partnerSlug, who = "admin", onCancel }: { partnerSlug: string; who?: Who; onCancel?: () => void }) {
+export function AddEvent({
+  partnerSlug,
+  who = "admin",
+  onCancel,
+  onAdded,
+}: {
+  partnerSlug: string;
+  who?: Who;
+  onCancel?: () => void;
+  /** Called with the success message; the panel closes and shows it as a toast. */
+  onAdded?: (message: string) => void;
+}) {
   const [state, action, pending] = useActionState(ACTIONS[who].create.bind(null, partnerSlug), {});
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    if (state.ok) form.current?.reset();
-  }, [state]);
+    if (!state.ok) return;
+    form.current?.reset();
+    onAdded?.(state.ok);
+  }, [state, onAdded]);
 
   return (
     <form ref={form} action={action} className="flex flex-col gap-3">
@@ -113,7 +126,7 @@ export function AddEvent({ partnerSlug, who = "admin", onCancel }: { partnerSlug
             Cancel
           </Button>
         )}
-        {(state.error || state.ok) && (
+        {(state.error || (state.ok && !onAdded)) && (
           <p className={cn("text-sm", state.error ? "text-danger" : "text-success")}>{state.error ?? state.ok}</p>
         )}
       </div>
@@ -121,9 +134,18 @@ export function AddEvent({ partnerSlug, who = "admin", onCancel }: { partnerSlug
   );
 }
 
-/** "Add an event" that opens into the form, with Cancel to close it again (Partner tab). */
+/** "Add an event" that opens into the form; Cancel closes it, and so does adding one (Partner tab). */
 export function AddEventPanel({ partnerSlug, who = "team" }: { partnerSlug: string; who?: Who }) {
+  const toast = useToast();
   const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const added = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
   if (!open) {
     return (
       <button
@@ -140,7 +162,7 @@ export function AddEventPanel({ partnerSlug, who = "team" }: { partnerSlug: stri
     <div className="rounded-xl border border-border">
       <p className="border-b border-border px-4 py-3 font-medium text-ink">Add an event</p>
       <div className="p-4">
-        <AddEvent partnerSlug={partnerSlug} who={who} onCancel={() => setOpen(false)} />
+        <AddEvent partnerSlug={partnerSlug} who={who} onCancel={close} onAdded={added} />
       </div>
     </div>
   );

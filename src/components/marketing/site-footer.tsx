@@ -33,7 +33,7 @@ export async function SiteFooter({ wide = false }: { wide?: boolean }) {
 
   return (
     <footer className="bg-surface text-ink">
-      <div className={`mx-auto flex flex-col gap-12 py-14 sm:py-16 lg:flex-row lg:justify-between ${wide ? "max-w-4xl px-5 sm:px-10" : "max-w-6xl px-4 sm:px-6"}`}>
+      <div className={`mx-auto flex flex-col gap-12 py-14 sm:py-16 lg:flex-row lg:justify-between ${wide ? "max-w-[68.5rem] px-5 sm:px-10" : "max-w-6xl px-4 sm:px-6"}`}>
         <div className="flex flex-col gap-6">
           <a href="/home" className="inline-flex items-center gap-2 font-semibold tracking-tight">
             <LogoMark />
@@ -80,7 +80,7 @@ export async function SiteFooter({ wide = false }: { wide?: boolean }) {
           ))}
         </div>
       </div>
-      <div className={`mx-auto flex flex-wrap items-center justify-between gap-4 py-6 text-sm text-ink-3 ${wide ? "max-w-4xl px-5 sm:px-10" : "max-w-6xl px-4 sm:px-6"}`}>
+      <div className={`mx-auto flex flex-wrap items-center justify-between gap-4 py-6 text-sm text-ink-3 ${wide ? "max-w-[68.5rem] px-5 sm:px-10" : "max-w-6xl px-4 sm:px-6"}`}>
         <span>© {new Date().getFullYear()} {COMPANY_NAME} ({COMPANY_RC}). All rights reserved.</span>
       </div>
     </footer>
