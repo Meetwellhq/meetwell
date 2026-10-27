@@ -107,10 +107,16 @@ export function Journey({
 }: {
   moments: { title: string; body: string; steps: Step[]; visual: ReactNode; tint: string }[];
 }) {
+  // Each card sticks a little lower than the one before, so as you scroll they
+  // stack like a deck (each earlier card's top edge peeks out above the next).
   return (
-    <ol className="flex flex-col gap-3">
+    <ol className="flex flex-col gap-8 pb-8">
       {moments.map((m, i) => (
-        <li key={m.title} className="grid items-center gap-8 rounded-[1.25rem] border border-border bg-surface p-6 sm:p-8 lg:grid-cols-[1fr_22rem] lg:gap-12">
+        <li
+          key={m.title}
+          style={{ top: `calc(5.5rem + ${i} * 1.75rem)` }}
+          className="sticky grid min-h-[26rem] items-center gap-8 rounded-[1.25rem] border border-border bg-surface p-6 shadow-[0_-8px_30px_-12px_rgb(0_0_0/0.15)] sm:p-10 lg:grid-cols-[1fr_26rem] lg:gap-14"
+        >
           <div>
             <p className="text-sm font-medium text-accent">Step {i + 1}</p>
             <h3 className="mt-1 font-display text-3xl leading-tight tracking-tight text-ink sm:text-4xl">{m.title}</h3>
@@ -126,7 +132,7 @@ export function Journey({
               ))}
             </ul>
           </div>
-          <div className={cn("flex min-h-44 items-center justify-center rounded-[1rem] p-5", m.tint)} aria-hidden>
+          <div className={cn("flex min-h-64 items-center justify-center rounded-[1rem] p-6 sm:min-h-72", m.tint)} aria-hidden>
             {m.visual}
           </div>
         </li>

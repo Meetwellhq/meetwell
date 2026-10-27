@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { BetaBanner } from "@/components/marketing/beta-banner";
 import { DemoVideoButton } from "@/components/marketing/demo-video-button";
-import { HeroPhoto } from "@/components/marketing/hero-photo";
 import { FeatureTabs } from "@/components/marketing/feature-tabs";
 import { HighlightsStrip, Journey, MomentsStrip, Panel } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
@@ -79,13 +78,13 @@ const moments = [
       { icon: QrCode, text: "Get a QR code that never changes" },
     ],
     visual: (
-      <span className="flex w-full max-w-[16rem] items-center gap-3 rounded-2xl bg-surface p-4 shadow-sm">
-        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold text-accent">AO</span>
+      <span className="flex w-full max-w-[20rem] items-center gap-3.5 rounded-2xl bg-surface p-5 shadow-md">
+        <span className="grid size-14 shrink-0 place-items-center rounded-full bg-accent-soft text-base font-semibold text-accent">AO</span>
         <span className="min-w-0 flex-1">
           <span className="block text-[15px] font-semibold text-ink">Amara Okafor</span>
           <span className="block truncate text-xs text-ink-2">Product Designer · Studio North</span>
         </span>
-        <QrCode className="size-6 shrink-0 text-ink" />
+        <QrCode className="size-8 shrink-0 text-ink" />
       </span>
     ),
     tint: "bg-sage",
@@ -99,12 +98,12 @@ const moments = [
       { icon: BookUser, text: "Signed in? They land in your Contacts too" },
     ],
     visual: (
-      <span className="flex w-full max-w-[16rem] flex-col gap-2">
-        <span className="flex items-center gap-2 rounded-xl bg-surface px-3.5 py-2.5 text-sm text-ink shadow-sm">
+      <span className="flex w-full max-w-[20rem] flex-col gap-2">
+        <span className="flex items-center gap-2 rounded-xl bg-surface px-4 py-3.5 text-[15px] text-ink shadow-md">
           <Check className="size-4 text-accent" />
           Contact saved
         </span>
-        <span className="ml-6 flex items-center gap-2 rounded-xl bg-surface px-3.5 py-2.5 text-sm text-ink shadow-sm">
+        <span className="ml-6 flex items-center gap-2 rounded-xl bg-surface px-4 py-3.5 text-[15px] text-ink shadow-md">
           <BookUser className="size-4 text-accent" />
           Added to Contacts
         </span>
@@ -121,7 +120,7 @@ const moments = [
       { icon: Repeat, text: "See who saved your card, and save them back" },
     ],
     visual: (
-      <span className="w-full max-w-[16rem] rounded-2xl rounded-bl-md bg-surface p-4 text-sm leading-relaxed text-ink shadow-sm">
+      <span className="w-full max-w-[20rem] rounded-2xl rounded-bl-md bg-surface p-5 text-[15px] leading-relaxed text-ink shadow-md">
         Hi Amara, great meeting you at Design Day. I&apos;d love to hear how your team runs research.
       </span>
     ),
@@ -173,26 +172,11 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             <HighlightsStrip items={spark ? highlights : highlights.filter((h) => h.label !== "AI introductions")} />
           </div>
 
-          {/* Phone illustration below the text; hidden on mobile. */}
-          <div className="mx-3 mt-12 hidden sm:mx-10 sm:block lg:mx-16">
-            <HeroPhoto />
-          </div>
-          <div className="h-3 sm:h-10 lg:h-16" />
-        </Panel>
-
-        {/* Every feature in one tabbed showcase (Calendly-style). */}
-        <Panel id="how-it-works">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
-              Everything after hello, in one place.
-            </h2>
-            <p className="mx-auto mt-4 max-w-lg text-[17px] leading-relaxed text-ink-2">
-              Share your card, help people write to you, keep everyone you meet, and see what works.
-            </p>
-          </div>
-          <div className="mt-10 sm:mt-12">
+          {/* Every feature in one tabbed showcase (Calendly-style), right under the hero text. */}
+          <div id="how-it-works" className="mx-3 mt-12 scroll-mt-20 sm:mx-10 lg:mx-16">
             <FeatureTabs qrSvg={qr} spark={spark} />
           </div>
+          <div className="h-3 sm:h-10 lg:h-16" />
         </Panel>
 
         {/* Before, during and after you meet. */}
