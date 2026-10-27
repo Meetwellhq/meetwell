@@ -201,7 +201,11 @@ every migration.
   `/subscribe/<card>?event=` and `start_subscription_purchase(p_slug, p_event)`, which stores `payments.event_id` only if
   the mentor speaks at that active event. Such a payment earns the **event's** partner 10% for 12 months after the event's last day (`20261206000000_event_share_12_months.sql`; after that the normal sign-up rule applies), even if
   the mentor joined through another partner or none. Admins create events and add speakers (email or card link) on
-  `/admin/partners/<slug>`; partner teams see their events on the Partner tab (`my_partner_events`).
+  `/admin/partners/<slug>`; partner teams see their events on the Partner tab (`my_partner_events`). Partner teams can also
+  create events (live at once), edit them and add or remove speakers there (`20261210000000_partner_manage_events.sql`,
+  `src/lib/partners/actions.ts`, the shared `EventCard` with `who="team"`); deleting and hiding stay admin-only. Speakers
+  are added straight away (Rasheed's choice, 27 Oct 2026). Partners never see a speaker's email: the server gets it from
+  `claim_event_speaker_email` (cron secret), once per speaker per event (`event_speaker_emails`, kept after removal).
 - **Outreach tracker**: `/admin/outreach` (`20261113000000_outreach.sql`, `src/lib/outreach.ts`). Rasheed adds
   people he finds on X one at a time or by pasting a list (one per line: handle or link, optional name and note;
   `parseOutreachList`); names are optional ("Hi there") and editable. Each person gets a single-use access code (60 days), a "Copy message"

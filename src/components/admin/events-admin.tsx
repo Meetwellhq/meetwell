@@ -4,7 +4,7 @@ import { Download, ExternalLink, Pencil, Trash2, X } from "lucide-react";
 import { useActionState, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { Field, Input } from "@/components/ui/field";
+import { Field, Input, Textarea } from "@/components/ui/field";
 import { Badge } from "@/components/ui/misc";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -16,6 +16,22 @@ import {
   adminUpdateEvent,
 } from "@/lib/admin/actions";
 import { cn } from "@/lib/cn";
+import {
+  partnerAddEventSpeaker,
+  partnerCreateEvent,
+  partnerRemoveEventSpeaker,
+  partnerUpdateEvent,
+} from "@/lib/partners/actions";
+
+/**
+ * The same event tools for admins and for a partner's own team (Partner tab).
+ * Partners can't hide or delete events; their actions check team membership.
+ */
+const ACTIONS = {
+  admin: { create: adminCreateEvent, update: adminUpdateEvent, add: adminAddEventSpeaker, remove: adminRemoveEventSpeaker },
+  team: { create: partnerCreateEvent, update: partnerUpdateEvent, add: partnerAddEventSpeaker, remove: partnerRemoveEventSpeaker },
+};
+type Who = keyof typeof ACTIONS;
 
 export type AdminEvent = {
   slug: string;
@@ -32,9 +48,48 @@ export type AdminEvent = {
   free_conversations?: number;
 };
 
-/** New event page for this partner: name, dates, venue, a short description. */
-export function AddEvent({ partnerSlug }: { partnerSlug: string }) {
-  const [state, action, pending] = useActionState(adminCreateEvent.bind(null, partnerSlug), {});
+/**
+ * Date, About and Venue, after the name and link fields. One date per event;
+ * About is a big box that fills the right column next to Date and Venue.
+ */
+function EventDetails({ event }: { event?: AdminEvent }) {
+  return (
+    <>
+      <Field label="Date">
+        {({ id }) => <Input id={id} name="startsOn" type="date" required defaultValue={event?.starts_on} />}
+      </Field>
+      <Field label="About" hint="Optional. A few lines about the event." className="sm:row-span-2">
+        {({ id, describedBy }) => (
+          <Textarea
+            id={id}
+            aria-describedby={describedBy}
+            name="about"
+            maxLength={600}
+            defaultValue={event?.about ?? ""}
+            placeholder={event ? undefined : "A day of talks on product design in Africa."}
+            className="min-h-28 flex-1 resize-none"
+          />
+        )}
+      </Field>
+      <Field label="Venue" hint="Optional.">
+        {({ id, describedBy }) => (
+          <Input
+            id={id}
+            aria-describedby={describedBy}
+            name="venue"
+            maxLength={120}
+            defaultValue={event?.venue ?? ""}
+            placeholder={event ? undefined : "Landmark Centre, Lagos"}
+          />
+        )}
+      </Field>
+    </>
+  );
+}
+
+/** New event page for this partner: name, date, venue, a short description. */
+export function AddEvent({ partnerSlug, who = "admin" }: { partnerSlug: string; who?: Who }) {
+  const [state, action, pending] = useActionState(ACTIONS[who].create.bind(null, partnerSlug), {});
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state.ok) form.current?.reset();
@@ -49,18 +104,7 @@ export function AddEvent({ partnerSlug }: { partnerSlug: string }) {
         <Field label="Link name" hint="Optional. Made from the name if you leave it empty.">
           {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="slug" maxLength={40} placeholder="e.g. design-summit-2026" />}
         </Field>
-        <Field label="Starts">
-          {({ id }) => <Input id={id} name="startsOn" type="date" required />}
-        </Field>
-        <Field label="Ends" hint="Optional, for events over more than one day.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="endsOn" type="date" />}
-        </Field>
-        <Field label="Venue" hint="Optional.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="venue" maxLength={120} placeholder="Landmark Centre, Lagos" />}
-        </Field>
-        <Field label="About" hint="Optional. One or two sentences.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="about" maxLength={600} placeholder="A day of talks on product design in Africa." />}
-        </Field>
+        <EventDetails />
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" loading={pending}>Add event</Button>
@@ -73,8 +117,8 @@ export function AddEvent({ partnerSlug }: { partnerSlug: string }) {
 }
 
 /** Edit an event in place. The link name can't change: QR codes may already be printed. */
-function EditEvent({ event, onDone }: { event: AdminEvent; onDone: () => void }) {
-  const [state, action, pending] = useActionState(adminUpdateEvent.bind(null, event.slug), {});
+function EditEvent({ event, who, onDone }: { event: AdminEvent; who: Who; onDone: () => void }) {
+  const [state, action, pending] = useActionState(ACTIONS[who].update.bind(null, event.slug), {});
   useEffect(() => {
     if (state.ok) onDone();
   }, [state, onDone]);
@@ -88,18 +132,7 @@ function EditEvent({ event, onDone }: { event: AdminEvent; onDone: () => void })
         <Field label="Link name" hint="Stays the same, so printed QR codes keep working.">
           {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} value={event.slug} disabled readOnly />}
         </Field>
-        <Field label="Starts">
-          {({ id }) => <Input id={id} name="startsOn" type="date" required defaultValue={event.starts_on} />}
-        </Field>
-        <Field label="Ends" hint="Optional, for events over more than one day.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="endsOn" type="date" defaultValue={event.ends_on ?? ""} />}
-        </Field>
-        <Field label="Venue" hint="Optional.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="venue" maxLength={120} defaultValue={event.venue ?? ""} />}
-        </Field>
-        <Field label="About" hint="Optional. One or two sentences.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="about" maxLength={600} defaultValue={event.about ?? ""} />}
-        </Field>
+        <EventDetails event={event} />
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" size="sm" loading={pending}>Save changes</Button>
@@ -110,8 +143,8 @@ function EditEvent({ event, onDone }: { event: AdminEvent; onDone: () => void })
   );
 }
 
-function AddSpeaker({ eventSlug }: { eventSlug: string }) {
-  const [state, action, pending] = useActionState(adminAddEventSpeaker.bind(null, eventSlug), {});
+function AddSpeaker({ eventSlug, who }: { eventSlug: string; who: Who }) {
+  const [state, action, pending] = useActionState(ACTIONS[who].add.bind(null, eventSlug), {});
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state.ok) form.current?.reset();
@@ -133,7 +166,7 @@ function AddSpeaker({ eventSlug }: { eventSlug: string }) {
  * One speaker on an event. Remove hides the row at once (the save takes a moment)
  * and says so; if it fails, the row comes back with the error.
  */
-function SpeakerRow({ eventSlug, speaker: s }: { eventSlug: string; speaker: AdminEvent["speakers"][number] }) {
+function SpeakerRow({ eventSlug, who, speaker: s }: { eventSlug: string; who: Who; speaker: AdminEvent["speakers"][number] }) {
   const toast = useToast();
   const [removed, setRemoved] = useState(false);
   const [, start] = useTransition();
@@ -150,7 +183,7 @@ function SpeakerRow({ eventSlug, speaker: s }: { eventSlug: string; speaker: Adm
         onClick={() => {
           setRemoved(true);
           start(async () => {
-            const { error } = await adminRemoveEventSpeaker(eventSlug, s.slug);
+            const { error } = await ACTIONS[who].remove(eventSlug, s.slug);
             if (error) {
               setRemoved(false);
               toast(error, "error");
@@ -233,8 +266,25 @@ function ActiveToggle({ event }: { event: AdminEvent }) {
   );
 }
 
-/** One event: its page and QR, speakers (add or remove), and the paid messages it brought in. */
-export function EventCard({ event, site, dates, revenue }: { event: AdminEvent; site: string; dates: string; revenue: string }) {
+/**
+ * One event: its page and QR, speakers (add or remove), and what it brought in.
+ * Admins pass the revenue line; a partner's team (who="team") passes its own note.
+ */
+export function EventCard({
+  event,
+  site,
+  dates,
+  revenue,
+  note,
+  who = "admin",
+}: {
+  event: AdminEvent;
+  site: string;
+  dates: string;
+  revenue?: string;
+  note?: string;
+  who?: Who;
+}) {
   const [editing, setEditing] = useState(false);
   const stopEditing = useCallback(() => setEditing(false), []);
   return (
@@ -261,28 +311,35 @@ export function EventCard({ event, site, dates, revenue }: { event: AdminEvent; 
               Edit
             </Button>
           )}
-          <ActiveToggle event={event} />
-          <DeleteEvent event={event} />
+          {who === "admin" && (
+            <>
+              <ActiveToggle event={event} />
+              <DeleteEvent event={event} />
+            </>
+          )}
         </div>
       </div>
 
-      {editing && <EditEvent event={event} onDone={stopEditing} />}
+      {editing && <EditEvent event={event} who={who} onDone={stopEditing} />}
 
-      <p className="text-sm text-ink-2">
-        Paid messages started from this page: <span className="font-medium text-ink">{event.payments}</span> · {revenue} · Free
-        conversations: <span className="font-medium text-ink">{event.free_conversations ?? 0}</span>
-      </p>
+      {revenue !== undefined && (
+        <p className="text-sm text-ink-2">
+          Paid messages started from this page: <span className="font-medium text-ink">{event.payments}</span> · {revenue} · Free
+          conversations: <span className="font-medium text-ink">{event.free_conversations ?? 0}</span>
+        </p>
+      )}
+      {note && <p className="text-sm text-ink-2">{note}</p>}
 
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium text-ink">Speakers ({event.speakers.length})</p>
         {event.speakers.length > 0 && (
           <ul className="divide-y divide-border rounded-lg border border-border">
             {event.speakers.map((s) => (
-              <SpeakerRow key={s.slug} eventSlug={event.slug} speaker={s} />
+              <SpeakerRow key={s.slug} eventSlug={event.slug} who={who} speaker={s} />
             ))}
           </ul>
         )}
-        <AddSpeaker eventSlug={event.slug} />
+        <AddSpeaker eventSlug={event.slug} who={who} />
       </div>
     </li>
   );

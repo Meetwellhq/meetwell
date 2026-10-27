@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AddEvent, EventCard, type AdminEvent } from "@/components/admin/events-admin";
 import { CopyPartnerLink } from "@/components/dashboard/copy-partner-link";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, Card } from "@/components/ui/misc";
@@ -29,7 +30,33 @@ const naira = (kobo: number) =>
 
 const joined = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-type PartnerEvent = { partner_name: string; slug: string; name: string; starts_on: string; active: boolean; speakers: number; conversations?: number };
+type PartnerEvent = {
+  partner_name: string;
+  slug: string;
+  name: string;
+  starts_on: string;
+  active: boolean;
+  speakers: number;
+  conversations?: number;
+  ends_on?: string | null;
+  venue?: string | null;
+  about?: string | null;
+  speaker_list?: AdminEvent["speakers"];
+};
+
+/** The shape the shared event card takes. Partners don't see payment amounts. */
+const asCard = (e: PartnerEvent): AdminEvent => ({
+  slug: e.slug,
+  name: e.name,
+  starts_on: e.starts_on,
+  ends_on: e.ends_on ?? null,
+  venue: e.venue ?? null,
+  about: e.about ?? null,
+  active: e.active,
+  speakers: e.speaker_list ?? [],
+  payments: 0,
+  revenue_kobo: 0,
+});
 
 /**
  * For a partner's team (an event platform such as ThinkUX): their invite link
@@ -82,34 +109,51 @@ export default async function PartnerPage() {
               </p>
             </Card>
 
-            {allEvents.some((e) => e.partner_name === partner.name) && (
-              <Card className="flex flex-col gap-3 p-5 sm:p-6">
-                <div>
-                  <h2 className="font-semibold">Your event pages</h2>
-                  <p className="mt-1 text-sm text-ink-2">
-                    Every speaker&apos;s card in one place. Put the QR code on your slides, and speakers&apos; QR codes on
-                    their badges.
-                  </p>
-                </div>
-                <ul className="divide-y divide-border rounded-lg border border-border">
-                  {allEvents
-                    .filter((e) => e.partner_name === partner.name)
-                    .map((e) => (
-                      <li key={e.slug} className="flex flex-col gap-1 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                        <span className="min-w-0">
-                          <Link href={`/e/${e.slug}`} className="font-medium text-ink hover:underline">{e.name}</Link>
-                          <span className="block text-xs text-ink-3">
-                            {eventDates(e.starts_on, null)} · {e.speakers} {e.speakers === 1 ? "speaker" : "speakers"}
-                            {typeof e.conversations === "number" && <> · {e.conversations} {e.conversations === 1 ? "conversation" : "conversations"} started</>}
-                            {!e.active && " · hidden"}
-                          </span>
-                        </span>
-                        <a href={`/e/${e.slug}/qr`} className="text-sm text-accent hover:underline">Download event QR</a>
-                      </li>
+            <Card className="flex flex-col gap-4 p-5 sm:p-6">
+              <div>
+                <h2 className="font-semibold">Your event pages</h2>
+                <p className="mt-1 text-sm text-ink-2">
+                  Every speaker&apos;s card in one place. Put the event QR code on your slides, and each speaker&apos;s QR
+                  code on their badge. New pages go live straight away.
+                </p>
+              </div>
+              {(() => {
+                const mine = allEvents.filter((e) => e.partner_name === partner.name);
+                return mine.length > 0 ? (
+                  <ul className="flex flex-col gap-3">
+                    {mine.map((e) => (
+                      <EventCard
+                        key={e.slug}
+                        who="team"
+                        event={asCard(e)}
+                        site={getSiteUrl()}
+                        dates={eventDates(e.starts_on, e.ends_on ?? null)}
+                        note={
+                          typeof e.conversations === "number"
+                            ? `${e.conversations} ${e.conversations === 1 ? "conversation" : "conversations"} started from this page`
+                            : undefined
+                        }
+                      />
                     ))}
-                </ul>
-              </Card>
-            )}
+                  </ul>
+                ) : (
+                  <p className="rounded-lg bg-surface-2 px-4 py-6 text-center text-sm text-ink-2">
+                    No events yet. Add your first one below.
+                  </p>
+                );
+              })()}
+              {partner.active && (
+                <details className="group rounded-xl border border-border">
+                  <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-medium text-ink [&::-webkit-details-marker]:hidden">
+                    Add an event
+                    <span className="text-sm text-ink-3 group-open:hidden">Name, dates, venue</span>
+                  </summary>
+                  <div className="border-t border-border p-4">
+                    <AddEvent partnerSlug={partner.slug} who="team" />
+                  </div>
+                </details>
+              )}
+            </Card>
 
             <dl className="grid grid-cols-3 gap-3">
               {[

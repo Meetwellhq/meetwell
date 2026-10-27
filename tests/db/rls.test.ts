@@ -1899,6 +1899,63 @@ describe("partner event pages", () => {
     expect(await as(BOB, "select * from public.my_partner_events()")).toEqual([]);
     await expect(as(null, "select * from public.my_partner_events()")).rejects.toThrow(/permission denied/);
   });
+
+  it("lets a partner's team create and edit its own events, live at once", async () => {
+    await expect(as(BOB, "select public.partner_create_event('thinkux', 'tux-meetup', 'Meetup', '2026-12-10')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.partner_create_event('thinkux', 'tux-meetup', 'Meetup', '2026-12-10')")).rejects.toThrow(/permission denied/);
+    await expect(as(TEAM, "select public.partner_create_event('techcabal', 'tux-meetup', 'Meetup', '2026-12-10')")).rejects.toThrow(/Not allowed/);
+    await as(TEAM, "select public.partner_create_event('ThinkUX', 'tux-meetup', ' ThinkUX Meetup ', '2026-12-10', null, 'Yaba', '')");
+    expect(await as(null, "select name, venue, partner_name from public.public_event('tux-meetup')")).toEqual([
+      { name: "ThinkUX Meetup", venue: "Yaba", partner_name: "ThinkUX" },
+    ]);
+
+    await as(TEAM, "select public.partner_update_event('tux-meetup', 'ThinkUX Meetup 2026', '2026-12-11')");
+    expect((await db.query("select name, starts_on::text as d, venue from public.partner_events where slug = 'tux-meetup'")).rows).toEqual([
+      { name: "ThinkUX Meetup 2026", d: "2026-12-11", venue: null },
+    ]);
+    // Not another partner's event, and not for strangers.
+    await expect(as(TEAM, "select public.partner_update_event('tc-summit', 'Hacked', '2026-11-20')")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select public.partner_update_event('tux-meetup', 'Hacked', '2026-12-11')")).rejects.toThrow(/Not allowed/);
+    // A paused partner can't add events.
+    await db.query("update public.partners set active = false where slug = 'thinkux'");
+    await expect(as(TEAM, "select public.partner_create_event('thinkux', 'tux-paused', 'X', '2026-12-10')")).rejects.toThrow(/Not allowed/);
+    await db.query("update public.partners set active = true where slug = 'thinkux'");
+  });
+
+  it("lets a partner's team add and remove speakers without seeing their email, and emails each speaker once", async () => {
+    const SECRET = "test-secret-that-is-long-enough-1234567890"; // stored by the reminders tests
+    await expect(as(TEAM, "select * from public.partner_add_event_speaker('tc-summit', 'partner-speaker')")).rejects.toThrow(/Not allowed/);
+    await expect(as(TEAM, "select * from public.partner_add_event_speaker('tux-meetup', 'nobody@x.test')")).rejects.toThrow(/No card found/);
+    const [first] = await as<Record<string, unknown>>(TEAM, "select * from public.partner_add_event_speaker('tux-meetup', 'SPEAKER@partner.test')");
+    expect(first).toEqual({ full_name: "Test Person", profile_slug: "partner-speaker", card_status: "published", added: true });
+    const [again] = await as<{ added: boolean }>(TEAM, "select added from public.partner_add_event_speaker('tux-meetup', 'partner-speaker')");
+    expect(again.added).toBe(false);
+
+    const [mine] = await as<{ speaker_list: unknown; partner_slug: string }>(TEAM, "select speaker_list, partner_slug from public.my_partner_events() where slug = 'tux-meetup'");
+    expect(mine).toEqual({ partner_slug: "thinkux", speaker_list: [{ slug: "partner-speaker", full_name: "Test Person", status: "published", mentor: true }] });
+
+    // The email address only comes from the server-only claim, once.
+    const claim = `select email, event_name from public.claim_event_speaker_email('${SECRET}', 'tux-meetup', 'partner-speaker')`;
+    await expect(as(TEAM, "select * from public.claim_event_speaker_email('wrong', 'tux-meetup', 'partner-speaker')")).rejects.toThrow();
+    expect(await as(null, claim)).toEqual([{ email: "speaker@partner.test", event_name: "ThinkUX Meetup 2026" }]);
+    expect(await as(null, claim)).toEqual([]);
+    // Removed and added again: still no second email.
+    await expect(as(TEAM, "select public.partner_remove_event_speaker('tc-summit', 'partner-speaker')")).rejects.toThrow(/Not allowed/);
+    await as(TEAM, "select public.partner_remove_event_speaker('tux-meetup', 'partner-speaker')");
+    expect(await as(null, "select * from public.public_event_speakers('tux-meetup')")).toEqual([]);
+    await as(TEAM, "select * from public.partner_add_event_speaker('tux-meetup', 'partner-speaker')");
+    expect(await as(null, claim)).toEqual([]);
+    // Nothing to claim for someone who isn't a speaker there.
+    expect(await as(null, `select * from public.claim_event_speaker_email('${SECRET}', 'tc-summit', 'nobody')`)).toEqual([]);
+
+    // A speaker an admin added (and emailed) isn't emailed again through the partner.
+    await as(ALICE, "select public.admin_create_event('thinkux', 'tux-admin', 'Admin Day', '2026-12-12')");
+    await as(ALICE, "select * from public.admin_add_event_speaker_details('tux-admin', 'partner-speaker')");
+    expect(await as(null, `select * from public.claim_event_speaker_email('${SECRET}', 'tux-admin', 'partner-speaker')`)).toEqual([]);
+
+    await as(ALICE, "select public.admin_delete_event('tux-admin')");
+    await as(ALICE, "select public.admin_delete_event('tux-meetup')");
+  });
 });
 
 describe("Spark switch", () => {

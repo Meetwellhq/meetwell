@@ -19,7 +19,7 @@ import { isSparkOn } from "../spark";
 import { createClient, getCurrentUser } from "../supabase/server";
 import { parseOutreachList, xHandle } from "../outreach";
 import { emailSchema } from "../validation";
-import { eventDates } from "../events";
+import { eventDates, linkName as partnerSlug } from "../events";
 
 export type InviteState = { ok?: boolean; error?: string };
 
@@ -334,16 +334,6 @@ export async function adminDeleteOutreach(id: number): Promise<{ error?: string 
   if (error) return { error: "Couldn't remove them." };
   revalidatePath("/admin", "layout");
   return {};
-}
-
-/** Turn a partner's name into its link name: "Think UX!" → "think-ux". */
-function partnerSlug(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40)
-    .replace(/-+$/, "");
 }
 
 /** Add a partner (an event platform). Its invite link is /join?partner=<slug>. */
