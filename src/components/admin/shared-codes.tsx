@@ -34,15 +34,15 @@ export function CreateSharedCode() {
     <form ref={form} action={action} className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Name" hint="Only you see this.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="note" required maxLength={120} placeholder="DevFest Abeokuta 2026" />}
+          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="note" required maxLength={120} placeholder="e.g. DevFest Abeokuta 2026" />}
         </Field>
         <Field label="Code" hint="What people type. Letters, numbers and dashes.">
           {({ id, describedBy }) => (
-            <Input id={id} aria-describedby={describedBy} name="code" required minLength={6} maxLength={32} placeholder="DEVFESTABK" className="uppercase" />
+            <Input id={id} aria-describedby={describedBy} name="code" required minLength={6} maxLength={32} placeholder="e.g. devfestabk" className="uppercase placeholder:normal-case" />
           )}
         </Field>
         <Field label="How many people" hint="It stops working after this many sign-ups.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="maxUses" type="number" min={1} max={100000} required placeholder="500" />}
+          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="maxUses" type="number" min={1} max={100000} required placeholder="e.g. 500" />}
         </Field>
         <Field label="Last day" hint="It works until the end of this day, Lagos time.">
           {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="endsOn" type="date" required />}
