@@ -95,3 +95,64 @@ export function ScanVisual({ qrSvg }: { qrSvg: string }) {
     </div>
   );
 }
+
+type Step = { icon: LucideIcon; text: string };
+
+/**
+ * Before, during and after you meet (after Calendly's stacked step cards): each
+ * moment with a short checklist and a small picture of what happens.
+ */
+export function Journey({
+  moments,
+}: {
+  moments: { title: string; body: string; steps: Step[]; visual: ReactNode; tint: string }[];
+}) {
+  return (
+    <ol className="flex flex-col gap-3">
+      {moments.map((m, i) => (
+        <li key={m.title} className="grid items-center gap-8 rounded-[1.25rem] border border-border bg-surface p-6 sm:p-8 lg:grid-cols-[1fr_22rem] lg:gap-12">
+          <div>
+            <p className="text-sm font-medium text-accent">Step {i + 1}</p>
+            <h3 className="mt-1 font-display text-3xl leading-tight tracking-tight text-ink sm:text-4xl">{m.title}</h3>
+            <p className="mt-3 max-w-lg text-[16px] leading-relaxed text-ink-2">{m.body}</p>
+            <ul className="mt-5 flex flex-col gap-2.5">
+              {m.steps.map((s) => (
+                <li key={s.text} className="flex items-center gap-3 text-[15px] text-ink">
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
+                    <s.icon className="size-4" aria-hidden />
+                  </span>
+                  {s.text}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className={cn("flex min-h-44 items-center justify-center rounded-[1rem] p-5", m.tint)} aria-hidden>
+            {m.visual}
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Things that happen on Meetwell, drifting by on the closing banner. */
+export function MomentsStrip({ items }: { items: string[] }) {
+  const row = (hidden: boolean) => (
+    <ul className="flex shrink-0 items-center gap-3 pr-3" aria-hidden={hidden || undefined}>
+      {items.map((label) => (
+        <li key={label} className="flex items-center gap-2 whitespace-nowrap rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white">
+          <span className="size-1.5 rounded-full bg-[#75e0a7]" aria-hidden />
+          {label}
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
+      <div className="flex w-max animate-marquee motion-reduce:animate-none">
+        {row(false)}
+        {row(true)}
+      </div>
+    </div>
+  );
+}

@@ -4,13 +4,18 @@ import {
   Briefcase,
   ChartLine,
   Camera,
+  Check,
+  EyeOff,
+  IdCard,
   Gift,
   GraduationCap,
   Lightbulb,
   MessageSquareText,
   Mic,
   QrCode,
+  Repeat,
   Rocket,
+  ScanLine,
   Smartphone,
   Sparkles,
   Ticket,
@@ -18,10 +23,10 @@ import {
   Wallet,
 } from "lucide-react";
 import { BetaBanner } from "@/components/marketing/beta-banner";
-import { AnalyticsPreview, ContactsPreview, EventPreview, MentorPreview, SparkPreview, StarterPreview } from "@/components/marketing/card-preview";
 import { DemoVideoButton } from "@/components/marketing/demo-video-button";
 import { HeroPhoto } from "@/components/marketing/hero-photo";
-import { Feature, HighlightsStrip, Panel, ScanVisual } from "@/components/marketing/landing";
+import { FeatureTabs } from "@/components/marketing/feature-tabs";
+import { HighlightsStrip, Journey, MomentsStrip, Panel } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink } from "@/components/ui/button";
@@ -63,6 +68,70 @@ const useCases = [
   { icon: GraduationCap, title: "Students & job seekers", body: "Give recruiters a card they can use." },
 ];
 
+// Before, during and after you meet. The small pictures are illustrations, not real people.
+const moments = [
+  {
+    title: "Before you go",
+    body: "Make your card once. It's yours to share anywhere.",
+    steps: [
+      { icon: IdCard, text: "Add your photo, title and links" },
+      { icon: EyeOff, text: "Choose what's public and what stays private" },
+      { icon: QrCode, text: "Get a QR code that never changes" },
+    ],
+    visual: (
+      <span className="flex w-full max-w-[16rem] items-center gap-3 rounded-2xl bg-surface p-4 shadow-sm">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold text-accent">AO</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold text-ink">Amara Okafor</span>
+          <span className="block truncate text-xs text-ink-2">Product Designer · Studio North</span>
+        </span>
+        <QrCode className="size-6 shrink-0 text-ink" />
+      </span>
+    ),
+    tint: "bg-sage",
+  },
+  {
+    title: "When you meet",
+    body: "They scan your code with their camera. No app, no typing.",
+    steps: [
+      { icon: ScanLine, text: "Your card opens on their phone" },
+      { icon: UserRoundPlus, text: "They save you to their contacts in one tap" },
+      { icon: BookUser, text: "Signed in? They land in your Contacts too" },
+    ],
+    visual: (
+      <span className="flex w-full max-w-[16rem] flex-col gap-2">
+        <span className="flex items-center gap-2 rounded-xl bg-surface px-3.5 py-2.5 text-sm text-ink shadow-sm">
+          <Check className="size-4 text-accent" />
+          Contact saved
+        </span>
+        <span className="ml-6 flex items-center gap-2 rounded-xl bg-surface px-3.5 py-2.5 text-sm text-ink shadow-sm">
+          <BookUser className="size-4 text-accent" />
+          Added to Contacts
+        </span>
+      </span>
+    ),
+    tint: "bg-clay",
+  },
+  {
+    title: "After the event",
+    body: "The part that usually gets lost. Meetwell makes it easy.",
+    steps: [
+      { icon: MessageSquareText, text: "Icebreaker drafts their first message to you" },
+      { icon: ChartLine, text: "See how many people viewed and saved you" },
+      { icon: Repeat, text: "See who saved your card, and save them back" },
+    ],
+    visual: (
+      <span className="w-full max-w-[16rem] rounded-2xl rounded-bl-md bg-surface p-4 text-sm leading-relaxed text-ink shadow-sm">
+        Hi Amara, great meeting you at Design Day. I&apos;d love to hear how your team runs research.
+      </span>
+    ),
+    tint: "bg-sage",
+  },
+];
+
+// What happens on Meetwell, drifting past on the closing banner.
+const happenings = ["Card scanned", "Contact saved", "First message sent", "Saved you back", "Mentor messaged", "Badge QR scanned", "Note added"];
+
 export default async function LandingPage({ searchParams }: PageProps<"/">) {
   const [signedIn, qr, { deleted }, spark] = await Promise.all([
     isSignedIn(),
@@ -97,6 +166,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               </ButtonLink>
               <DemoVideoButton />
             </div>
+            <p className="mt-4 text-sm text-ink-3">Free · No app needed · Works with any phone camera</p>
           </div>
 
           <div className="mt-12">
@@ -110,143 +180,38 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           <div className="h-3 sm:h-10 lg:h-16" />
         </Panel>
 
-        {/* Scan */}
+        {/* Every feature in one tabbed showcase (Calendly-style). */}
         <Panel id="how-it-works">
-          <Feature
-            title={<>One scan. No app. No typing.</>}
-            body={
-              <p>
-                People scan your code with their camera and your card opens. Nothing to install.
-              </p>
-            }
-            action={<ButtonLink href={cta}>
-                {ctaLabel}
-                <ArrowRight className="size-4" aria-hidden />
-              </ButtonLink>}
-            visual={<ScanVisual qrSvg={qr} />}
-            visualClassName="bg-sage"
-          />
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
+              Everything after hello, in one place.
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-[17px] leading-relaxed text-ink-2">
+              Share your card, help people write to you, keep everyone you meet, and see what works.
+            </p>
+          </div>
+          <div className="mt-10 sm:mt-12">
+            <FeatureTabs qrSvg={qr} spark={spark} />
+          </div>
         </Panel>
 
-        {/* Connect */}
+        {/* Before, during and after you meet. */}
         <Panel>
-          <Feature
-            reverse
-            title={<>Never stare at a blank message again.</>}
-            body={
-              <p>
-                Visitors get a short first message based on your card, ready to edit and send.
-              </p>
-            }
-            action={<ButtonLink href={cta}>
-                {ctaLabel}
-                <ArrowRight className="size-4" aria-hidden />
-              </ButtonLink>}
-            visual={
-              <div className="w-full max-w-md">
-                <StarterPreview />
-              </div>
-            }
-            visualClassName="bg-clay"
-          />
-        </Panel>
-
-        {/* Contacts */}
-        <Panel>
-          <Feature
-            title={<>Every card you scan, kept.</>}
-            body={
-              <p>
-                Everyone you meet lands in your Contacts, with a note on where you met. Save one to your phone, or
-                export them all. See who saved your card, and save them back.
-              </p>
-            }
-            action={<ButtonLink href={cta}>
-                {ctaLabel}
-                <ArrowRight className="size-4" aria-hidden />
-              </ButtonLink>}
-            visual={<ContactsPreview />}
-            visualClassName="bg-sage"
-          />
-        </Panel>
-
-        {/* Spark: hidden until it launches (admin Overview). */}
-        {spark && <Panel>
-          <Feature
-            reverse
-            title={<>Meet people a few steps ahead.</>}
-            body={
-              <p>
-                Spark uses AI to introduce you to someone with more experience in your field, and tells you why
-                you should talk. One free introduction a month.
-              </p>
-            }
-            action={<ButtonLink href={cta}>
-                {ctaLabel}
-                <ArrowRight className="size-4" aria-hidden />
-              </ButtonLink>}
-            visual={<SparkPreview />}
-            visualClassName="bg-clay"
-          />
-        </Panel>}
-
-        {/* Mentoring: flips sides while Spark is hidden, so the sections keep alternating. */}
-        <Panel>
-          <Feature
-            reverse={!spark}
-            title={<>Get paid for what you know.</>}
-            body={
-              <p>
-                With 4+ years of experience, you can become a mentor. Set your monthly price, answer messages from
-                people earlier in their careers, and keep 80% of every payment.
-              </p>
-            }
-            action={<ButtonLink href={cta}>
-                {ctaLabel}
-                <ArrowRight className="size-4" aria-hidden />
-              </ButtonLink>}
-            visual={<MentorPreview />}
-            visualClassName="bg-sage"
-          />
-        </Panel>
-
-        {/* Analytics and Events keep alternating sides after Mentoring. */}
-        <Panel>
-          <Feature
-            reverse={spark}
-            title={<>See who&apos;s finding you.</>}
-            body={
-              <p>
-                Your dashboard shows how many people viewed your card, scanned your QR code and saved you, day by day.
-                Anonymous totals only, never who they are.
-              </p>
-            }
-            action={<ButtonLink href={cta}>
-                {ctaLabel}
-                <ArrowRight className="size-4" aria-hidden />
-              </ButtonLink>}
-            visual={<AnalyticsPreview />}
-            visualClassName="bg-clay"
-          />
-        </Panel>
-
-        <Panel>
-          <Feature
-            reverse={!spark}
-            title={<>Speaking at an event? Bring your card.</>}
-            body={
-              <p>
-                Event partners put every speaker on one Meetwell page. You get your own QR code for your badge or
-                slides, so people can save you and follow up after your talk.
-              </p>
-            }
-            action={<ButtonLink href="/features/events" variant="secondary">
-                How events work
-                <ArrowRight className="size-4" aria-hidden />
-              </ButtonLink>}
-            visual={<EventPreview />}
-            visualClassName="bg-sage"
-          />
+          <div className="max-w-2xl">
+            <p className="text-sm font-medium uppercase tracking-wider text-accent">How it works</p>
+            <h2 className="mt-2 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
+              From first hello to follow-up.
+            </h2>
+          </div>
+          <div className="mt-10">
+            <Journey moments={moments} />
+          </div>
+          <div className="mt-10">
+            <ButtonLink href={cta}>
+              {ctaLabel}
+              <ArrowRight className="size-4" aria-hidden />
+            </ButtonLink>
+          </div>
         </Panel>
 
         {/* Use cases */}
@@ -282,6 +247,9 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               {ctaLabel}
               <ArrowRight className="size-4" aria-hidden />
             </ButtonLink>
+          </div>
+          <div className="mt-14">
+            <MomentsStrip items={happenings} />
           </div>
         </section>
       </main>
