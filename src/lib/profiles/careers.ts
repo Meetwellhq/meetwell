@@ -62,6 +62,20 @@ export const COMPANIES: Company[] = [
   { name: "Meetwell", aliases: ["Meet Well", "Meet Well Limited", "MeetWell"], logo: "/companies/meetwell.png" },
 ];
 
+/** Kinds of organisation, for people whose work isn't one of the companies above. Still free text. */
+export const ORGANISATION_TYPES: readonly string[] = [
+  "Software community",
+  "Tech community",
+  "NGO",
+  "Non-profit",
+  "Startup",
+  "Agency",
+  "Freelance",
+  "Self-employed",
+  "University",
+  "Government",
+];
+
 const normalise = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 /** The known company for a card's organisation text, if any. */
