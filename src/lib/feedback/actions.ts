@@ -19,9 +19,15 @@ export async function sendFeedback(_prev: FeedbackState, form: FormData): Promis
   if (message.length > 2000) return { error: "Keep it under 2,000 characters." };
 
   const supabase = await createClient();
+  const where = page.startsWith("/") ? page : "/dashboard";
+  // Kept for the admin Ideas page; at most 10 an hour per member.
+  const { error: saveError } = await supabase.rpc("submit_idea", { p_kind: kind, p_message: message, p_page: where });
+  if (saveError?.code === "54000") return { error: "You've sent a lot in the last hour. Please try again later." };
+  if (saveError) console.error("submit_idea failed", saveError.code, saveError.message);
+
   const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
   const name = profile?.full_name?.trim() || user.email;
-
-  const ok = await sendFeedbackEmail(kind as FeedbackKind, message, { name, email: user.email }, page.startsWith("/") ? page : "/dashboard");
-  return ok ? { sent: true } : { error: "That didn't send. Please try again, or email support@meetwell.me." };
+  const emailed = await sendFeedbackEmail(kind as FeedbackKind, message, { name, email: user.email }, where);
+  // Saved or emailed is enough: either way it reaches the team.
+  return emailed || !saveError ? { sent: true } : { error: "That didn't send. Please try again, or email support@meetwell.me." };
 }

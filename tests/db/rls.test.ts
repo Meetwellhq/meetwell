@@ -2000,3 +2000,37 @@ describe("saved your card back emails", () => {
     expect(await as(AMA, "select public.my_saveback_emails() as on")).toEqual([{ on: false }]);
   });
 });
+
+describe("ideas", () => {
+  const MEMBER = "77777777-7777-7777-7777-777777777777"; // still has an account here
+  beforeAll(async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+  });
+
+  it("lets members send ideas, at most 10 an hour, and only admins read them", async () => {
+    await expect(as(null, "select public.submit_idea('idea', 'Hello there', '/dashboard')")).rejects.toThrow(/permission denied/);
+    await expect(as(MEMBER, "select public.submit_idea('wish', 'Hello there')")).rejects.toThrow(/check constraint/);
+    await expect(as(MEMBER, "select public.submit_idea('idea', ' a ')")).rejects.toThrow(/check constraint/);
+    const [{ id }] = await as<{ id: number }>(MEMBER, "select public.submit_idea('idea', '  Dark mode for cards  ', '/dashboard') as id");
+    for (let i = 0; i < 9; i++) await as(MEMBER, "select public.submit_idea('other', 'More of the same', null)");
+    await expect(as(MEMBER, "select public.submit_idea('idea', 'One too many')")).rejects.toThrow(/Too many ideas/);
+
+    await expect(as(MEMBER, "select * from public.admin_list_ideas()")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.ideas")).rejects.toThrow(/permission denied/);
+    await expect(as(MEMBER, "select * from public.ideas")).rejects.toThrow(/permission denied/);
+    const rows = await as<{ id: number; kind: string; message: string; page: string | null; done_at: string | null }>(
+      ALICE, "select id, kind, message, page, done_at from public.admin_list_ideas() where id = $1", [id],
+    );
+    expect(rows).toEqual([{ id, kind: "idea", message: "Dark mode for cards", page: "/dashboard", done_at: null }]);
+  });
+
+  it("lets admins mark an idea done and new again", async () => {
+    const [{ id }] = await as<{ id: number }>(ALICE, "select id from public.admin_list_ideas() where message = 'Dark mode for cards'");
+    await expect(as(MEMBER, `select public.admin_set_idea_done(${id}, true)`)).rejects.toThrow(/Not allowed/);
+    await as(ALICE, `select public.admin_set_idea_done(${id}, true)`);
+    const done = async () => (await as<{ done: boolean }>(ALICE, "select done_at is not null as done from public.admin_list_ideas() where id = $1", [id]))[0].done;
+    expect(await done()).toBe(true);
+    await as(ALICE, `select public.admin_set_idea_done(${id}, false)`);
+    expect(await done()).toBe(false);
+  });
+});

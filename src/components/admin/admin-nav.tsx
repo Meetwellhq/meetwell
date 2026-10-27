@@ -4,6 +4,7 @@ import {
   HandHeart,
   CreditCard,
   LayoutDashboard,
+  Lightbulb,
   ListOrdered,
   LogOut,
   Megaphone,
@@ -20,8 +21,8 @@ import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 
 type Item = { href: string; label: string; icon: LucideIcon; count?: keyof Counts };
-/** Things waiting on the admin: invites to send, open reports, mentor applications plus withdrawals to approve. */
-export type Counts = { waiting: number; reports: number; mentors: number };
+/** Things waiting on the admin: invites to send, open reports, mentor applications plus withdrawals to approve, new ideas. */
+export type Counts = { waiting: number; reports: number; mentors: number; ideas: number };
 
 const SECTIONS: { title: string; items: Item[] }[] = [
   {
@@ -46,6 +47,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     items: [
       { href: "/admin/payments", label: "Payments", icon: CreditCard },
       { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
+      { href: "/admin/ideas", label: "Ideas", icon: Lightbulb, count: "ideas" },
     ],
   },
 ];

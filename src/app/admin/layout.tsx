@@ -17,11 +17,12 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const { data: isAdmin } = await supabase.rpc("is_admin");
   if (isAdmin !== true) notFound();
 
-  const [waitlist, reports, mentors, withdrawals] = await Promise.all([
+  const [waitlist, reports, mentors, withdrawals, ideas] = await Promise.all([
     supabase.rpc("admin_list_waitlist"),
     supabase.rpc("admin_list_reports"),
     supabase.rpc("admin_list_mentors"),
     supabase.rpc("admin_list_withdrawals"),
+    supabase.rpc("admin_list_ideas"),
   ]);
   const count = <T,>(data: unknown, keep: (row: T) => boolean) => ((data ?? []) as T[]).filter(keep).length;
   const counts: Counts = {
@@ -30,6 +31,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     mentors:
       count<{ status: string }>(mentors.data, (r) => r.status === "applied") +
       count<{ status: string }>(withdrawals.data, (r) => r.status === "requested"),
+    ideas: count<{ done_at: string | null }>(ideas.data, (r) => !r.done_at),
   };
 
   return (

@@ -429,6 +429,15 @@ export async function adminCreateEvent(partnerSlugValue: string, _: AdminFormSta
   return { ok: `Added ${name}. Now add its speakers.` };
 }
 
+/** Mark a member's idea done (or new again) on the admin Ideas page. */
+export async function adminSetIdeaDone(id: number, done: boolean): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_set_idea_done", { p_id: id, p_done: done });
+  if (error) return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't update that." };
+  revalidatePath("/admin", "layout");
+  return {};
+}
+
 /** Edit an event's name, dates, venue and description. Its link (and printed QR codes) stays the same. */
 export async function adminUpdateEvent(eventSlug: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };
