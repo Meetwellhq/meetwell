@@ -3,8 +3,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  AnalyticsPreview,
   CardPreview,
   ContactsPreview,
+  EventPreview,
   MentorPreview,
   SparkPreview,
   StarterPreview,
@@ -53,6 +55,10 @@ async function Visual({ slug }: { slug: FeatureSlug }) {
       return <SparkPreview />;
     case "mentoring":
       return <MentorPreview />;
+    case "analytics":
+      return <AnalyticsPreview />;
+    case "events":
+      return <EventPreview />;
   }
 }
 

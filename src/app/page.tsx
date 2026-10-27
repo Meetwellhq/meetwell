@@ -2,11 +2,13 @@ import {
   ArrowRight,
   BookUser,
   Briefcase,
+  ChartLine,
   Camera,
   Gift,
   GraduationCap,
   Lightbulb,
   MessageSquareText,
+  Mic,
   QrCode,
   Rocket,
   Smartphone,
@@ -16,7 +18,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { BetaBanner } from "@/components/marketing/beta-banner";
-import { ContactsPreview, MentorPreview, SparkPreview, StarterPreview } from "@/components/marketing/card-preview";
+import { AnalyticsPreview, ContactsPreview, EventPreview, MentorPreview, SparkPreview, StarterPreview } from "@/components/marketing/card-preview";
 import { DemoVideoButton } from "@/components/marketing/demo-video-button";
 import { HeroPhoto } from "@/components/marketing/hero-photo";
 import { Feature, HighlightsStrip, Panel, ScanVisual } from "@/components/marketing/landing";
@@ -49,6 +51,8 @@ const highlights = [
   { icon: BookUser, label: "Contacts in one place" },
   { icon: Sparkles, label: "AI introductions" },
   { icon: Wallet, label: "Get paid to mentor" },
+  { icon: ChartLine, label: "Card analytics" },
+  { icon: Mic, label: "Event speaker pages" },
 ];
 
 const useCases = [
@@ -202,6 +206,45 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
                 <ArrowRight className="size-4" aria-hidden />
               </ButtonLink>}
             visual={<MentorPreview />}
+            visualClassName="bg-sage"
+          />
+        </Panel>
+
+        {/* Analytics and Events keep alternating sides after Mentoring. */}
+        <Panel>
+          <Feature
+            reverse={spark}
+            title={<>See who&apos;s finding you.</>}
+            body={
+              <p>
+                Your dashboard shows how many people viewed your card, scanned your QR code and saved you, day by day.
+                Anonymous totals only, never who they are.
+              </p>
+            }
+            action={<ButtonLink href={cta}>
+                {ctaLabel}
+                <ArrowRight className="size-4" aria-hidden />
+              </ButtonLink>}
+            visual={<AnalyticsPreview />}
+            visualClassName="bg-clay"
+          />
+        </Panel>
+
+        <Panel>
+          <Feature
+            reverse={!spark}
+            title={<>Speaking at an event? Bring your card.</>}
+            body={
+              <p>
+                Event partners put every speaker on one Meetwell page. You get your own QR code for your badge or
+                slides, so people can save you and follow up after your talk.
+              </p>
+            }
+            action={<ButtonLink href="/features/events" variant="secondary">
+                How events work
+                <ArrowRight className="size-4" aria-hidden />
+              </ButtonLink>}
+            visual={<EventPreview />}
             visualClassName="bg-sage"
           />
         </Panel>

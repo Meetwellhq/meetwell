@@ -136,3 +136,74 @@ export function SparkPreview() {
 export function MentorPreview() {
   return <MentorFlow />;
 }
+
+/** Static illustration of a member's card analytics. */
+export function AnalyticsPreview() {
+  const stats = [
+    { label: "Profile views", value: "202" },
+    { label: "QR scans", value: "91" },
+    { label: "Saved you", value: "34" },
+  ];
+  // Views per day for a fortnight, as bar heights (percent).
+  const bars = [30, 45, 38, 60, 52, 70, 48, 85, 66, 58, 92, 74, 80, 100];
+  return (
+    <div className="w-full max-w-md rounded-[1.25rem] border border-border bg-surface p-5" role="img" aria-label="Example card analytics">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-ink">Last 30 days</p>
+        <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">▲ 24% views</span>
+      </div>
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        {stats.map((s) => (
+          <span key={s.label} className="rounded-xl bg-bg px-3 py-2.5">
+            <span className="block text-xs text-ink-2">{s.label}</span>
+            <span className="mt-0.5 block text-xl font-semibold tabular-nums text-ink">{s.value}</span>
+          </span>
+        ))}
+      </div>
+      <div className="mt-5 flex h-24 items-end gap-1.5" aria-hidden>
+        {bars.map((h, i) => (
+          <span key={i} className="flex-1 rounded-t bg-accent/80" style={{ height: `${h}%` }} />
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-ink-3">Views per day · anonymous totals only</p>
+    </div>
+  );
+}
+
+/** Static illustration of an event page with its speakers. */
+export function EventPreview() {
+  const speakers = [
+    { initials: "AO", name: "Amara Okafor", role: "Product Designer · Studio North", mentor: true },
+    { initials: "TB", name: "Tunde Bello", role: "ML Engineer · Brightwave", mentor: false },
+  ];
+  return (
+    <div className="w-full max-w-md rounded-[1.25rem] border border-border bg-surface p-5" role="img" aria-label="Example event page with speakers">
+      <p className="text-xs font-medium uppercase tracking-wider text-accent">Event · 5 Dec · Lagos</p>
+      <p className="mt-1.5 text-lg font-semibold leading-tight text-ink">Design Day 2026</p>
+      <p className="text-sm text-ink-2">Speakers</p>
+      <ul className="mt-3 divide-y divide-border">
+        {speakers.map((s) => (
+          <li key={s.name} className="flex items-center gap-3 py-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold text-accent">{s.initials}</span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2 text-[15px] font-medium text-ink">
+                {s.name}
+                {s.mentor && <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">Mentor</span>}
+              </span>
+              <span className="block truncate text-sm text-ink-2">{s.role}</span>
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs text-ink-2">
+              <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4" />
+              </svg>
+              Badge QR
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

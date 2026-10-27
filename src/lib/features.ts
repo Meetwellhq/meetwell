@@ -1,5 +1,5 @@
 /** Meetwell's features, for the footer and the /features/[slug] pages. Product facts only. */
-export type FeatureSlug = "qr-card" | "icebreaker" | "contacts" | "spark" | "mentoring";
+export type FeatureSlug = "qr-card" | "icebreaker" | "contacts" | "spark" | "mentoring" | "analytics" | "events";
 
 export type FeaturePage = {
   slug: FeatureSlug;
@@ -97,6 +97,41 @@ export const FEATURES: FeaturePage[] = [
       "Members get a full refund if a mentor doesn't reply within 7 days.",
       "Nothing renews by itself. Members get a reminder before 30 days end.",
       "Block and report are built into every conversation.",
+    ],
+  },
+  {
+    slug: "analytics",
+    name: "Analytics",
+    title: "See who's finding you.",
+    intro:
+      "Your dashboard shows how your card is doing: how many people viewed it, scanned your QR code and saved your contact, day by day.",
+    steps: [
+      { title: "Share your card", body: "Show your QR code, send your link or put it on a slide." },
+      { title: "Watch it work", body: "Views, scans and saves show up on your Analytics page as they happen." },
+      { title: "See what works", body: "Compare with the month before, and see where people found you." },
+    ],
+    details: [
+      "Views per day for the last 30 days, next to the 30 days before.",
+      "Where views come from: QR scans, shared links or opened directly.",
+      "What visitors do: save your contact, or tap your email, phone and links.",
+      "Anonymous totals only. We never record who visitors are, and your own visits don't count.",
+    ],
+  },
+  {
+    slug: "events",
+    name: "Events",
+    title: "Speaking at an event? Bring your card.",
+    intro:
+      "Event partners put every speaker on one Meetwell page. You get your own QR code for your badge or slides, so people can save you and follow up after your talk.",
+    steps: [
+      { title: "Get added", body: "The event team adds you as a speaker, and we email you the details." },
+      { title: "Show your QR code", body: "Put it on your badge or your last slide. One scan opens your card." },
+      { title: "Keep talking", body: "People save your contact in one tap. If you mentor, they can message you too." },
+    ],
+    details: [
+      "One page with every speaker's card, plus an event QR code for posters and slides.",
+      "Free for speakers. Your card stays yours after the event.",
+      "Want your event on Meetwell? Write to us at support@meetwell.me.",
     ],
   },
 ];
