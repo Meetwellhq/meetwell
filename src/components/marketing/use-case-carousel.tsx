@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 
 type UseCase = { icon: LucideIcon; title: string; body: string; more: string; tags: [string, string]; photo: string };
 
-// Photos in public/landing: professional from Unsplash (free licence), the rest from Magnific (free licence,
+// Photos in public/landing: professional and founder from Unsplash (free licence), the rest from Magnific (free licence,
 // credit required: shown under the carousel; originals in brand/magnific). Stock people, never shown as members or quoted.
 const USE_CASES: UseCase[] = [
   {
@@ -24,7 +24,7 @@ const USE_CASES: UseCase[] = [
     body: "Share what you're building.",
     more: "Your card links to your product, and your analytics show who opened it after a pitch.",
     tags: ["QR card", "Analytics"],
-    photo: "/landing/founder-blazer.webp",
+    photo: "/landing/founder-suit.webp",
   },
   {
     icon: Lightbulb,
@@ -54,7 +54,6 @@ const USE_CASES: UseCase[] = [
 
 // Credit for the Magnific photos: [shown name, author page].
 const MAGNIFIC_AUTHORS = [
-  ["magnific", "magnific"],
   ["DC Studio", "dcstudio"],
   ["rawpixel.com", "rawpixel-com"],
   ["ASphotofamily", "asphotofamily"],
