@@ -170,7 +170,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         </Panel>
 
         {/* Before, during and after you meet: white cards stacking on light grey. */}
-        <Panel className="bg-surface-2!">
+        <Panel className="relative z-10 bg-surface-2!">
           <div className="max-w-2xl">
             <p className="text-sm font-medium uppercase tracking-wider text-accent">How it works</p>
             <h2 className="mt-2 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
@@ -189,9 +189,9 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         </Panel>
 
         {/* Use cases */}
-        {/* Full width: breaks out of the page column to the screen edges, heading inside the background. */}
-        <section className="relative left-1/2 w-screen -translate-x-1/2">
-          <UseCaseCarousel>
+        {/* Full width, heading inside the colour; tucked under the panel above (-mt-9) so its rounded corners sit on it. */}
+        <section className="relative left-1/2 -mt-9 w-screen -translate-x-1/2">
+          <UseCaseCarousel className="pt-23! sm:pt-29!">
             <h2 className="text-center font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
               Made for people who meet people.
             </h2>

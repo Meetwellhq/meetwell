@@ -67,7 +67,7 @@ const STEP_MS = 4500;
  * small connectors. It moves to the next group every few seconds, so the row
  * slides left; hovering pauses it, and clicking a slim card opens it.
  */
-export function UseCaseCarousel({ children }: { children?: ReactNode }) {
+export function UseCaseCarousel({ className, children }: { className?: string; children?: ReactNode }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -79,7 +79,7 @@ export function UseCaseCarousel({ children }: { children?: ReactNode }) {
 
   return (
     <div
-      className="relative overflow-hidden bg-gradient-to-br from-sage via-accent-soft to-clay py-14 sm:py-20"
+      className={cn("relative overflow-hidden bg-gradient-to-br from-sage via-accent-soft to-clay py-14 sm:py-20", className)}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
