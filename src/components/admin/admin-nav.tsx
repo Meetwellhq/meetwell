@@ -11,6 +11,7 @@ import {
   MessagesSquare,
   Send,
   Handshake,
+  Ticket,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -33,6 +34,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
       { href: "/admin/users", label: "Users", icon: Users },
       { href: "/admin/outreach", label: "Outreach", icon: Send },
       { href: "/admin/partners", label: "Partners", icon: Handshake },
+      { href: "/admin/codes", label: "Shared codes", icon: Ticket },
     ],
   },
   {

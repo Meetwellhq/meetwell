@@ -556,3 +556,40 @@ export async function adminSetSparkEnabled(enabled: boolean): Promise<{ error?: 
   revalidatePath("/", "layout");
   return {};
 }
+
+/** A shared access code for an event: many sign-ups, up to a limit, until the end of its last day. */
+export async function adminCreateSharedCode(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const note = String(formData.get("note") ?? "").trim().slice(0, 120);
+  const code = String(formData.get("code") ?? "").trim().toUpperCase().replace(/\s+/g, "");
+  const maxUses = Number(formData.get("maxUses") ?? 0);
+  const endsOn = String(formData.get("endsOn") ?? "");
+  if (!note) return { error: "Add a name, like the event's." };
+  if (!/^[A-Z0-9-]{6,32}$/.test(code)) return { error: "The code needs 6 to 32 letters, numbers or dashes." };
+  if (!Number.isInteger(maxUses) || maxUses < 1 || maxUses > 100000) return { error: "Pick how many people can use it." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(endsOn)) return { error: "Pick the last day it works." };
+
+  const { error } = await (await createClient()).rpc("admin_create_shared_code", {
+    p_code: code,
+    p_note: note,
+    p_max_uses: maxUses,
+    p_ends_on: endsOn,
+  });
+  if (error) {
+    if (error.code === "23505") return { error: `The code ${code} is already used. Try another.` };
+    if (error.code === "22023") return { error: error.message.endsWith(".") ? error.message : `${error.message}.` };
+    console.error("admin_create_shared_code failed", error.code, error.message);
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't make the code." };
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: `Made ${code}. Share its link or QR code.` };
+}
+
+/** Turn a shared code off now. People who already joined keep their accounts. */
+export async function adminStopSharedCode(code: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_stop_shared_code", { p_code: code });
+  if (error) return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't turn it off." };
+  revalidatePath("/admin", "layout");
+  return {};
+}

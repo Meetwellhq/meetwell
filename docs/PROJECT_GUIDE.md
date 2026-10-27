@@ -90,6 +90,10 @@ every migration.
   refuses new accounts without a valid code and uses it up. Codes live in
   `public.access_codes`. To reopen public sign-up later: make `public.invite_only()` return
   false and set `SIGNUPS_OPEN = true`.
+- **Shared codes** (`/admin/codes`, `20261211000000_shared_codes.sql`): one access code for a whole event (first: DevFest
+  Abeokuta). Rasheed sets a name, the code, how many people and the last day (Lagos time); anyone can join with it (no
+  experience rule, unlike partner links). Each sign-up is kept in `code_signups` (who joined with it), and the page shows
+  joined and published counts, the link `/access-code?code=…` and a QR download (`/admin/codes/qr`). "Turn off" ends it at once.
 - **Log in page**: `/sign-in` shows the private beta chooser; `?method=email` shows the form.
 - **Cards**: public card `/p/[slug]` (`src/components/profile/profile-view.tsx`) with a
   floating green "Try it for free" bar. Editor in `/dashboard/profile`.

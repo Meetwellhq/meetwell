@@ -2091,3 +2091,54 @@ describe("ideas", () => {
     expect(await done()).toBe(false);
   });
 });
+
+describe("shared access codes", () => {
+  const newUser = (id: string, email: string, meta: Record<string, unknown>) =>
+    db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)", [id, email, meta]);
+  const tomorrow = "(current_date + 1)";
+
+  beforeAll(async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+  });
+
+  it("lets only admins make a shared code, with a limit and an end date", async () => {
+    await expect(as(BOB, `select public.admin_create_shared_code('DEVFEST-ABK', 'DevFest', 2, ${tomorrow})`)).rejects.toThrow(/Not allowed/);
+    await expect(as(null, `select public.admin_create_shared_code('DEVFEST-ABK', 'DevFest', 2, ${tomorrow})`)).rejects.toThrow(/permission denied/);
+    await expect(as(ALICE, `select public.admin_create_shared_code('ab', 'Too short', 2, ${tomorrow})`)).rejects.toThrow(/6 to 32/);
+    await expect(as(ALICE, `select public.admin_create_shared_code('PASTEVENT', 'Old', 2, current_date - 1)`)).rejects.toThrow(/not passed/);
+    await expect(as(ALICE, `select public.admin_create_shared_code('NOLIMIT1', 'X', 0, ${tomorrow})`)).rejects.toThrow(/how many/);
+    expect(await as(ALICE, `select public.admin_create_shared_code(' devfest-abk ', ' DevFest Abeokuta ', 2, ${tomorrow}) as code`)).toEqual([
+      { code: "DEVFEST-ABK" },
+    ]);
+    await expect(as(null, "select * from public.code_signups")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.admin_shared_codes()")).rejects.toThrow(/Not allowed/);
+  });
+
+  it("lets anyone sign up with it until it's used up, and remembers who did", async () => {
+    // Any experience level: no 4-year rule, unlike partner links.
+    await newUser("6d6d6d6d-0000-4000-8000-000000000001", "dev1@devfest.test", { access_code: " devfest-abk ", experience_years: "0" });
+    await newUser("6d6d6d6d-0000-4000-8000-000000000002", "dev2@devfest.test", { access_code: "DEVFEST-ABK" });
+    await expect(newUser("6d6d6d6d-0000-4000-8000-000000000003", "dev3@devfest.test", { access_code: "DEVFEST-ABK" })).rejects.toThrow(
+      /valid access code/,
+    );
+    const [row] = await as<Record<string, unknown>>(
+      ALICE, "select note, max_uses, uses, active, joined, published from public.admin_shared_codes() where code = 'DEVFEST-ABK'",
+    );
+    expect(row).toEqual({ note: "DevFest Abeokuta", max_uses: 2, uses: 2, active: false, joined: 2, published: 0 });
+    // Ordinary single-use codes aren't listed or recorded.
+    await db.query("insert into public.access_codes (code) values ('ONEINVITE1')");
+    await newUser("6d6d6d6d-0000-4000-8000-000000000004", "one@devfest.test", { access_code: "ONEINVITE1" });
+    expect((await db.query("select 1 from public.code_signups where code = 'ONEINVITE1'")).rows).toEqual([]);
+    expect(await as(ALICE, "select code from public.admin_shared_codes() where code = 'ONEINVITE1'")).toEqual([]);
+  });
+
+  it("stops a code at once when an admin turns it off", async () => {
+    await as(ALICE, `select public.admin_create_shared_code('DEVFEST-STOP', 'Stop test', 50, ${tomorrow})`);
+    await expect(as(BOB, "select public.admin_stop_shared_code('DEVFEST-STOP')")).rejects.toThrow(/Not allowed/);
+    await as(ALICE, "select public.admin_stop_shared_code('devfest-stop')");
+    await expect(newUser("6d6d6d6d-0000-4000-8000-000000000005", "late@devfest.test", { access_code: "DEVFEST-STOP" })).rejects.toThrow(
+      /valid access code/,
+    );
+    expect(await as(ALICE, "select active from public.admin_shared_codes() where code = 'DEVFEST-STOP'")).toEqual([{ active: false }]);
+  });
+});
