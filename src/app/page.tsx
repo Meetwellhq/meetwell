@@ -128,8 +128,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
   const ctaLabel = signedIn ? "Go to your dashboard" : JOIN_CTA.label;
 
   return (
-    // overflow-x-clip: the full-width carousel can reach the screen edges without a sideways scroll (and sticky cards still work).
-    <div className="light-only flex min-h-full flex-col overflow-x-clip bg-surface">
+    <div className="light-only flex min-h-full flex-col bg-surface">
       {!SIGNUPS_OPEN && !signedIn && <BetaBanner />}
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
@@ -167,7 +166,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         </Panel>
 
         {/* Before, during and after you meet: white cards stacking on light grey. */}
-        <Panel className="relative z-10 bg-surface-2!">
+        <Panel className="bg-surface-2!">
           <div className="max-w-2xl">
             <p className="text-sm font-medium uppercase tracking-wider text-accent">How it works</p>
             <h2 className="mt-2 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
@@ -186,9 +185,9 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         </Panel>
 
         {/* Use cases */}
-        {/* Full width, heading inside the colour; tucked under the panel above (-mt-9) so its rounded corners sit on it. */}
-        <section className="relative left-1/2 -mt-9 w-screen -translate-x-1/2">
-          <UseCaseCarousel className="pt-23! sm:pt-29!">
+        {/* A rounded sheet like the others, heading inside the colour. */}
+        <section className="overflow-hidden rounded-[1.5rem]">
+          <UseCaseCarousel>
             <h2 className="text-center font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
               Made for people who meet people.
             </h2>
