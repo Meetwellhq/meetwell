@@ -98,30 +98,6 @@ export default async function PartnerPage() {
               </p>
             </div>
 
-            <Card className="flex flex-col gap-3 p-5 sm:p-6">
-              <div className="flex items-center gap-2">
-                <h2 className="font-semibold">Your invite link</h2>
-                {!partner.active && <Badge tone="warning">Paused</Badge>}
-              </div>
-              <CopyPartnerLink link={`${getSiteUrl()}/join?partner=${partner.slug}`} />
-              <p className="text-sm text-ink-3">
-                {partner.signups} of {partner.max_signups} invites used.
-              </p>
-            </Card>
-
-            <dl className="grid grid-cols-3 gap-3">
-              {[
-                { label: "Joined", value: partner.signups },
-                { label: "Published a card", value: published },
-                { label: "Mentors", value: mentors },
-              ].map((s) => (
-                <div key={s.label} className="rounded-xl border border-border bg-surface p-4">
-                  <dt className="text-sm text-ink-2">{s.label}</dt>
-                  <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{s.value}</dd>
-                </div>
-              ))}
-            </dl>
-
             <Card className="flex flex-col gap-4 p-5 sm:p-6">
               <div>
                 <h2 className="font-semibold">Your earnings</h2>
@@ -146,6 +122,30 @@ export default async function PartnerPage() {
                   </div>
                 ))}
               </dl>
+            </Card>
+
+            <dl className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Joined", value: partner.signups },
+                { label: "Published a card", value: published },
+                { label: "Mentors", value: mentors },
+              ].map((s) => (
+                <div key={s.label} className="rounded-xl border border-border bg-surface p-4">
+                  <dt className="text-sm text-ink-2">{s.label}</dt>
+                  <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <Card className="flex flex-col gap-3 p-5 sm:p-6">
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold">Your invite link</h2>
+                {!partner.active && <Badge tone="warning">Paused</Badge>}
+              </div>
+              <CopyPartnerLink link={`${getSiteUrl()}/join?partner=${partner.slug}`} />
+              <p className="text-sm text-ink-3">
+                {partner.signups} of {partner.max_signups} invites used.
+              </p>
             </Card>
 
             <Card className="flex flex-col gap-4 p-5 sm:p-6">
