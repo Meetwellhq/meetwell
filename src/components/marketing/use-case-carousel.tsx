@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 
 type UseCase = { icon: LucideIcon; title: string; body: string; more: string; tags: [string, string]; photo: string };
 
-// Photos in public/landing: professional and founder from Unsplash (free licence), the rest from Magnific (free licence,
+// Photos in public/landing: professional and founder from Unsplash, event from Pexels (free licences, no credit needed), the rest from Magnific (free licence,
 // credit required: shown under the carousel; originals in brand/magnific). Stock people, never shown as members or quoted.
 const USE_CASES: UseCase[] = [
   {
@@ -40,7 +40,7 @@ const USE_CASES: UseCase[] = [
     body: "Swap details in seconds.",
     more: "Scan, save and follow up before the next talk starts. Speakers get their own badge QR.",
     tags: ["Badge QR", "Contacts"],
-    photo: "/landing/event-panel.webp",
+    photo: "/landing/event-phones.webp",
   },
   {
     icon: GraduationCap,
@@ -55,7 +55,6 @@ const USE_CASES: UseCase[] = [
 // Credit for the Magnific photos: [shown name, author page].
 const MAGNIFIC_AUTHORS = [
   ["DC Studio", "dcstudio"],
-  ["rawpixel.com", "rawpixel-com"],
   ["ASphotofamily", "asphotofamily"],
 ] as const;
 
@@ -150,7 +149,7 @@ export function UseCaseCarousel({ className, children }: { className?: string; c
       </div>
 
       <p className="mt-5 text-center text-[11px] text-ink-3">
-        Photos from Unsplash, and by{" "}
+        Photos from Unsplash and Pexels, and by{" "}
         {MAGNIFIC_AUTHORS.map(([name, slug], i) => (
           <span key={slug}>
             {i > 0 && (i === MAGNIFIC_AUTHORS.length - 1 ? " and " : ", ")}
