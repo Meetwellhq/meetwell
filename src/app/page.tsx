@@ -179,8 +179,8 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           <div className="h-3 sm:h-10 lg:h-16" />
         </Panel>
 
-        {/* Before, during and after you meet. */}
-        <Panel>
+        {/* Before, during and after you meet: white cards stacking on light grey. */}
+        <Panel className="bg-surface-2!">
           <div className="max-w-2xl">
             <p className="text-sm font-medium uppercase tracking-wider text-accent">How it works</p>
             <h2 className="mt-2 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
