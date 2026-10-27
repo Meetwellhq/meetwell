@@ -10,7 +10,7 @@ import { checkSlugAvailability } from "@/lib/profiles/actions";
 import { LIMITS, NETWORKING_GOALS, SOCIAL_PLATFORMS } from "@/lib/profiles/constants";
 import { cn } from "@/lib/cn";
 import { slugify } from "@/lib/validation";
-import { COMPANIES, ORGANISATION_TYPES, TITLE_GROUPS } from "@/lib/profiles/careers";
+import { COMPANIES, TITLE_GROUPS } from "@/lib/profiles/careers";
 import { AvatarUpload } from "./avatar-upload";
 import { PickOrType } from "./pick-or-type";
 import type { SectionProps } from "./types";
@@ -85,10 +85,7 @@ export function BasicsSection({
               invalid={invalid}
               value={values.organization}
               onChange={(v) => set("organization", v)}
-              groups={[
-                { label: "Companies", options: COMPANIES.map((c) => c.name) },
-                { label: "Other organisations", options: ORGANISATION_TYPES },
-              ]}
+              groups={[{ label: "Companies", options: COMPANIES.map((c) => c.name) }]}
               maxLength={LIMITS.organization}
               placeholder="Pick or type your company"
               autoComplete="organization"

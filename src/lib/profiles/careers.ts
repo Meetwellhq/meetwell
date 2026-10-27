@@ -35,6 +35,20 @@ export const TITLE_GROUPS = [
       "Co-founder",
     ],
   },
+  {
+    // What kind of place it is, for cards like "Software Company · Meetwell".
+    label: "Organisations",
+    titles: [
+      "Software Company",
+      "Software Community",
+      "Tech Community",
+      "Startup",
+      "Agency",
+      "NGO",
+      "Non-profit",
+      "Government Agency",
+    ],
+  },
 ] as const;
 
 export const TITLE_OPTIONS: readonly string[] = TITLE_GROUPS.flatMap((g) => g.titles);
@@ -60,20 +74,6 @@ export const COMPANIES: Company[] = [
   { name: "Dangote Group", aliases: ["Dangote", "Dangote Industries"], logo: null },
   { name: "Raenest", aliases: ["Raenest (formerly Geegpay)", "Geegpay"], logo: "/companies/raenest.png" },
   { name: "Meetwell", aliases: ["Meet Well", "Meet Well Limited", "MeetWell"], logo: "/companies/meetwell.png" },
-];
-
-/** Kinds of organisation, for people whose work isn't one of the companies above. Still free text. */
-export const ORGANISATION_TYPES: readonly string[] = [
-  "Software community",
-  "Tech community",
-  "NGO",
-  "Non-profit",
-  "Startup",
-  "Agency",
-  "Freelance",
-  "Self-employed",
-  "University",
-  "Government",
 ];
 
 const normalise = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
