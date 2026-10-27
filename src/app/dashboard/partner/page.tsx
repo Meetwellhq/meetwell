@@ -109,6 +109,45 @@ export default async function PartnerPage() {
               </p>
             </Card>
 
+            <dl className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Joined", value: partner.signups },
+                { label: "Published a card", value: published },
+                { label: "Mentors", value: mentors },
+              ].map((s) => (
+                <div key={s.label} className="rounded-xl border border-border bg-surface p-4">
+                  <dt className="text-sm text-ink-2">{s.label}</dt>
+                  <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <Card className="flex flex-col gap-4 p-5 sm:p-6">
+              <div>
+                <h2 className="font-semibold">Your earnings</h2>
+                <p className="mt-1 text-sm text-ink-2">
+                  You earn 10% of what your speakers are paid as mentors on Meetwell, for each speaker&apos;s first 12
+                  months, and 10% of every paid message started from one of your event pages, for 12 months after each event. Meetwell pays you by
+                  bank transfer.
+                </p>
+              </div>
+              <dl className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Earned", value: naira(money[i].earned_kobo) },
+                  { label: "Paid to you", value: naira(money[i].paid_kobo) },
+                  {
+                    label: "Still to be paid",
+                    value: naira(money[i].earned_kobo - money[i].paid_kobo),
+                  },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-xl bg-surface-2 p-4">
+                    <dt className="text-sm text-ink-2">{s.label}</dt>
+                    <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Card>
+
             <Card className="flex flex-col gap-4 p-5 sm:p-6">
               <div>
                 <h2 className="font-semibold">Your event pages</h2>
@@ -153,45 +192,6 @@ export default async function PartnerPage() {
                   </div>
                 </details>
               )}
-            </Card>
-
-            <dl className="grid grid-cols-3 gap-3">
-              {[
-                { label: "Joined", value: partner.signups },
-                { label: "Published a card", value: published },
-                { label: "Mentors", value: mentors },
-              ].map((s) => (
-                <div key={s.label} className="rounded-xl border border-border bg-surface p-4">
-                  <dt className="text-sm text-ink-2">{s.label}</dt>
-                  <dd className="mt-1 text-2xl font-semibold tabular-nums text-ink">{s.value}</dd>
-                </div>
-              ))}
-            </dl>
-
-            <Card className="flex flex-col gap-4 p-5 sm:p-6">
-              <div>
-                <h2 className="font-semibold">Your earnings</h2>
-                <p className="mt-1 text-sm text-ink-2">
-                  You earn 10% of what your speakers are paid as mentors on Meetwell, for each speaker&apos;s first 12
-                  months, and 10% of every paid message started from one of your event pages, for 12 months after each event. Meetwell pays you by
-                  bank transfer.
-                </p>
-              </div>
-              <dl className="grid grid-cols-3 gap-3">
-                {[
-                  { label: "Earned", value: naira(money[i].earned_kobo) },
-                  { label: "Paid to you", value: naira(money[i].paid_kobo) },
-                  {
-                    label: "Still to be paid",
-                    value: naira(money[i].earned_kobo - money[i].paid_kobo),
-                  },
-                ].map((s) => (
-                  <div key={s.label} className="rounded-xl bg-surface-2 p-4">
-                    <dt className="text-sm text-ink-2">{s.label}</dt>
-                    <dd className="mt-1 text-xl font-semibold tabular-nums text-ink">{s.value}</dd>
-                  </div>
-                ))}
-              </dl>
             </Card>
 
             <Card className="p-0">
