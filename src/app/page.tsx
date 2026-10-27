@@ -192,7 +192,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         {/* Full width: breaks out of the page column to the screen edges, heading inside the background. */}
         <section className="relative left-1/2 w-screen -translate-x-1/2">
           <UseCaseCarousel>
-            <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
+            <h2 className="text-center font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
               Made for people who meet people.
             </h2>
           </UseCaseCarousel>
