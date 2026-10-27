@@ -1,31 +1,26 @@
 import {
   ArrowRight,
   BookUser,
-  Briefcase,
   ChartLine,
   Camera,
   Check,
   EyeOff,
   IdCard,
   Gift,
-  GraduationCap,
-  Lightbulb,
   MessageSquareText,
   Mic,
   QrCode,
   Repeat,
-  Rocket,
   ScanLine,
   Smartphone,
   Sparkles,
-  Ticket,
   UserRoundPlus,
   Wallet,
 } from "lucide-react";
-import Image from "next/image";
 import { BetaBanner } from "@/components/marketing/beta-banner";
 import { DemoVideoButton } from "@/components/marketing/demo-video-button";
 import { FeatureTabs } from "@/components/marketing/feature-tabs";
+import { UseCaseCarousel } from "@/components/marketing/use-case-carousel";
 import { HighlightsStrip, Journey, MomentsStrip, Panel } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
@@ -60,14 +55,6 @@ const highlights = [
   { icon: Mic, label: "Event speaker pages" },
 ];
 
-// Photos: Unsplash (free licence), in public/landing. Stock people, never shown as members.
-const useCases = [
-  { icon: Briefcase, title: "Professionals", body: "Turn new contacts into real conversations.", photo: "/landing/professional.webp" },
-  { icon: Rocket, title: "Founders", body: "Share what you're building.", photo: "/landing/founder.webp" },
-  { icon: Lightbulb, title: "Freelancers & creators", body: "Send new clients straight to your work.", photo: "/landing/creator.webp" },
-  { icon: Ticket, title: "Event attendees", body: "Swap details in seconds.", photo: "/landing/event.webp" },
-  { icon: GraduationCap, title: "Students & job seekers", body: "Give recruiters a card they can use.", photo: "/landing/student.webp" },
-];
 
 // Before, during and after you meet. The small pictures are illustrations, not real people.
 const moments = [
@@ -144,7 +131,8 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
   const ctaLabel = signedIn ? "Go to your dashboard" : JOIN_CTA.label;
 
   return (
-    <div className="flex min-h-full flex-col bg-surface">
+    // overflow-x-clip: the full-width carousel can reach the screen edges without a sideways scroll (and sticky cards still work).
+    <div className="flex min-h-full flex-col overflow-x-clip bg-surface">
       {!SIGNUPS_OPEN && !signedIn && <BetaBanner />}
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
@@ -201,28 +189,14 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         </Panel>
 
         {/* Use cases */}
-        <Panel>
-          <div className="max-w-2xl">
+        {/* Full width: breaks out of the page column to the screen edges, heading inside the background. */}
+        <section className="relative left-1/2 w-screen -translate-x-1/2">
+          <UseCaseCarousel>
             <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
               Made for people who meet people.
             </h2>
-          </div>
-          {/* A tall photo per group, title and one line under it (Calendly-style). Stock photos, not members. */}
-          <ul className="mt-12 grid gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-5">
-            {useCases.map((u) => (
-              <li key={u.title}>
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-surface-2">
-                  <Image src={u.photo} alt="" fill sizes="(min-width: 1024px) 18vw, (min-width: 640px) 45vw, 92vw" className="object-cover" />
-                  <span className="absolute left-3 top-3 grid size-9 place-items-center rounded-full bg-surface/90 text-accent backdrop-blur-sm">
-                    <u.icon className="size-[18px]" aria-hidden />
-                  </span>
-                </div>
-                <h3 className="mt-4 font-semibold text-ink">{u.title}</h3>
-                <p className="mt-1 text-[15px] leading-relaxed text-ink-2">{u.body}</p>
-              </li>
-            ))}
-          </ul>
-        </Panel>
+          </UseCaseCarousel>
+        </section>
 
         {/* Final CTA */}
         <section className="rounded-[1.5rem] bg-accent px-6 py-20 text-center text-white sm:py-28">
