@@ -140,25 +140,3 @@ export function Journey({
     </ol>
   );
 }
-
-/** Things that happen on Meetwell, drifting by on the closing banner. */
-export function MomentsStrip({ items }: { items: string[] }) {
-  const row = (hidden: boolean) => (
-    <ul className="flex shrink-0 items-center gap-3 pr-3" aria-hidden={hidden || undefined}>
-      {items.map((label) => (
-        <li key={label} className="flex items-center gap-2 whitespace-nowrap rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white">
-          <span className="size-1.5 rounded-full bg-[#75e0a7]" aria-hidden />
-          {label}
-        </li>
-      ))}
-    </ul>
-  );
-  return (
-    <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
-      <div className="flex w-max animate-marquee motion-reduce:animate-none">
-        {row(false)}
-        {row(true)}
-      </div>
-    </div>
-  );
-}

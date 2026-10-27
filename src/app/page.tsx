@@ -21,7 +21,7 @@ import { BetaBanner } from "@/components/marketing/beta-banner";
 import { DemoVideoButton } from "@/components/marketing/demo-video-button";
 import { FeatureTabs } from "@/components/marketing/feature-tabs";
 import { UseCaseCarousel } from "@/components/marketing/use-case-carousel";
-import { HighlightsStrip, Journey, MomentsStrip, Panel } from "@/components/marketing/landing";
+import { HighlightsStrip, Journey, Panel } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink } from "@/components/ui/button";
@@ -117,9 +117,6 @@ const moments = [
   },
 ];
 
-// What happens on Meetwell, drifting past on the closing banner.
-const happenings = ["Card scanned", "Contact saved", "First message sent", "Saved you back", "Mentor messaged", "Badge QR scanned", "Note added"];
-
 export default async function LandingPage({ searchParams }: PageProps<"/">) {
   const [signedIn, qr, { deleted }, spark] = await Promise.all([
     isSignedIn(),
@@ -211,9 +208,6 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               {ctaLabel}
               <ArrowRight className="size-4" aria-hidden />
             </ButtonLink>
-          </div>
-          <div className="mt-14">
-            <MomentsStrip items={happenings} />
           </div>
         </section>
       </main>
