@@ -115,7 +115,7 @@ export function Journey({
         <li
           key={m.title}
           style={{ top: `calc(5.5rem + ${i} * 1.75rem)` }}
-          className="sticky grid min-h-[26rem] items-center gap-8 rounded-[1.25rem] border border-border bg-surface p-6 shadow-[0_-8px_30px_-12px_rgb(0_0_0/0.15)] sm:p-10 lg:grid-cols-[1fr_26rem] lg:gap-14"
+          className="sticky grid min-h-[26rem] items-center gap-8 rounded-[1.25rem] border border-border bg-surface p-6 sm:p-10 lg:grid-cols-[1fr_26rem] lg:gap-14"
         >
           <div>
             <p className="text-sm font-medium text-accent">Step {i + 1}</p>
