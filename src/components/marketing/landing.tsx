@@ -75,9 +75,9 @@ export function HighlightsStrip({ items }: { items: { icon: LucideIcon; label: s
 /** A phone camera framing the QR code. */
 export function ScanVisual({ qrSvg }: { qrSvg: string }) {
   return (
-    <div className="relative w-48 sm:w-64">
+    <div className="relative w-52 sm:w-64">
       <div className="rounded-[2.25rem] border-[6px] border-[#141413] bg-[#141413] p-1.5 shadow-2xl">
-        <div className="rounded-[1.75rem] bg-[#1b1b1a] px-5 pb-8 pt-10">
+        <div className="rounded-[1.75rem] bg-[#1b1b1a] px-3.5 pb-8 pt-10 sm:px-5">
           <div className="relative rounded-2xl bg-surface p-3">
             {/* viewfinder corners */}
             <span className="absolute -left-2 -top-2 size-6 rounded-tl-xl border-l-4 border-t-4 border-[#75e0a7]" />
@@ -86,7 +86,7 @@ export function ScanVisual({ qrSvg }: { qrSvg: string }) {
             <span className="absolute -bottom-2 -right-2 size-6 rounded-br-xl border-b-4 border-r-4 border-[#75e0a7]" />
             <div className="[&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: qrSvg }} />
           </div>
-          <p className="mt-6 flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-surface/10 px-3 py-2 text-[11px] font-medium text-white">
+          <p className="mt-6 flex items-center justify-center gap-1 whitespace-nowrap rounded-full bg-surface/10 px-2.5 py-2 text-[10.5px] font-medium text-white sm:gap-1.5 sm:px-3 sm:text-[11px]">
             <ScanLine className="size-4" aria-hidden />
             Open card on meetwell.me
           </p>
