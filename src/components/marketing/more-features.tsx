@@ -55,7 +55,7 @@ const BLURBS: Record<FeatureSlug, string> = {
 
 /**
  * "More from Meetwell" on feature pages (after Calendly's product row): a small label, a heading,
- * then a row of cards that moves on by itself, each with the feature's landing page
+ * then a row of cards that slides left as the page scrolls, each with the feature's landing page
  * illustration, its name, one short line and a link to that feature's page.
  */
 export function MoreFeatures({ features, qrSvg }: { features: FeaturePage[]; qrSvg: string }) {
@@ -67,15 +67,14 @@ export function MoreFeatures({ features, qrSvg }: { features: FeaturePage[]; qrS
           There&apos;s more to meeting people than one scan.
         </h2>
       </div>
-      {/* Edge to edge inside the section, scrolling sideways; cards snap into place.
-          Moves one card left every few seconds (AutoScrollRow). scroll-px: cards snap to the padded
-          edge, lined up with the page, not the screen edge. */}
-      <AutoScrollRow className="-mx-5 mt-10 flex snap-x snap-mandatory scroll-px-5 gap-5 overflow-x-auto px-5 pb-4 sm:-mx-10 sm:mt-14 sm:scroll-px-10 sm:gap-8 sm:px-10 lg:-mx-16 lg:scroll-px-16 lg:px-16">
+      {/* Edge to edge inside the section, scrolling sideways. As the page scrolls, the row slides
+          left (AutoScrollRow); no snapping, which would fight that smooth movement. */}
+      <AutoScrollRow className="-mx-5 mt-10 flex gap-5 overflow-x-auto px-5 pb-4 sm:-mx-10 sm:mt-14 sm:gap-8 sm:px-10 lg:-mx-16 lg:px-16">
         {features.map((f, i) => {
           const Icon = ICONS[f.slug];
           return (
             // The name and Learn more are the links; the illustration stays interactive (Mentoring has buttons).
-            <li key={f.slug} className="w-[17.5rem] shrink-0 snap-start sm:w-[26rem]">
+            <li key={f.slug} className="w-[17.5rem] shrink-0 sm:w-[26rem]">
               <div className={cn("h-[17rem] overflow-hidden rounded-[1.25rem] p-4 sm:h-[26rem] sm:p-6", i % 2 ? "bg-clay" : "bg-sage")}>
                 <FitToBox watch={f.slug}>{illustration(f.slug, qrSvg)}</FitToBox>
               </div>
