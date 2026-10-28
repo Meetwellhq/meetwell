@@ -81,7 +81,7 @@ export function MoreFeatures({ features, qrSvg }: { features: FeaturePage[]; qrS
               </div>
               {/* Name under the picture, then one short line. */}
               <Link href={`/features/${f.slug}`} className="mt-5 inline-flex items-center gap-2.5 text-ink hover:text-accent">
-                <span className="grid size-9 place-items-center rounded-xl bg-accent text-white">
+                <span className="grid size-9 place-items-center rounded-xl bg-surface-2 text-ink">
                   <Icon className="size-[18px]" aria-hidden />
                 </span>
                 <span className="text-lg font-semibold">{f.name}</span>

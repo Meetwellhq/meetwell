@@ -30,7 +30,7 @@ export type FeaturePage = {
   title: string;
   intro: string;
   steps: { icon: LucideIcon; title: string; body: string }[];
-  details: string[];
+  details: { title: string; body: string }[];
 };
 
 export const FEATURES: FeaturePage[] = [
@@ -46,10 +46,10 @@ export const FEATURES: FeaturePage[] = [
       { icon: UserRoundPlus, title: "They save you in one tap", body: "Your card opens in their browser and saves straight to their phone's contacts." },
     ],
     details: [
-      "Works with any phone camera.",
-      "Each contact detail and link can be Public or Private.",
-      "Unpublish your card anytime to take it offline.",
-      "See how many people viewed your card, scanned your code and saved you.",
+      { title: "Any phone camera", body: "Works with any phone camera." },
+      { title: "Public or private", body: "Each contact detail and link can be Public or Private." },
+      { title: "Offline anytime", body: "Unpublish your card anytime to take it offline." },
+      { title: "See the numbers", body: "See how many people viewed your card, scanned your code and saved you." },
     ],
   },
   {
@@ -64,9 +64,9 @@ export const FEATURES: FeaturePage[] = [
       { icon: Send, title: "They send it their way", body: "Copy it into email, WhatsApp or anywhere else. We never see it." },
     ],
     details: [
-      "Written in the visitor's own browser, never sent to us.",
-      "Visitors can try another version or edit it freely.",
-      "Turns a quick hello at an event into a real follow-up.",
+      { title: "Private by design", body: "Written in the visitor's own browser, never sent to us." },
+      { title: "Theirs to edit", body: "Visitors can try another version or edit it freely." },
+      { title: "Real follow-ups", body: "Turns a quick hello at an event into a real follow-up." },
     ],
   },
   {
@@ -81,9 +81,9 @@ export const FEATURES: FeaturePage[] = [
       { icon: Download, title: "Save to your phone", body: "Save one person, or export everyone in one file your phone can import." },
     ],
     details: [
-      "Search by name, company or note.",
-      "See which members saved your card, and save them back.",
-      "No account yet? Cards you open are kept on your phone and come with you when you join.",
+      { title: "Easy to find", body: "Search by name, company or note." },
+      { title: "Who saved you", body: "See which members saved your card, and save them back." },
+      { title: "Kept for later", body: "No account yet? Cards you open are kept on your phone and come with you when you join." },
     ],
   },
   {
@@ -98,10 +98,10 @@ export const FEATURES: FeaturePage[] = [
       { icon: MessageCircle, title: "Reach out", body: "Open their card and say hello. Spark explains why you'd be a good match." },
     ],
     details: [
-      "One free introduction a month.",
-      "Want more? Buy Spark credits on your Spark page.",
-      "People with 4+ years are recommended to others, not introduced.",
-      "Turn Spark on or off anytime.",
+      { title: "One free a month", body: "One free introduction a month." },
+      { title: "Want more?", body: "Want more? Buy Spark credits on your Spark page." },
+      { title: "For experienced people", body: "People with 4+ years are recommended to others, not introduced." },
+      { title: "Your choice", body: "Turn Spark on or off anytime." },
     ],
   },
   {
@@ -116,10 +116,10 @@ export const FEATURES: FeaturePage[] = [
       { icon: Wallet, title: "Answer and earn", body: "Reply to messages, keep 80% of every payment and withdraw to your bank." },
     ],
     details: [
-      "Payments are handled by Paystack. We never see card details.",
-      "Members get a full refund if a mentor doesn't reply within 7 days.",
-      "Nothing renews by itself. Members get a reminder before 30 days end.",
-      "Block and report are built into every conversation.",
+      { title: "Safe payments", body: "Payments are handled by Paystack. We never see card details." },
+      { title: "Reply or refund", body: "Members get a full refund if a mentor doesn't reply within 7 days." },
+      { title: "No surprise renewals", body: "Nothing renews by itself. Members get a reminder before 30 days end." },
+      { title: "Safe to talk", body: "Block and report are built into every conversation." },
     ],
   },
   {
@@ -134,10 +134,10 @@ export const FEATURES: FeaturePage[] = [
       { icon: TrendingUp, title: "See what works", body: "Compare with the month before, and see where people found you." },
     ],
     details: [
-      "Views per day for the last 30 days, next to the 30 days before.",
-      "Where views come from: QR scans, shared links or opened directly.",
-      "What visitors do: save your contact, or tap your email, phone and links.",
-      "Anonymous totals only. We never record who visitors are, and your own visits don't count.",
+      { title: "Day by day", body: "Views per day for the last 30 days, next to the 30 days before." },
+      { title: "Where they found you", body: "Where views come from: QR scans, shared links or opened directly." },
+      { title: "What they did", body: "What visitors do: save your contact, or tap your email, phone and links." },
+      { title: "Anonymous only", body: "Anonymous totals only. We never record who visitors are, and your own visits don't count." },
     ],
   },
   {
@@ -152,9 +152,9 @@ export const FEATURES: FeaturePage[] = [
       { icon: MessageCircle, title: "Keep talking", body: "People save your contact in one tap. If you mentor, they can message you too." },
     ],
     details: [
-      "One page with every speaker's card, plus an event QR code for posters and slides.",
-      "Free for speakers. Your card stays yours after the event.",
-      "Want your event on Meetwell? Write to us at support@meetwell.me.",
+      { title: "One page for everyone", body: "One page with every speaker's card, plus an event QR code for posters and slides." },
+      { title: "Free for speakers", body: "Free for speakers. Your card stays yours after the event." },
+      { title: "Bring your event", body: "Want your event on Meetwell? Write to us at support@meetwell.me." },
     ],
   },
 ];

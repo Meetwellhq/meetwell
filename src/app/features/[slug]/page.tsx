@@ -1,4 +1,4 @@
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
@@ -10,6 +10,7 @@ import {
   SparkPreview,
   StarterPreview,
 } from "@/components/marketing/card-preview";
+import { GoodToKnow } from "@/components/marketing/good-to-know";
 import { Journey, Panel } from "@/components/marketing/landing";
 import { MoreFeatures } from "@/components/marketing/more-features";
 import { SiteFooter } from "@/components/marketing/site-footer";
@@ -124,17 +125,11 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
           </div>
         </Panel>
 
-        <Panel>
-          <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-            <h2 className="font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">Good to know</h2>
-            <ul className="flex flex-col gap-4">
-              {feature.details.map((d) => (
-                <li key={d} className="flex items-start gap-3 text-fluid-body leading-relaxed text-ink-2">
-                  <Check className="mt-1 size-5 shrink-0 text-accent" aria-hidden />
-                  {d}
-                </li>
-              ))}
-            </ul>
+        {/* One card open at a time, white cards on light grey. */}
+        <Panel className="bg-surface-2!">
+          <h2 className="font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">Good to know</h2>
+          <div className="mt-8 sm:mt-10">
+            <GoodToKnow items={feature.details} />
           </div>
         </Panel>
 
