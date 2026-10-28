@@ -1,5 +1,6 @@
 import { Globe, Mail, Phone, UserRoundPlus } from "lucide-react";
 import { SocialIcon } from "@/components/icons/social-icon";
+import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/cn";
 import { MentorFlow } from "./mentor-flow";
 
@@ -9,7 +10,7 @@ export function CardPreview({ qrSvg }: { qrSvg: string }) {
     <div className="relative mx-auto w-full max-w-[22rem]" aria-label="Example networking card" role="img">
       <div className="rounded-[1.75rem] border border-border bg-surface p-5 shadow-[0_1px_2px_rgb(20_20_19/0.04),0_12px_32px_-12px_rgb(20_20_19/0.12)]">
         <div className="flex items-center gap-3.5">
-          <div className="grid size-14 place-items-center rounded-full bg-accent-soft text-lg font-semibold text-accent">AO</div>
+          <Avatar name="Amara Okafor" src="/demo/amara.webp" className="size-14 shrink-0" />
           <div className="min-w-0">
             <p className="truncate text-lg font-semibold leading-tight text-ink">Amara Okafor</p>
             <p className="truncate text-sm text-ink-2">Product Designer · Studio North</p>
@@ -91,9 +92,11 @@ export function StarterPreview() {
 /** Static illustration of the Contacts page (example people, not real). */
 export function ContactsPreview() {
   const people = [
-    { initials: "AO", name: "Amara Okafor", role: "Product Designer · Studio North", note: "Met at the fintech meetup" },
-    { initials: "TB", name: "Tunde Bello", role: "ML Engineer · Brightwave", note: "Wants to talk about data teams" },
-    { initials: "KE", name: "Kemi Eze", role: "Founder · Loop Health", note: null },
+    // AI-generated portraits from Magnific (free licence, credited under the use-case carousel; originals in
+    // brand/avatars). Nobody real, and never shown as actual members.
+    { photo: "/demo/amara.webp", name: "Amara Okafor", role: "Product Designer · Studio North", note: "Met at the fintech meetup" },
+    { photo: "/demo/tunde.webp", name: "Tunde Bello", role: "ML Engineer · Brightwave", note: "Wants to talk about data teams" },
+    { photo: "/demo/kemi.webp", name: "Kemi Eze", role: "Founder · Loop Health", note: null },
   ];
   return (
     <div className="w-full max-w-md rounded-[1.25rem] border border-border bg-surface p-4 sm:p-5" role="img" aria-label="Example contacts list">
@@ -104,7 +107,7 @@ export function ContactsPreview() {
       <ul className="mt-4 divide-y divide-border">
         {people.map((p) => (
           <li key={p.name} className="flex items-start gap-3 py-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold text-accent">{p.initials}</span>
+            <Avatar name={p.name} src={p.photo} className="size-10 shrink-0" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[15px] font-medium text-ink">{p.name}</span>
               <span className="block truncate text-sm text-ink-2">{p.role}</span>
@@ -126,7 +129,7 @@ export function SparkPreview() {
     <div className="w-full max-w-md rounded-[1.25rem] border border-border bg-surface p-4 sm:p-5" role="img" aria-label="Example Spark introduction">
       <p className="truncate text-xs font-medium uppercase tracking-wider text-accent">Spark · today&apos;s introduction</p>
       <div className="mt-4 flex items-center gap-3.5">
-        <span className="grid size-14 shrink-0 place-items-center rounded-full bg-accent-soft text-lg font-semibold text-accent">IA</span>
+        <Avatar name="Ifeoma Adeyemi" src="/demo/ifeoma.webp" className="size-14 shrink-0" />
         <span className="min-w-0">
           <span className="block truncate text-lg font-semibold leading-tight text-ink">Ifeoma Adeyemi</span>
           <span className="block truncate text-sm text-ink-2">Senior Product Designer · 8 years</span>
@@ -186,8 +189,8 @@ export function AnalyticsPreview() {
 /** Static illustration of an event page with its speakers. */
 export function EventPreview() {
   const speakers = [
-    { initials: "AO", name: "Amara Okafor", role: "Product Designer · Studio North", mentor: true },
-    { initials: "TB", name: "Tunde Bello", role: "ML Engineer · Brightwave", mentor: false },
+    { photo: "/demo/amara.webp", name: "Amara Okafor", role: "Product Designer · Studio North", mentor: true },
+    { photo: "/demo/tunde.webp", name: "Tunde Bello", role: "ML Engineer · Brightwave", mentor: false },
   ];
   return (
     <div className="w-full max-w-md rounded-[1.25rem] border border-border bg-surface p-4 sm:p-5" role="img" aria-label="Example event page with speakers">
@@ -197,7 +200,7 @@ export function EventPreview() {
       <ul className="mt-3 divide-y divide-border">
         {speakers.map((s) => (
           <li key={s.name} className="flex items-center gap-3 py-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-semibold text-accent">{s.initials}</span>
+            <Avatar name={s.name} src={s.photo} className="size-10 shrink-0" />
             <span className="min-w-0 flex-1">
               {/* The Mentor badge sits by the name, or on the job line on phones so the name fits. */}
               <span className="flex items-center gap-2 text-[15px] font-medium text-ink">

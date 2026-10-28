@@ -24,6 +24,7 @@ import { UseCaseCarousel } from "@/components/marketing/use-case-carousel";
 import { HighlightsStrip, Journey, Panel } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
+import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink } from "@/components/ui/button";
 import { Alert } from "@/components/ui/misc";
 import { getSiteUrl, isSupabaseConfigured, JOIN_CTA, SIGNUPS_OPEN } from "@/lib/config";
@@ -68,7 +69,7 @@ const moments = [
     ],
     visual: (
       <span className="flex w-full max-w-[20rem] items-center gap-3.5 rounded-2xl bg-surface p-5 shadow-md">
-        <span className="grid size-14 shrink-0 place-items-center rounded-full bg-accent-soft text-base font-semibold text-accent">AO</span>
+        <Avatar name="Amara Okafor" src="/demo/amara.webp" className="size-14 shrink-0" />
         <span className="min-w-0 flex-1">
           <span className="block text-[15px] font-semibold text-ink">Amara Okafor</span>
           <span className="block truncate text-xs text-ink-2">Product Designer · Studio North</span>

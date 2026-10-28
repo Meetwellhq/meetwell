@@ -83,7 +83,7 @@ function CardStep() {
   return (
     <div className="flex flex-col gap-2.5">
       <div className="rounded-2xl border border-border bg-surface px-4 pb-5 pt-6 text-center sm:px-5">
-        <CompanyAvatar name="Chidi Nwosu" src="/demo/chidi.svg" organization="Brightwave" className="size-20 text-xl" badgeClassName="size-8" />
+        <CompanyAvatar name="Chidi Nwosu" src="/demo/chidi.webp" organization="Brightwave" className="size-20 text-xl" badgeClassName="size-8" />
         <p className="mt-3 truncate text-xl font-semibold tracking-tight text-ink">Chidi Nwosu</p>
         <p className="mt-0.5 truncate text-sm text-ink-2">Engineering Manager · Brightwave</p>
         <p className="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-xs text-ink-3">

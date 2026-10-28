@@ -155,7 +155,8 @@ export function UseCaseCarousel({ className, children }: { className?: string; c
             <a href={`https://www.magnific.com/author/${slug}`} className="underline">{name}</a>
           </span>
         ))}{" "}
-        on Magnific
+        on Magnific. AI-generated portraits by{" "}
+        <a href="https://www.magnific.com" className="underline">Magnific</a>
       </p>
     </div>
   );
