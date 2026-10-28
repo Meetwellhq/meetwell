@@ -78,14 +78,14 @@ export function UseCaseCarousel({ className, children }: { className?: string; c
 
   return (
     <div
-      className={cn("relative overflow-hidden bg-gradient-to-br from-sage via-accent-soft to-clay py-14 sm:py-20", className)}
+      className={cn("relative overflow-hidden bg-gradient-to-br from-sage via-accent-soft to-clay py-10 sm:py-20", className)}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
       {/* The heading, lined up with the page content above. */}
-      {children && <div className="mx-auto mb-10 max-w-[90rem] px-8 sm:mb-12 sm:px-14 lg:px-20">{children}</div>}
+      {children && <div className="mx-auto mb-7 max-w-[90rem] px-6 sm:mb-12 sm:px-14 lg:px-20">{children}</div>}
       {/* The track: the open card sits in the middle; moving on slides everything left. */}
       <div
         className="relative left-1/2 flex w-max items-center gap-3 transition-transform duration-700 ease-out [--open:min(80vw,46rem)] [--slim:4.5rem] sm:[--slim:6.5rem]"
@@ -98,18 +98,18 @@ export function UseCaseCarousel({ className, children }: { className?: string; c
             <div key={u.title} className="flex shrink-0 items-center">
               {open ? (
                 // The photo fills the whole card; the words sit on a dark fade at the bottom.
-                <article className="relative h-[26rem] w-[var(--open)] shrink-0 overflow-hidden rounded-[1.5rem] shadow-sm sm:h-[28rem]">
+                <article className="relative h-[21rem] w-[var(--open)] shrink-0 overflow-hidden rounded-[1.25rem] shadow-sm sm:h-[28rem] sm:rounded-[1.5rem]">
                   {/* Each photo has a wide crop for the open card next to the tall one: name-wide.webp. */}
                   <Image src={u.photo.replace(".webp", "-wide.webp")} alt="" fill sizes="(min-width: 768px) 46rem, 80vw" className="object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 via-45% to-transparent" aria-hidden />
-                  <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-8">
-                    <span className="grid size-10 place-items-center rounded-full bg-white/15 backdrop-blur-sm">
-                      <u.icon className="size-5" aria-hidden />
+                  <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-8">
+                    <span className="grid size-8 place-items-center rounded-full bg-white/15 backdrop-blur-sm sm:size-10">
+                      <u.icon className="size-4 sm:size-5" aria-hidden />
                     </span>
-                    <h3 className="mt-3 font-display text-3xl leading-[1.05] tracking-tight sm:text-4xl">{u.title}</h3>
-                    <p className="mt-1.5 text-[17px] font-medium">{u.body}</p>
-                    <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-white/80">{u.more}</p>
-                    <div className="mt-4 flex flex-wrap gap-1.5">
+                    <h3 className="mt-2.5 font-display text-2xl leading-[1.05] tracking-tight sm:mt-3 sm:text-4xl">{u.title}</h3>
+                    <p className="mt-1 text-[15px] font-medium sm:mt-1.5 sm:text-[17px]">{u.body}</p>
+                    <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-white/80 sm:mt-2 sm:text-[15px]">{u.more}</p>
+                    <div className="mt-3 sm:mt-4 flex flex-wrap gap-1.5">
                       {u.tags.map((t) => (
                         <span key={t} className="rounded-md bg-white/15 px-2.5 py-1 text-xs font-medium backdrop-blur-sm">{t}</span>
                       ))}
@@ -123,7 +123,7 @@ export function UseCaseCarousel({ className, children }: { className?: string; c
                   aria-label={`Show ${u.title}`}
                   className="w-[var(--slim)] shrink-0 rounded-[1.25rem] bg-surface p-2 transition-transform hover:scale-[1.03]"
                 >
-                  <span className="relative block h-48 overflow-hidden rounded-[0.9rem] sm:h-64">
+                  <span className="relative block h-40 overflow-hidden rounded-[0.9rem] sm:h-64">
                     <Image src={u.photo} alt="" fill sizes="7rem" className="object-cover" />
                   </span>
                 </button>

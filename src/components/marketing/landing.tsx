@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 /** A rounded cream "sheet" sitting on the sand page background. */
 export function Panel({ id, className, children }: { id?: string; className?: string; children: ReactNode }) {
   return (
-    <section id={id} className={cn("scroll-mt-20 rounded-[1.5rem] bg-surface px-5 py-14 sm:px-10 sm:py-20 lg:px-16", className)}>
+    <section id={id} className={cn("scroll-mt-20 rounded-[1.5rem] bg-surface px-5 py-10 sm:px-10 sm:py-20 lg:px-16", className)}>
       {children}
     </section>
   );
@@ -75,7 +75,7 @@ export function HighlightsStrip({ items }: { items: { icon: LucideIcon; label: s
 /** A phone camera framing the QR code. */
 export function ScanVisual({ qrSvg }: { qrSvg: string }) {
   return (
-    <div className="relative w-56 sm:w-64">
+    <div className="relative w-48 sm:w-64">
       <div className="rounded-[2.25rem] border-[6px] border-[#141413] bg-[#141413] p-1.5 shadow-2xl">
         <div className="rounded-[1.75rem] bg-[#1b1b1a] px-5 pb-8 pt-10">
           <div className="relative rounded-2xl bg-surface p-3">
@@ -110,20 +110,22 @@ export function Journey({
   // Each card sticks a little lower than the one before, so as you scroll they
   // stack like a deck (each earlier card's top edge peeks out above the next).
   return (
-    <ol className="flex flex-col gap-8 pb-8">
+    <ol className="flex flex-col gap-6 pb-8 sm:gap-8">
       {moments.map((m, i) => (
+        // minmax(0, …) lets the column shrink to the screen; without it the card's
+        // longest line made phones scroll sideways.
         <li
           key={m.title}
           style={{ top: `calc(5.5rem + ${i} * 1.75rem)` }}
-          className="sticky grid min-h-[26rem] items-center gap-8 rounded-[1.25rem] bg-surface p-6 sm:p-10 lg:grid-cols-[1fr_26rem] lg:gap-14"
+          className="sticky grid grid-cols-[minmax(0,1fr)] items-center gap-6 rounded-[1.25rem] bg-surface p-5 sm:min-h-[26rem] sm:gap-8 sm:p-10 lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-14"
         >
           <div>
             <p className="text-sm font-medium text-accent">Step {i + 1}</p>
-            <h3 className="mt-1 font-display text-3xl leading-tight tracking-tight text-ink sm:text-4xl">{m.title}</h3>
-            <p className="mt-3 max-w-lg text-[16px] leading-relaxed text-ink-2">{m.body}</p>
-            <ul className="mt-5 flex flex-col gap-2.5">
+            <h3 className="mt-1 font-display text-[clamp(1.5rem,7vw,1.875rem)] leading-tight tracking-tight text-ink sm:text-4xl">{m.title}</h3>
+            <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-ink-2 sm:mt-3 sm:text-[16px]">{m.body}</p>
+            <ul className="mt-4 flex flex-col gap-2.5 sm:mt-5">
               {m.steps.map((s) => (
-                <li key={s.text} className="flex items-center gap-3 text-[15px] text-ink">
+                <li key={s.text} className="flex items-center gap-3 text-[14px] text-ink sm:text-[15px]">
                   <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
                     <s.icon className="size-4" aria-hidden />
                   </span>
@@ -132,7 +134,7 @@ export function Journey({
               ))}
             </ul>
           </div>
-          <div className={cn("flex min-h-64 items-center justify-center rounded-[1rem] p-6 sm:min-h-72", m.tint)} aria-hidden>
+          <div className={cn("flex min-h-44 items-center justify-center rounded-[1rem] p-4 sm:min-h-72 sm:p-6", m.tint)} aria-hidden>
             {m.visual}
           </div>
         </li>

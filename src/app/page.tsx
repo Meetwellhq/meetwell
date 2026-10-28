@@ -137,14 +137,15 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         {/* Hero */}
         <Panel className="overflow-hidden px-0 pb-0 sm:px-0 lg:px-0">
           <div className="px-5 text-center sm:px-10">
-            <h1 className="mx-auto max-w-4xl font-display text-[3.25rem] leading-[0.98] tracking-tight text-ink sm:text-7xl lg:text-[5.5rem]">
+            {/* On phones the headline scales with the screen width. */}
+            <h1 className="mx-auto max-w-4xl font-display text-[clamp(2.25rem,11vw,3.25rem)] leading-[0.98] tracking-tight text-ink sm:text-7xl lg:text-[5.5rem]">
               Meet someone. {/* Instrument Serif has one weight; a hairline stroke gives a medium look. */}
               <span className="font-medium italic text-accent [-webkit-text-stroke:0.008em_currentColor]">Make it a connection.</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-ink-2">
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-2 sm:mt-6 sm:text-lg">
               Share your card with one scan. Make it easy for people to follow up.
             </p>
-            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:mt-9 sm:flex-row">
               <ButtonLink href={cta} size="lg">
                 {ctaLabel}
                 <ArrowRight className="size-4" aria-hidden />
@@ -154,12 +155,12 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             <p className="mt-4 text-sm text-ink-3">Free · No app needed · Works with any phone camera</p>
           </div>
 
-          <div className="mt-12">
+          <div className="mt-8 sm:mt-12">
             <HighlightsStrip items={spark ? highlights : highlights.filter((h) => h.label !== "AI introductions")} />
           </div>
 
           {/* Every feature in one tabbed showcase (Calendly-style), right under the hero text. */}
-          <div id="how-it-works" className="mx-3 mt-12 scroll-mt-20 sm:mx-10 lg:mx-16">
+          <div id="how-it-works" className="mx-3 mt-8 scroll-mt-20 sm:mx-10 sm:mt-12 lg:mx-16">
             <FeatureTabs qrSvg={qr} spark={spark} />
           </div>
           <div className="h-3 sm:h-10 lg:h-16" />
@@ -169,14 +170,14 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         <Panel className="bg-surface-2!">
           <div className="max-w-2xl">
             <p className="text-sm font-medium uppercase tracking-wider text-accent">How it works</p>
-            <h2 className="mt-2 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
+            <h2 className="mt-2 font-display text-[clamp(1.875rem,8.5vw,2.25rem)] leading-[1.05] tracking-tight text-ink sm:text-5xl">
               From first hello to follow-up.
             </h2>
           </div>
-          <div className="mt-10">
+          <div className="mt-7 sm:mt-10">
             <Journey moments={moments} />
           </div>
-          <div className="mt-10">
+          <div className="mt-6 sm:mt-10">
             <ButtonLink href={cta}>
               {ctaLabel}
               <ArrowRight className="size-4" aria-hidden />
@@ -188,21 +189,21 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         {/* A rounded sheet like the others, heading inside the colour. */}
         <section className="overflow-hidden rounded-[1.5rem]">
           <UseCaseCarousel>
-            <h2 className="text-center font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
+            <h2 className="text-center font-display text-[clamp(1.875rem,8.5vw,2.25rem)] leading-[1.05] tracking-tight text-ink sm:text-5xl">
               Made for people who meet people.
             </h2>
           </UseCaseCarousel>
         </section>
 
         {/* Final CTA */}
-        <section className="rounded-[1.5rem] bg-accent px-6 py-20 text-center text-white sm:py-28">
-          <h2 className="mx-auto max-w-3xl font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl">
+        <section className="rounded-[1.5rem] bg-accent px-6 py-14 text-center text-white sm:py-28">
+          <h2 className="mx-auto max-w-3xl font-display text-[clamp(2.25rem,10vw,3rem)] leading-[1.02] tracking-tight sm:text-7xl">
             Your next connection is one scan away.
           </h2>
-          <p className="mx-auto mt-5 max-w-md text-lg text-white/75">
+          <p className="mx-auto mt-4 max-w-md text-base text-white/75 sm:mt-5 sm:text-lg">
             {SIGNUPS_OPEN ? "Create a free card in a few minutes." : "We're letting people in slowly."}
           </p>
-          <div className="mt-9">
+          <div className="mt-7 sm:mt-9">
             <ButtonLink href={cta} size="lg" variant="secondary" className="border-transparent">
               {ctaLabel}
               <ArrowRight className="size-4" aria-hidden />

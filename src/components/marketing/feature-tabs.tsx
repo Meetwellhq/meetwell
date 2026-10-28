@@ -131,21 +131,21 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
         id="feature-panel"
         role="tabpanel"
         aria-labelledby={`tab-${tab.key}`}
-        className="grid items-center gap-8 rounded-[1.25rem] bg-surface p-6 sm:p-10 lg:grid-cols-2 lg:gap-14 lg:p-12"
+        className="grid grid-cols-[minmax(0,1fr)] items-center gap-6 rounded-[1.25rem] bg-surface p-5 sm:gap-8 sm:p-10 lg:grid-cols-2 lg:gap-14 lg:p-12"
       >
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-accent">
             <tab.icon className="size-4" aria-hidden />
             {tab.label}
           </span>
-          <h3 className="mt-5 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">{tab.title}</h3>
-          <p className="mt-4 max-w-md text-[17px] leading-relaxed text-ink-2">{tab.body}</p>
-          <Link href={tab.href} className="mt-7 inline-flex items-center gap-1.5 border-b border-ink pb-0.5 text-[15px] font-medium text-ink hover:border-accent hover:text-accent">
+          <h3 className="mt-4 font-display text-[clamp(1.75rem,8vw,2.25rem)] leading-[1.05] tracking-tight text-ink sm:mt-5 sm:text-5xl">{tab.title}</h3>
+          <p className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-2 sm:mt-4 sm:text-[17px]">{tab.body}</p>
+          <Link href={tab.href} className="mt-5 sm:mt-7 inline-flex items-center gap-1.5 border-b border-ink pb-0.5 text-[15px] font-medium text-ink hover:border-accent hover:text-accent">
             Learn more
             <ArrowRight className="size-4" aria-hidden />
           </Link>
         </div>
-        <div className={cn("flex min-h-[20rem] items-center justify-center overflow-hidden rounded-[1.25rem] p-6 sm:min-h-[26rem] sm:p-10", tab.tint)}>
+        <div className={cn("flex min-h-[15rem] items-center justify-center overflow-hidden rounded-[1.25rem] p-4 sm:min-h-[26rem] sm:p-10", tab.tint)}>
           {tab.visual}
         </div>
       </div>
