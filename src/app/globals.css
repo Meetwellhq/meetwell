@@ -162,6 +162,8 @@
      to a 1280px laptop, then stays at the desktop size (e.g. text-fluid-hero). */
   --text-fluid-hero: clamp(2.25rem, 1.257rem + 5.3vw, 5.5rem); /* 40px → 88px */
   --text-fluid-cta: clamp(2.25rem, 1.45rem + 3.81vw, 4.5rem); /* 37.5px → 72px */
+  --text-fluid-title: clamp(2.25rem, 1.628rem + 2.65vw, 3.75rem); /* 36px → 60px: feature and event page titles */
+  --text-fluid-page: clamp(2.25rem, 1.939rem + 1.33vw, 3rem); /* 36px → 48px: Support, Changelog, legal titles */
   --text-fluid-h2: clamp(1.75rem, 1.586rem + 1.77vw, 3rem); /* 32px → 48px */
   --text-fluid-tab: clamp(1.75rem, 1.762rem + 1.55vw, 3rem); /* 34px → 48px */
   --text-fluid-h3: clamp(1.5rem, 1.543rem + 0.88vw, 2.25rem); /* 28px → 36px */

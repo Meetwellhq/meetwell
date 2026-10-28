@@ -36,11 +36,11 @@ export default async function EventPage({ params }: PageProps<"/e/[slug]">) {
   return (
     <div className="light-only flex min-h-full flex-col bg-surface-2">
       <SiteHeader signedIn={signedIn} />
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-16 px-4 py-6 sm:px-6 sm:py-10 lg:gap-[100px]">
         <section className="grid gap-8 rounded-[1.5rem] bg-surface p-6 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="min-w-0">
             <p className="text-sm font-medium uppercase tracking-wider text-accent">{event.partnerName}</p>
-            <h1 className="mt-3 font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-6xl">{event.name}</h1>
+            <h1 className="mt-3 font-display text-fluid-title leading-[1.05] tracking-tight text-ink">{event.name}</h1>
             <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-ink-2">
               <span className="inline-flex items-center gap-2">
                 <CalendarDays className="size-4 text-accent" aria-hidden />
@@ -53,7 +53,7 @@ export default async function EventPage({ params }: PageProps<"/e/[slug]">) {
                 </span>
               )}
             </div>
-            {event.about && <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-ink-2">{event.about}</p>}
+            {event.about && <p className="mt-5 max-w-2xl text-fluid-body leading-relaxed text-ink-2">{event.about}</p>}
           </div>
 
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-white p-4 text-center lg:w-56">
@@ -68,7 +68,7 @@ export default async function EventPage({ params }: PageProps<"/e/[slug]">) {
 
         <section className="rounded-[1.5rem] bg-surface p-6 sm:p-10">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-display text-3xl tracking-tight text-ink sm:text-4xl">Speakers</h2>
+            <h2 className="font-display text-fluid-h3 tracking-tight text-ink">Speakers</h2>
             <p className="text-sm text-ink-2">
               {speakers.length} {speakers.length === 1 ? "speaker" : "speakers"} · save their cards and keep in touch
             </p>
@@ -115,7 +115,7 @@ export default async function EventPage({ params }: PageProps<"/e/[slug]">) {
         </section>
 
         <section className="flex flex-col items-center gap-4 rounded-[1.5rem] bg-accent px-6 py-12 text-center text-white">
-          <h2 className="max-w-2xl font-display text-3xl tracking-tight sm:text-4xl">Met someone great at {event.name}?</h2>
+          <h2 className="max-w-2xl font-display text-fluid-h3 tracking-tight">Met someone great at {event.name}?</h2>
           <p className="max-w-xl text-white/85">
             {APP_NAME} gives you a card with its own QR code, so the people you meet can save you in one tap.
           </p>

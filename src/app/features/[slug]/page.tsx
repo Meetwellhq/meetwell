@@ -1,6 +1,5 @@
 import { ArrowRight, Check } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   AnalyticsPreview,
@@ -11,7 +10,8 @@ import {
   SparkPreview,
   StarterPreview,
 } from "@/components/marketing/card-preview";
-import { Panel } from "@/components/marketing/landing";
+import { FeatureTabs } from "@/components/marketing/feature-tabs";
+import { Journey, Panel } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink } from "@/components/ui/button";
@@ -39,10 +39,10 @@ async function isSignedIn() {
   }
 }
 
-async function Visual({ slug }: { slug: FeatureSlug }) {
+function Visual({ slug, qr }: { slug: FeatureSlug; qr: string }) {
   switch (slug) {
     case "qr-card":
-      return <CardPreview qrSvg={await qrSvg(getSiteUrl(), { margin: 1 })} />;
+      return <CardPreview qrSvg={qr} />;
     case "icebreaker":
       return (
         <div className="w-full max-w-md">
@@ -70,18 +70,21 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
   const signedIn = await isSignedIn();
   const cta = signedIn ? "/dashboard" : JOIN_CTA.href;
   const ctaLabel = signedIn ? "Go to your dashboard" : JOIN_CTA.label;
-  const others = visibleFeatures(spark).filter((f) => f.slug !== feature.slug);
+  // "More from Meetwell" opens on the feature after this one (wrapping round).
+  const shown = visibleFeatures(spark);
+  const next = shown[(shown.findIndex((f) => f.slug === feature.slug) + 1) % shown.length].slug;
+  const qr = await qrSvg(getSiteUrl(), { margin: 1 });
 
   return (
     <div className="light-only flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
-      <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
+      <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-16 px-3 pb-3 sm:px-4 lg:gap-[100px]">
         <Panel>
           <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
             <div>
               <p className="text-sm font-medium uppercase tracking-wider text-accent">{feature.name}</p>
-              <h1 className="mt-4 font-display text-5xl leading-[1] tracking-tight text-ink sm:text-6xl">{feature.title}</h1>
-              <p className="mt-6 max-w-lg text-lg leading-relaxed text-ink-2">{feature.intro}</p>
+              <h1 className="mt-4 font-display text-fluid-title leading-[1] tracking-tight text-ink">{feature.title}</h1>
+              <p className="mt-6 max-w-lg text-fluid-lead leading-relaxed text-ink-2">{feature.intro}</p>
               <div className="mt-8">
                 <ButtonLink href={cta} size="lg">
                   {ctaLabel}
@@ -90,30 +93,42 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
               </div>
             </div>
             <div className="relative flex min-h-[24rem] items-center justify-center overflow-hidden rounded-[1.25rem] bg-sage p-4 pb-20 sm:min-h-[28rem] sm:p-10 sm:pb-20">
-              <Visual slug={feature.slug} />
+              <Visual slug={feature.slug} qr={qr} />
             </div>
           </div>
         </Panel>
 
-        <Panel>
-          <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">How it works</h2>
-          <ol className="mt-10 grid gap-3 md:grid-cols-3">
-            {feature.steps.map((s, i) => (
-              <li key={s.title} className="rounded-[1rem] border border-border bg-surface p-6">
-                <span className="grid size-9 place-items-center rounded-full bg-accent text-sm font-semibold text-white">{i + 1}</span>
-                <h3 className="mt-5 font-semibold text-ink">{s.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{s.body}</p>
-              </li>
-            ))}
-          </ol>
+        {/* The landing page's stacking step cards, with this feature's own steps and an icon for each. */}
+        <Panel className="bg-surface-2!">
+          <div className="max-w-2xl">
+            <p className="text-sm font-medium uppercase tracking-wider text-accent">How it works</p>
+            <h2 className="mt-2 font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">
+              {feature.name} in three steps.
+            </h2>
+          </div>
+          <div className="mt-7 sm:mt-10">
+            <Journey
+              moments={feature.steps.map((s, i) => ({
+                title: s.title,
+                body: s.body,
+                steps: [],
+                tint: i % 2 ? "bg-clay" : "bg-sage",
+                visual: (
+                  <span className="grid size-24 place-items-center rounded-[1.75rem] bg-surface shadow-md sm:size-28">
+                    <s.icon className="size-10 text-accent sm:size-12" />
+                  </span>
+                ),
+              }))}
+            />
+          </div>
         </Panel>
 
         <Panel>
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-            <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">Good to know</h2>
+            <h2 className="font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">Good to know</h2>
             <ul className="flex flex-col gap-4">
               {feature.details.map((d) => (
-                <li key={d} className="flex items-start gap-3 text-[17px] leading-relaxed text-ink-2">
+                <li key={d} className="flex items-start gap-3 text-fluid-body leading-relaxed text-ink-2">
                   <Check className="mt-1 size-5 shrink-0 text-accent" aria-hidden />
                   {d}
                 </li>
@@ -122,24 +137,12 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
           </div>
         </Panel>
 
+        {/* The landing page's feature tabs, opening on the next feature rather than this one. */}
         <Panel>
-          <h2 className="font-display text-3xl leading-[1.05] tracking-tight text-ink sm:text-4xl">More from Meetwell</h2>
-          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {others.map((f) => (
-              <li key={f.slug}>
-                <Link
-                  href={`/features/${f.slug}`}
-                  className="flex h-full flex-col rounded-[1rem] border border-border bg-surface p-6 transition-colors hover:border-border-strong"
-                >
-                  <span className="font-semibold text-ink">{f.name}</span>
-                  <span className="mt-2 flex-1 text-[15px] leading-relaxed text-ink-2">{f.title}</span>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent">
-                    Learn more <ArrowRight className="size-4" aria-hidden />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <h2 className="text-center font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">More from Meetwell</h2>
+          <div className="mt-8 sm:mt-12">
+            <FeatureTabs qrSvg={qr} spark={spark} initial={next} />
+          </div>
         </Panel>
       </main>
       <SiteFooter wide />

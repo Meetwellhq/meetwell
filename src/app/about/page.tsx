@@ -43,14 +43,14 @@ export default async function AboutPage() {
   return (
     <div className="light-only flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
-      <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
+      <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-16 px-3 pb-3 sm:px-4 lg:gap-[100px]">
         {/* Intro */}
         <Panel className="text-center">
           <p className="text-sm font-medium uppercase tracking-wider text-accent">About {APP_NAME}</p>
-          <h1 className="mx-auto mt-4 max-w-4xl font-display text-5xl leading-[1] tracking-tight text-ink sm:text-7xl">
+          <h1 className="mx-auto mt-4 max-w-4xl font-display text-fluid-cta leading-[1] tracking-tight text-ink">
             Good meetings shouldn&apos;t end at <span className="italic text-accent">hello.</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-ink-2">
+          <p className="mx-auto mt-6 max-w-2xl text-fluid-lead leading-relaxed text-ink-2">
             You meet someone great at an event. You swap numbers, or a handle, or nothing at all. A week later
             you&apos;ve forgotten their name. {APP_NAME} is here so that doesn&apos;t happen.
           </p>
@@ -59,10 +59,10 @@ export default async function AboutPage() {
         {/* Why */}
         <Panel>
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-            <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">
+            <h2 className="font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">
               Why we&apos;re building it
             </h2>
-            <div className="space-y-4 text-[17px] leading-relaxed text-ink-2">
+            <div className="space-y-4 text-fluid-body leading-relaxed text-ink-2">
               <p>
                 Most careers grow through people: the senior designer who reviews your portfolio, the founder who
                 remembers you, the friend of a friend who knows about the job. But the tools for meeting people
@@ -79,7 +79,7 @@ export default async function AboutPage() {
 
         {/* What */}
         <Panel>
-          <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">What {APP_NAME} does</h2>
+          <h2 className="font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">What {APP_NAME} does</h2>
           <ul className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {offer.map((w) => (
               <li key={w.title} className="rounded-[1rem] border border-border bg-surface p-6">
@@ -104,8 +104,8 @@ export default async function AboutPage() {
               className="size-40 rounded-full object-cover sm:size-56"
             />
             <div>
-              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">Built in Lagos</h2>
-              <div className="mt-5 max-w-2xl space-y-4 text-[17px] leading-relaxed text-ink-2">
+              <h2 className="font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">Built in Lagos</h2>
+              <div className="mt-5 max-w-2xl space-y-4 text-fluid-body leading-relaxed text-ink-2">
                 <p>
                   I&apos;m Rasheed, a design engineer and the founder of {APP_NAME}. Almost every step in my
                   career came from someone I met, or someone who mentioned my name. But it rarely felt easy. I
@@ -136,15 +136,15 @@ export default async function AboutPage() {
         <Panel>
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
             <div>
-              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">The company</h2>
-              <p className="mt-5 max-w-md text-[17px] leading-relaxed text-ink-2">
+              <h2 className="font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">The company</h2>
+              <p className="mt-5 max-w-md text-fluid-body leading-relaxed text-ink-2">
                 {APP_NAME} is run by {COMPANY_NAME} ({COMPANY_RC}), a company registered in Nigeria with the
                 Corporate Affairs Commission in October 2026.
               </p>
             </div>
             <div>
-              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-ink sm:text-5xl">Say hello</h2>
-              <p className="mt-5 text-[17px] leading-relaxed text-ink-2">
+              <h2 className="font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">Say hello</h2>
+              <p className="mt-5 text-fluid-body leading-relaxed text-ink-2">
                 Questions, ideas or feedback:{" "}
                 <a href={`mailto:${INFO_EMAIL}`} className="text-accent underline">
                   {INFO_EMAIL}
@@ -173,7 +173,7 @@ export default async function AboutPage() {
 
         {/* CTA */}
         <section className="rounded-[1.5rem] bg-accent px-6 py-20 text-center text-white sm:py-24">
-          <h2 className="mx-auto max-w-3xl font-display text-5xl leading-[1.02] tracking-tight sm:text-6xl">
+          <h2 className="mx-auto max-w-3xl font-display text-fluid-cta leading-[1.02] tracking-tight">
             Make your next meeting count.
           </h2>
           <div className="mt-9">

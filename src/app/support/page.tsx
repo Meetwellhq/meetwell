@@ -37,8 +37,8 @@ const infoMail = (
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mt-14">
-      <h2 className="font-display text-3xl tracking-tight text-ink">{title}</h2>
-      <div className="mt-4 space-y-4 text-[17px] leading-relaxed text-ink-2">{children}</div>
+      <h2 className="font-display text-fluid-h3 tracking-tight text-ink">{title}</h2>
+      <div className="mt-4 space-y-4 text-fluid-body leading-relaxed text-ink-2">{children}</div>
     </section>
   );
 }
@@ -62,7 +62,7 @@ export default async function SupportPage() {
     <div className="light-only flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-14 sm:py-20">
-        <h1 className="font-display text-4xl leading-none tracking-tight text-ink sm:text-5xl">Support</h1>
+        <h1 className="font-display text-fluid-page leading-none tracking-tight text-ink">Support</h1>
         <p className="mt-5 text-ink-3">Last updated 22 October 2026.</p>
 
         <Section title="Get in touch">

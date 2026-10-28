@@ -44,7 +44,7 @@ function Blocks({ blocks }: { blocks: Block[] }) {
         {block.text}
       </h3>
     ) : block.type === "paragraph" ? (
-      <p key={i} className="text-[17px] leading-relaxed text-ink-2">
+      <p key={i} className="text-fluid-body leading-relaxed text-ink-2">
         <Text parts={block.content} />
       </p>
     ) : block.type === "image" ? (
@@ -59,7 +59,7 @@ function Blocks({ blocks }: { blocks: Block[] }) {
     ) : (
       <ul key={i} className="flex flex-col gap-4 border-l border-border pl-6">
         {block.items.map((item, j) => (
-          <li key={j} className="text-[16px] leading-relaxed text-ink-2">
+          <li key={j} className="text-fluid-small leading-relaxed text-ink-2">
             <Text parts={item} />
           </li>
         ))}
@@ -92,8 +92,8 @@ export default async function ChangelogPage() {
     <div className="light-only flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-14 sm:px-8 sm:py-20">
-        <h1 className="font-display text-4xl leading-none tracking-tight text-ink sm:text-5xl">Changelog</h1>
-        <p className="mt-4 text-lg text-ink-2">What&apos;s new in {APP_NAME}, newest first.</p>
+        <h1 className="font-display text-fluid-page leading-none tracking-tight text-ink">Changelog</h1>
+        <p className="mt-4 text-fluid-lead text-ink-2">What&apos;s new in {APP_NAME}, newest first.</p>
 
         <div className="mt-14 grid gap-12 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-20">
           {/* Sidebar: months, then each release. */}
@@ -137,7 +137,7 @@ export default async function ChangelogPage() {
                   {r.date}
                   {i === 0 && <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">Latest</span>}
                 </p>
-                <h2 className="mt-3 font-display text-3xl leading-[1.05] tracking-tight text-ink">{r.title}</h2>
+                <h2 className="mt-3 font-display text-fluid-h3 leading-[1.05] tracking-tight text-ink">{r.title}</h2>
                 <div className="mt-6 flex flex-col gap-5">
                   <Blocks blocks={r.blocks} />
                 </div>

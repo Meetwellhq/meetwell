@@ -47,7 +47,7 @@ function FitToBox({ children, watch }: { children: ReactNode; watch: string }) {
  * frame, and the chosen feature below with its illustration. Replaces a long
  * run of separate sections. Spark only shows once it has launched.
  */
-export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean }) {
+export function FeatureTabs({ qrSvg, spark, initial }: { qrSvg: string; spark: boolean; initial?: string }) {
   const tabs: Tab[] = [
     {
       key: "qr-card",
@@ -128,7 +128,8 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
       tint: "bg-clay",
     },
   ];
-  const [active, setActive] = useState(tabs[0].key);
+  // `initial` picks the opening tab (feature pages start on a different feature from their own).
+  const [active, setActive] = useState(initial && tabs.some((t) => t.key === initial) ? initial : tabs[0].key);
   const tab = tabs.find((t) => t.key === active) ?? tabs[0];
   const keys = tabs.map((t) => t.key).join(",");
 

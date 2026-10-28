@@ -100,7 +100,8 @@ type Step = { icon: LucideIcon; text: string };
 
 /**
  * Before, during and after you meet (after Calendly's stacked step cards): each
- * moment with a short checklist and a small picture of what happens.
+ * moment with a short checklist and a small picture of what happens. Also used
+ * for each feature page's steps, without the checklist.
  */
 export function Journey({
   moments,
@@ -123,6 +124,7 @@ export function Journey({
             <p className="text-sm font-medium text-accent">Step {i + 1}</p>
             <h3 className="mt-1 font-display text-fluid-h3 leading-tight tracking-tight text-ink">{m.title}</h3>
             <p className="mt-2 max-w-lg text-fluid-small leading-relaxed text-ink-2 sm:mt-3">{m.body}</p>
+            {m.steps.length > 0 && (
             <ul className="mt-4 flex flex-col gap-2.5 sm:mt-5">
               {m.steps.map((s) => (
                 <li key={s.text} className="flex items-center gap-3 text-fluid-list text-ink">
@@ -133,6 +135,7 @@ export function Journey({
                 </li>
               ))}
             </ul>
+            )}
           </div>
           <div className={cn("flex min-h-44 items-center justify-center rounded-[1rem] p-4 sm:min-h-72 sm:p-6", m.tint)} aria-hidden>
             {m.visual}
