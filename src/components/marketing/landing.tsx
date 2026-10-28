@@ -121,11 +121,11 @@ export function Journey({
         >
           <div>
             <p className="text-sm font-medium text-accent">Step {i + 1}</p>
-            <h3 className="mt-1 font-display text-[clamp(1.5rem,7vw,1.875rem)] leading-tight tracking-tight text-ink sm:text-4xl">{m.title}</h3>
-            <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-ink-2 sm:mt-3 sm:text-[16px]">{m.body}</p>
+            <h3 className="mt-1 font-display text-fluid-h3 leading-tight tracking-tight text-ink">{m.title}</h3>
+            <p className="mt-2 max-w-lg text-fluid-small leading-relaxed text-ink-2 sm:mt-3">{m.body}</p>
             <ul className="mt-4 flex flex-col gap-2.5 sm:mt-5">
               {m.steps.map((s) => (
-                <li key={s.text} className="flex items-center gap-3 text-[14px] text-ink sm:text-[15px]">
+                <li key={s.text} className="flex items-center gap-3 text-fluid-list text-ink">
                   <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent-soft text-accent">
                     <s.icon className="size-4" aria-hidden />
                   </span>

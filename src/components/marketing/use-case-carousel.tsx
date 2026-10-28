@@ -106,9 +106,9 @@ export function UseCaseCarousel({ className, children }: { className?: string; c
                     <span className="grid size-8 place-items-center rounded-full bg-white/15 backdrop-blur-sm sm:size-10">
                       <u.icon className="size-4 sm:size-5" aria-hidden />
                     </span>
-                    <h3 className="mt-2.5 font-display text-2xl leading-[1.05] tracking-tight sm:mt-3 sm:text-4xl">{u.title}</h3>
-                    <p className="mt-1 text-[15px] font-medium sm:mt-1.5 sm:text-[17px]">{u.body}</p>
-                    <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-white/80 sm:mt-2 sm:text-[15px]">{u.more}</p>
+                    <h3 className="mt-2.5 font-display text-fluid-photo leading-[1.05] tracking-tight sm:mt-3">{u.title}</h3>
+                    <p className="mt-1 text-fluid-body font-medium sm:mt-1.5">{u.body}</p>
+                    <p className="mt-1.5 max-w-xl text-fluid-xs leading-relaxed text-white/80 sm:mt-2">{u.more}</p>
                     <div className="mt-3 sm:mt-4 flex flex-wrap gap-1.5">
                       {u.tags.map((t) => (
                         <span key={t} className="rounded-md bg-white/15 px-2.5 py-1 text-xs font-medium backdrop-blur-sm">{t}</span>

@@ -156,6 +156,20 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --animate-toast-in: toast-in 180ms ease-out;
+
+  /* Fluid text for the landing page: grows in a straight line from a 375px phone
+     to a 1280px laptop, then stays at the desktop size (e.g. text-fluid-hero). */
+  --text-fluid-hero: clamp(2.25rem, 1.257rem + 5.3vw, 5.5rem); /* 40px → 88px */
+  --text-fluid-cta: clamp(2.25rem, 1.45rem + 3.81vw, 4.5rem); /* 37.5px → 72px */
+  --text-fluid-h2: clamp(1.75rem, 1.586rem + 1.77vw, 3rem); /* 32px → 48px */
+  --text-fluid-tab: clamp(1.75rem, 1.762rem + 1.55vw, 3rem); /* 34px → 48px */
+  --text-fluid-h3: clamp(1.5rem, 1.543rem + 0.88vw, 2.25rem); /* 28px → 36px */
+  --text-fluid-photo: clamp(1.5rem, 1.19rem + 1.33vw, 2.25rem); /* 24px → 36px */
+  --text-fluid-lead: clamp(1rem, 0.948rem + 0.22vw, 1.125rem); /* 16px → 18px */
+  --text-fluid-body: clamp(0.9375rem, 0.886rem + 0.22vw, 1.0625rem); /* 15px → 17px */
+  --text-fluid-small: clamp(0.9375rem, 0.912rem + 0.11vw, 1rem); /* 15px → 16px */
+  --text-fluid-xs: clamp(0.8125rem, 0.761rem + 0.22vw, 0.9375rem); /* 13px → 15px */
+  --text-fluid-list: clamp(0.875rem, 0.849rem + 0.11vw, 0.9375rem); /* 14px → 15px */
 }
 
 html {

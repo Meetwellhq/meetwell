@@ -82,11 +82,11 @@ function CardStep() {
   ];
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="rounded-2xl border border-border bg-surface px-5 pb-5 pt-6 text-center">
+      <div className="rounded-2xl border border-border bg-surface px-4 pb-5 pt-6 text-center sm:px-5">
         <CompanyAvatar name="Chidi Nwosu" src="/demo/chidi.svg" organization="Brightwave" className="size-20 text-xl" badgeClassName="size-8" />
-        <p className="mt-3 text-xl font-semibold tracking-tight text-ink">Chidi Nwosu</p>
-        <p className="mt-0.5 text-sm text-ink-2">Engineering Manager · Brightwave</p>
-        <p className="mt-1 inline-flex items-center gap-1 text-xs text-ink-3">
+        <p className="mt-3 truncate text-xl font-semibold tracking-tight text-ink">Chidi Nwosu</p>
+        <p className="mt-0.5 truncate text-sm text-ink-2">Engineering Manager · Brightwave</p>
+        <p className="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-xs text-ink-3">
           <CalendarDays className="size-3" aria-hidden />
           Joined 2026
         </p>
@@ -94,15 +94,15 @@ function CardStep() {
           9 years building payment teams. I help engineers grow into leads.
         </p>
         <p className="mt-3">
-          <span className="inline-block rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">Open to mentoring</span>
+          <span className="inline-block whitespace-nowrap rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">Open to mentoring</span>
         </p>
-        <div className="mt-4 flex h-11 items-center justify-center gap-2 rounded-lg bg-accent text-[15px] font-medium text-white">
-          <UserRoundPlus className="size-[18px]" aria-hidden />
+        <div className="mt-4 flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-accent px-3 text-[15px] font-medium text-white">
+          <UserRoundPlus className="size-[18px] shrink-0" aria-hidden />
           Save contact
         </div>
-        <div className="mt-2.5 flex h-11 items-center justify-center gap-2 rounded-lg border border-border-strong bg-surface text-[15px] font-medium text-ink">
-          <MessageCircle className="size-[18px]" aria-hidden />
-          Message Chidi · {nairaShort(500_000)}/month
+        <div className="mt-2.5 flex h-11 items-center justify-center gap-2 rounded-lg border border-border-strong bg-surface px-3 text-[14px] font-medium text-ink sm:text-[15px]">
+          <MessageCircle className="size-[18px] shrink-0" aria-hidden />
+          <span className="truncate">Message Chidi · {nairaShort(500_000)}/month</span>
         </div>
         <div className="mt-3 flex justify-center gap-2.5">
           {icons.map((icon, i) => (
@@ -114,9 +114,9 @@ function CardStep() {
       </div>
       <div className="flex gap-2">
         {(["linkedin", "x"] as const).map((p) => (
-          <span key={p} className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs text-ink-2">
-            <SocialIcon platform={p} className="size-4 text-ink" />
-            {p === "linkedin" ? "in/chidinwosu" : "@chidibuilds"}
+          <span key={p} className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs text-ink-2">
+            <SocialIcon platform={p} className="size-4 shrink-0 text-ink" />
+            <span className="truncate">{p === "linkedin" ? "in/chidinwosu" : "@chidibuilds"}</span>
           </span>
         ))}
       </div>
@@ -133,14 +133,14 @@ function CheckoutStep() {
   ];
   return (
     <div className="overflow-hidden rounded-[1.25rem] border border-border bg-surface">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
-        <div>
-          <p className="text-xs text-ink-3">Meet Well Limited</p>
-          <p className="text-sm font-medium text-ink">Messages with Chidi · 30 days</p>
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5 sm:px-5">
+        <div className="min-w-0">
+          <p className="truncate text-xs text-ink-3">Meet Well Limited</p>
+          <p className="truncate text-sm font-medium text-ink">Messages with Chidi · 30 days</p>
         </div>
-        <p className="text-lg font-semibold tabular-nums text-ink">₦5,000</p>
+        <p className="shrink-0 text-lg font-semibold tabular-nums text-ink">₦5,000</p>
       </div>
-      <div className="flex flex-col gap-2 p-5">
+      <div className="flex flex-col gap-2 p-4 sm:p-5">
         {methods.map((m) => (
           <div
             key={m.label}
@@ -171,10 +171,10 @@ function ChatStep() {
     <div className="flex flex-col gap-3">
       <div className="rounded-[1.25rem] border border-border bg-surface p-4">
         <div className="flex items-center gap-2 text-sm font-medium text-success">
-          <span className="grid size-5 place-items-center rounded-full bg-success text-white">
+          <span className="grid size-5 shrink-0 place-items-center rounded-full bg-success text-white">
             <Check className="size-3" aria-hidden />
           </span>
-          Payment received · 30 days of messages
+          <span className="truncate">Payment received · 30 days of messages</span>
         </div>
         <div className="mt-4 flex flex-col gap-2 text-[14px] leading-snug">
           <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-white">
@@ -186,9 +186,9 @@ function ChatStep() {
         </div>
       </div>
       <div className="flex items-center justify-between rounded-[1.25rem] border border-border bg-surface px-4 py-3.5">
-        <div>
-          <p className="text-xs text-ink-3">Chidi&apos;s earnings</p>
-          <p className="text-sm text-ink-2">You keep 80%. Withdraw to your bank.</p>
+        <div className="min-w-0">
+          <p className="truncate text-xs text-ink-3">Chidi&apos;s earnings</p>
+          <p className="truncate text-sm text-ink-2">You keep 80%. Withdraw to your bank.</p>
         </div>
         <p className="shrink-0 whitespace-nowrap pl-3 text-xl font-semibold tabular-nums text-success">+₦4,000</p>
       </div>

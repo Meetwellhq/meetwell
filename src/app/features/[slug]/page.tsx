@@ -89,7 +89,7 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
                 </ButtonLink>
               </div>
             </div>
-            <div className="relative flex min-h-[24rem] items-center justify-center overflow-hidden rounded-[1.25rem] bg-sage p-6 pb-20 sm:min-h-[28rem] sm:p-10 sm:pb-20">
+            <div className="relative flex min-h-[24rem] items-center justify-center overflow-hidden rounded-[1.25rem] bg-sage p-4 pb-20 sm:min-h-[28rem] sm:p-10 sm:pb-20">
               <Visual slug={feature.slug} />
             </div>
           </div>
