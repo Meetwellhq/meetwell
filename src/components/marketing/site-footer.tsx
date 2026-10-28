@@ -40,7 +40,7 @@ export async function SiteFooter({ wide = false }: { wide?: boolean }) {
             <span className="text-[19px]">{APP_NAME}</span>
           </a>
           {socials.length > 0 && (
-            <ul className="-ml-1.5 flex items-center gap-2" aria-label="Meetwell elsewhere">
+            <ul className="flex items-center gap-2.5" aria-label="Meetwell elsewhere">
               {socials.map((s) => (
                 <li key={s.platform}>
                   <a
@@ -49,9 +49,11 @@ export async function SiteFooter({ wide = false }: { wide?: boolean }) {
                     rel="noopener noreferrer"
                     aria-label={`Meetwell on ${s.label}`}
                     title={s.label}
-                    className="grid size-8 place-items-center text-ink-2 transition-colors hover:text-ink"
+                    // Brand glyph on a grey circle.
+                    className="grid size-10 place-items-center rounded-full border border-border bg-surface-2 text-ink transition-colors hover:border-border-strong hover:bg-border"
                   >
-                    <SocialIcon platform={s.platform} className="size-5" />
+                    {/* X fills its whole box, so it is drawn smaller to look the same size as the others. */}
+                    <SocialIcon platform={s.platform} className={s.platform === "x" ? "size-[15px]" : "size-[18px]"} />
                   </a>
                 </li>
               ))}

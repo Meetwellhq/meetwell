@@ -35,10 +35,12 @@ export function SocialIcon({ platform, className }: { platform: string; classNam
   const cls = cn("size-5 shrink-0", className);
 
   if (platform === "linkedin") {
-    // Simple Icons no longer ships LinkedIn; this is a neutral "in" monogram.
+    // Simple Icons no longer ships LinkedIn; this is just the "in" letters (no box), so it weighs
+    // about the same as the other glyphs.
     return (
       <svg viewBox="0 0 24 24" className={cls} aria-hidden fill="currentColor">
-        <path d="M4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm1.6 7.4V19h3V9.4h-3Zm1.5-4.6a1.75 1.75 0 1 0 0 3.5 1.75 1.75 0 0 0 0-3.5ZM10.6 9.4V19h3v-5c0-1.4.6-2.4 1.9-2.4 1.2 0 1.6.9 1.6 2.3V19h3v-5.7c0-2.8-1.4-4.1-3.5-4.1-1.5 0-2.4.7-2.9 1.5h-.1V9.4h-3Z" />
+        <circle cx="5" cy="4.6" r="2.2" />
+        <path d="M3 8.6h4V21H3zM9.5 8.6h3.8v1.7h.06c.53-1 1.82-2.05 3.75-2.05 4.01 0 4.75 2.64 4.75 6.07V21h-4v-5.88c0-1.4-.03-3.2-1.95-3.2-1.95 0-2.25 1.52-2.25 3.1V21h-4.16z" />
       </svg>
     );
   }

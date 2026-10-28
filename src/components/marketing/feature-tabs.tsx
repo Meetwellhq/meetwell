@@ -222,7 +222,7 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
       )}
       <div className={cn(scrollMode && "w-full max-w-6xl")}>
       {/* The tabs: icons on a pill, labels under them from tablets up. */}
-      <div role="tablist" aria-label="Features" className="-mx-1 flex justify-start gap-2 overflow-x-auto px-1 pb-3 sm:justify-center sm:pb-4">
+      <div role="tablist" aria-label="Features" className="-mx-1 flex justify-start gap-2 overflow-x-auto px-1 pb-3 pt-1 sm:justify-center sm:pb-4">
         {tabs.map((t) => {
           const on = t.key === tab.key;
           return (
@@ -235,11 +235,15 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
               aria-controls="feature-panel"
               onClick={() => choose(t.key)}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
-                on ? "bg-surface text-ink shadow-sm ring-1 ring-accent/30" : "bg-surface/60 text-ink-2 hover:bg-surface/90 hover:text-ink",
+                // A 2px outline on every tab. Active: all brand green with white text and icon;
+                // inactive: a subtle light green with a white outline.
+                "flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium ring-2 transition-colors",
+                // Active outline: a 200 shade of the brand green (#1f4d3f).
+                on ? "bg-accent text-white shadow-sm ring-[#a9cdbd]" : "bg-accent-soft text-ink ring-white hover:bg-surface hover:text-ink",
               )}
             >
-              <span className={cn("grid size-7 place-items-center rounded-full", on ? "bg-accent text-accent-ink" : "bg-surface text-ink-2")}>
+              {/* Active icon sits on a lighter green circle. */}
+              <span className={cn("grid size-7 place-items-center rounded-full", on ? "bg-white/20 text-white" : "bg-surface text-ink-2")}>
                 <t.icon className="size-4" aria-hidden />
               </span>
               {t.label}
@@ -264,7 +268,7 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
           </span>
           <h3 className="mt-4 font-display text-fluid-tab leading-[1.05] tracking-tight text-ink sm:mt-5">{tab.title}</h3>
           <p className="mt-3 max-w-md text-fluid-body leading-relaxed text-ink-2 sm:mt-4">{tab.body}</p>
-          <Link href={tab.href} className="mt-5 sm:mt-7 inline-flex items-center gap-1.5 border-b border-ink pb-0.5 text-[15px] font-medium text-ink hover:border-accent hover:text-accent">
+          <Link href={tab.href} className="mt-5 inline-flex items-center gap-1.5 text-[15px] font-medium text-accent hover:text-accent-hover sm:mt-7">
             Learn more
             <ArrowRight className="size-4" aria-hidden />
           </Link>

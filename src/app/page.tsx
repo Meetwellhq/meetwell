@@ -118,6 +118,9 @@ const moments = [
   },
 ];
 
+// The page column every section except the edge-to-edge use cases sits in.
+const COLUMN = "mx-auto w-full max-w-[90rem] px-3 sm:px-4";
+
 export default async function LandingPage({ searchParams }: PageProps<"/">) {
   const [signedIn, qr, { deleted }, spark] = await Promise.all([
     isSignedIn(),
@@ -132,12 +135,19 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
     <div className="light-only flex min-h-full flex-col bg-surface">
       {!SIGNUPS_OPEN && !signedIn && <BetaBanner />}
       <SiteHeader signedIn={signedIn} />
-      <main className="mx-auto flex w-full max-w-[90rem] flex-1 flex-col gap-3 px-3 pb-3 sm:px-4">
-        {deleted && <Alert tone="success">Your account and card have been deleted.</Alert>}
+      {/* Full width so the use-case section can run edge to edge; the other sections sit in COLUMN.
+          100px between sections on laptops and up, 64px on phones. */}
+      <main className="flex flex-1 flex-col gap-16 pb-3 lg:gap-[100px]">
+        {deleted && (
+          <div className={COLUMN}>
+            <Alert tone="success">Your account and card have been deleted.</Alert>
+          </div>
+        )}
 
         {/* Hero */}
         {/* max-sm:px-0! because Panel's own px-5 otherwise wins on phones and squeezes the feature tabs.
             overflow-clip, not hidden: hidden would stop the feature tabs from sticking while you scroll. */}
+        <div className={COLUMN}>
         <Panel className="overflow-clip px-0 pb-0 max-sm:px-0! sm:px-0 lg:px-0 lg:pb-0!">
           <div className="px-5 text-center sm:px-10">
             {/* Text on this page scales with the screen width (text-fluid-* in globals.css). */}
@@ -169,8 +179,10 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           {/* Small on laptops, so the enlarged feature frame ends close to the next section. */}
           <div className="h-3 sm:h-10 lg:h-4" />
         </Panel>
+        </div>
 
         {/* Before, during and after you meet: white cards stacking on light grey. */}
+        <div className={COLUMN}>
         <Panel className="bg-surface-2!">
           <div className="max-w-2xl">
             <p className="text-sm font-medium uppercase tracking-wider text-accent">How it works</p>
@@ -188,10 +200,10 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             </ButtonLink>
           </div>
         </Panel>
+        </div>
 
-        {/* Use cases */}
-        {/* A rounded sheet like the others, heading inside the colour. */}
-        <section className="overflow-hidden rounded-[1.5rem]">
+        {/* Use cases: edge to edge across the screen, its colour fading into the white page top and bottom. */}
+        <section>
           <UseCaseCarousel>
             <h2 className="text-center font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">
               Made for people who meet people.
@@ -200,8 +212,10 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         </section>
 
         {/* Final CTA */}
+        <div className={COLUMN}>
         <section className="rounded-[1.5rem] bg-accent px-6 py-14 text-center text-white sm:py-28">
-          <h2 className="mx-auto max-w-3xl font-display text-fluid-cta leading-[1.02] tracking-tight">
+          {/* One line from tablets up: the size follows the banner's width (the line is about 16.5× its font size). */}
+          <h2 className="mx-auto max-w-3xl font-display text-fluid-cta leading-[1.02] tracking-tight sm:max-w-none sm:whitespace-nowrap sm:text-[min(4.5rem,calc((100vw-6rem)/16.5))]">
             Your next connection is one scan away.
           </h2>
           <p className="mx-auto mt-4 max-w-md text-fluid-lead text-white/75 sm:mt-5">
@@ -214,6 +228,7 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
             </ButtonLink>
           </div>
         </section>
+        </div>
       </main>
       <SiteFooter wide />
     </div>

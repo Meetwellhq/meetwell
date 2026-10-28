@@ -3,23 +3,18 @@
 import {
   ArrowRight,
   BookUser,
-  Briefcase,
   ChartLine,
   ChevronDown,
-  GraduationCap,
   HandHeart,
   Info,
-  Lightbulb,
   LifeBuoy,
   Menu,
   MessageSquareText,
   Mic,
   QrCode,
-  Rocket,
   ScrollText,
   ShieldCheck,
   Sparkles,
-  Ticket,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -43,15 +38,6 @@ const FEATURE_ICONS: Record<FeatureSlug, LucideIcon> = {
   events: Mic,
 };
 
-// The same five groups as "Made for people who meet people", each sent to the feature that fits it best.
-const WHO: Item[] = [
-  { href: "/features/contacts", label: "Professionals", note: "Turn new contacts into real conversations.", icon: Briefcase },
-  { href: "/features/analytics", label: "Founders", note: "Share what you're building.", icon: Rocket },
-  { href: "/features/qr-card", label: "Freelancers & creators", note: "Send new clients straight to your work.", icon: Lightbulb },
-  { href: "/features/events", label: "Event attendees", note: "Swap details in seconds.", icon: Ticket },
-  { href: "/features/mentoring", label: "Students & job seekers", note: "Give recruiters a card they can use.", icon: GraduationCap },
-];
-
 const RESOURCES: Item[] = [
   { href: "/about", label: "About", note: "Who we are and why we built it.", icon: Info },
   { href: "/changelog", label: "Changelog", note: "What's new on Meetwell.", icon: ScrollText },
@@ -60,8 +46,8 @@ const RESOURCES: Item[] = [
 ];
 
 /**
- * The landing header's menus, after Calendly's: Product, Who it's for and
- * Resources open a panel on hover or click; on phones everything folds into
+ * The landing header's menus, after Calendly's: Product and Resources open a
+ * panel on hover or click; on phones everything folds into
  * one menu button.
  */
 export function SiteNav({
@@ -76,7 +62,6 @@ export function SiteNav({
       label: "Product",
       items: features.map((f) => ({ href: `/features/${f.slug}`, label: f.name, note: f.title, icon: FEATURE_ICONS[f.slug] })),
     },
-    { label: "Who it's for", items: WHO },
     { label: "Resources", items: RESOURCES },
   ];
   const [open, setOpen] = useState<string | null>(null);
@@ -200,8 +185,9 @@ export function SiteNav({
 
 function MenuLink({ item }: { item: Item }) {
   return (
-    <Link href={item.href} className="flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-surface-2">
-      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
+    <Link href={item.href} className="group flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-surface-2">
+      {/* Grey box around the icon; white while the row is hovered (the row itself turns grey). */}
+      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-2 text-ink transition-colors group-hover:bg-surface">
         <item.icon className="size-[18px]" aria-hidden />
       </span>
       <span className="min-w-0">

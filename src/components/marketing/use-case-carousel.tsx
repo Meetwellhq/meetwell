@@ -59,6 +59,8 @@ const MAGNIFIC_AUTHORS = [
 ] as const;
 
 const STEP_MS = 4500;
+// Slim cards on each side of the open one (the rest of the five).
+const SIDE = Math.floor(USE_CASES.length / 2);
 
 /**
  * "Made for people who meet people", after Calendly's customer stories: one
@@ -67,7 +69,8 @@ const STEP_MS = 4500;
  * slides left; hovering pauses it, and clicking a slim card opens it.
  */
 export function UseCaseCarousel({ className, children }: { className?: string; children?: ReactNode }) {
-  const [active, setActive] = useState(0);
+  // Starts on the middle photo, so there are slim cards on both sides.
+  const [active, setActive] = useState(Math.floor(USE_CASES.length / 2));
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
@@ -78,7 +81,12 @@ export function UseCaseCarousel({ className, children }: { className?: string; c
 
   return (
     <div
-      className={cn("relative overflow-hidden bg-gradient-to-br from-sage via-accent-soft to-clay py-10 sm:py-20", className)}
+      className={cn("relative overflow-hidden py-16 sm:py-28", className)}
+      // The colour fades in from the white page at the top and back out at the bottom.
+      style={{
+        background:
+          "linear-gradient(to bottom, var(--surface), transparent 22%, transparent 78%, var(--surface)), linear-gradient(to bottom right, var(--sage), var(--accent-soft), var(--clay))",
+      }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -86,19 +94,23 @@ export function UseCaseCarousel({ className, children }: { className?: string; c
     >
       {/* The heading, lined up with the page content above. */}
       {children && <div className="mx-auto mb-7 max-w-[90rem] px-6 sm:mb-12 sm:px-14 lg:px-20">{children}</div>}
-      {/* The track: the open card sits in the middle; moving on slides everything left. */}
+      {/* The track works like a loop: the open card always sits in the middle with the same number of
+          slim cards either side (two and two), and the cards rotate round it as it moves on. */}
       <div
-        className="relative left-1/2 flex w-max items-center gap-3 transition-transform duration-700 ease-out [--open:min(80vw,46rem)] [--slim:4.5rem] sm:[--slim:6.5rem]"
-        // Starts from the middle of the box; each slim card before the open one shifts the row left by its width plus the gap.
-        style={{ transform: `translateX(calc(-1 * ${active} * (var(--slim) + 0.75rem) - var(--open) / 2))` }}
+        className="relative left-1/2 flex w-max items-center gap-3 [--open:min(80vw,46rem)] [--slim:4.5rem] sm:[--slim:6.5rem]"
+        // Starts from the middle of the box; the slim cards before the open one shift the row left by their width plus the gap.
+        style={{ transform: `translateX(calc(-1 * ${SIDE} * (var(--slim) + 0.75rem) - var(--open) / 2))` }}
       >
-        {USE_CASES.map((u, i) => {
+        {Array.from({ length: USE_CASES.length }, (_, slot) => (active - SIDE + slot + USE_CASES.length) % USE_CASES.length).map((i) => {
+          const u = USE_CASES[i];
           const open = i === active;
           return (
-            <div key={u.title} className="flex shrink-0 items-center">
+            <div key={u.title} className={cn("flex shrink-0 items-center", open && "motion-safe:animate-fade-in")}>
               {open ? (
-                // The photo fills the whole card; the words sit on a dark fade at the bottom.
-                <article className="relative h-[21rem] w-[var(--open)] shrink-0 overflow-hidden rounded-[1.25rem] shadow-sm sm:h-[28rem] sm:rounded-[1.5rem]">
+                // Same white 8px frame and corners as the slim cards; the photo fills the inside and the
+                // words sit on a dark fade at the bottom.
+                <article className="h-[21rem] w-[var(--open)] shrink-0 rounded-[1.25rem] bg-surface p-2 shadow-sm sm:h-[28rem]">
+                  <div className="relative size-full overflow-hidden rounded-[0.9rem]">
                   {/* Each photo has a wide crop for the open card next to the tall one: name-wide.webp. */}
                   <Image src={u.photo.replace(".webp", "-wide.webp")} alt="" fill sizes="(min-width: 768px) 46rem, 80vw" className="object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 via-45% to-transparent" aria-hidden />
@@ -114,6 +126,7 @@ export function UseCaseCarousel({ className, children }: { className?: string; c
                         <span key={t} className="rounded-md bg-white/15 px-2.5 py-1 text-xs font-medium backdrop-blur-sm">{t}</span>
                       ))}
                     </div>
+                  </div>
                   </div>
                 </article>
               ) : (

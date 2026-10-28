@@ -189,8 +189,8 @@ export function AnalyticsPreview() {
 /** Static illustration of an event page with its speakers. */
 export function EventPreview() {
   const speakers = [
-    { photo: "/demo/amara.webp", name: "Amara Okafor", role: "Product Designer · Studio North", mentor: true },
-    { photo: "/demo/tunde.webp", name: "Tunde Bello", role: "ML Engineer · Brightwave", mentor: false },
+    { photo: "/demo/amara.webp", name: "Amara Okafor", role: "Product Designer · Studio North" },
+    { photo: "/demo/tunde.webp", name: "Tunde Bello", role: "ML Engineer · Brightwave" },
   ];
   return (
     <div className="w-full max-w-md rounded-[1.25rem] border border-border bg-surface p-4 sm:p-5" role="img" aria-label="Example event page with speakers">
@@ -202,15 +202,8 @@ export function EventPreview() {
           <li key={s.name} className="flex items-center gap-3 py-3">
             <Avatar name={s.name} src={s.photo} className="size-10 shrink-0" />
             <span className="min-w-0 flex-1">
-              {/* The Mentor badge sits by the name, or on the job line on phones so the name fits. */}
-              <span className="flex items-center gap-2 text-[15px] font-medium text-ink">
-                <span className="truncate">{s.name}</span>
-                {s.mentor && <span className="shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent max-sm:hidden">Mentor</span>}
-              </span>
-              <span className="flex items-center gap-1.5 text-sm text-ink-2">
-                {s.mentor && <span className="shrink-0 rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-medium text-accent sm:hidden">Mentor</span>}
-                <span className="truncate">{s.role}</span>
-              </span>
+              <span className="block truncate text-[15px] font-medium text-ink">{s.name}</span>
+              <span className="block truncate text-sm text-ink-2">{s.role}</span>
             </span>
             <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-border px-2.5 py-1 text-xs text-ink-2">
               <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
