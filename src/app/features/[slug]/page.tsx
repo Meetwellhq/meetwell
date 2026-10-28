@@ -10,8 +10,8 @@ import {
   SparkPreview,
   StarterPreview,
 } from "@/components/marketing/card-preview";
-import { FeatureTabs } from "@/components/marketing/feature-tabs";
 import { Journey, Panel } from "@/components/marketing/landing";
+import { MoreFeatures } from "@/components/marketing/more-features";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink } from "@/components/ui/button";
@@ -70,9 +70,10 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
   const signedIn = await isSignedIn();
   const cta = signedIn ? "/dashboard" : JOIN_CTA.href;
   const ctaLabel = signedIn ? "Go to your dashboard" : JOIN_CTA.label;
-  // "More from Meetwell" opens on the feature after this one (wrapping round).
+  // "More from Meetwell": every other feature, starting with the one after this (wrapping round).
   const shown = visibleFeatures(spark);
-  const next = shown[(shown.findIndex((f) => f.slug === feature.slug) + 1) % shown.length].slug;
+  const at = shown.findIndex((f) => f.slug === feature.slug);
+  const others = [...shown.slice(at + 1), ...shown.slice(0, at)];
   const qr = await qrSvg(getSiteUrl(), { margin: 1 });
 
   return (
@@ -137,12 +138,9 @@ export default async function FeaturePage({ params }: PageProps<"/features/[slug
           </div>
         </Panel>
 
-        {/* The landing page's feature tabs, opening on the next feature rather than this one. */}
-        <Panel>
-          <h2 className="text-center font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">More from Meetwell</h2>
-          <div className="mt-8 sm:mt-12">
-            <FeatureTabs qrSvg={qr} spark={spark} initial={next} />
-          </div>
+        {/* Every other feature as a card with its landing page illustration, starting with the next one. */}
+        <Panel className="overflow-clip">
+          <MoreFeatures features={others} qrSvg={qr} />
         </Panel>
       </main>
       <SiteFooter wide />

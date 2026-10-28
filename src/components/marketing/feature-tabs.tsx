@@ -16,7 +16,7 @@ const STICK_TOP = 88; // px, just under the sticky site header (5.5rem, as in Jo
 const STEP_VH = 55; // scroll distance per tab, in % of the window height
 
 /** Shrinks its content (never grows it) so it fits the box's height; the box keeps one height for every tab. */
-function FitToBox({ children, watch }: { children: ReactNode; watch: string }) {
+export function FitToBox({ children, watch }: { children: ReactNode; watch: string }) {
   const box = useRef<HTMLDivElement>(null);
   const inner = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -47,7 +47,7 @@ function FitToBox({ children, watch }: { children: ReactNode; watch: string }) {
  * frame, and the chosen feature below with its illustration. Replaces a long
  * run of separate sections. Spark only shows once it has launched.
  */
-export function FeatureTabs({ qrSvg, spark, initial }: { qrSvg: string; spark: boolean; initial?: string }) {
+export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean }) {
   const tabs: Tab[] = [
     {
       key: "qr-card",
@@ -128,8 +128,7 @@ export function FeatureTabs({ qrSvg, spark, initial }: { qrSvg: string; spark: b
       tint: "bg-clay",
     },
   ];
-  // `initial` picks the opening tab (feature pages start on a different feature from their own).
-  const [active, setActive] = useState(initial && tabs.some((t) => t.key === initial) ? initial : tabs[0].key);
+  const [active, setActive] = useState(tabs[0].key);
   const tab = tabs.find((t) => t.key === active) ?? tabs[0];
   const keys = tabs.map((t) => t.key).join(",");
 
