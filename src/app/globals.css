@@ -156,6 +156,7 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --animate-toast-in: toast-in 180ms ease-out;
+  --animate-fade-in: fade-in 250ms ease-out;
 
   /* Fluid text for the landing page: grows in a straight line from a 375px phone
      to a 1280px laptop, then stays at the desktop size (e.g. text-fluid-hero). */
@@ -212,6 +213,15 @@ dialog::backdrop {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

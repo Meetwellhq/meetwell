@@ -1,13 +1,46 @@
 "use client";
 
-import { ArrowRight, BookUser, ChartLine, HandHeart, MessageSquareText, Mic, QrCode, Sparkles, type LucideIcon } from "lucide-react";
+import { ArrowRight, BookUser, ChartLine, HandHeart, MessageSquareText, Mic, QrCode, Sparkles, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { AnalyticsPreview, ContactsPreview, EventPreview, MentorPreview, SparkPreview, StarterPreview } from "./card-preview";
 import { ScanVisual } from "./landing";
 
 type Tab = { key: string; label: string; icon: LucideIcon; title: string; body: string; href: string; visual: ReactNode; tint: string };
+
+// Scroll-through mode, on laptops and up with a tall enough window (the panel must fit under the header):
+// the showcase sticks below the header and scrolling moves through the tabs, then the page carries on.
+const SCROLL_QUERY = "(min-width: 1024px) and (min-height: 760px)";
+const STICK_TOP = 88; // px, just under the sticky site header (5.5rem, as in Journey)
+const STEP_VH = 55; // scroll distance per tab, in % of the window height
+
+/** Shrinks its content (never grows it) so it fits the box's height; the box keeps one height for every tab. */
+function FitToBox({ children, watch }: { children: ReactNode; watch: string }) {
+  const box = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  useLayoutEffect(() => {
+    const fit = () => {
+      const b = box.current;
+      const i = inner.current;
+      if (!b || !i) return;
+      const room = b.clientHeight;
+      const need = i.scrollHeight;
+      setScale(need > room ? room / need : 1);
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [watch]);
+  return (
+    <div ref={box} className="flex size-full items-center justify-center">
+      <div ref={inner} className="flex w-full shrink-0 justify-center" style={{ transform: `scale(${scale})` }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 /**
  * One showcase for every feature (after Calendly's): icon tabs on a soft green
@@ -97,9 +130,97 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
   ];
   const [active, setActive] = useState(tabs[0].key);
   const tab = tabs.find((t) => t.key === active) ?? tabs[0];
+  const keys = tabs.map((t) => t.key).join(",");
+
+  // canScroll: the screen is big enough; closed: the visitor pressed X; pinned: stuck right now.
+  const [canScroll, setCanScroll] = useState(false);
+  const [closed, setClosed] = useState(false);
+  const [stuck, setPinned] = useState(false);
+  const scrollMode = canScroll && !closed;
+  const pinned = scrollMode && stuck;
+  const track = useRef<HTMLDivElement>(null);
+  const spacer = useRef<HTMLDivElement>(null);
+  const skipTo = useRef<number | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia(SCROLL_QUERY);
+    const update = () => setCanScroll(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // While pinned, how far you've scrolled through the spacer picks the tab.
+  useEffect(() => {
+    if (!scrollMode) return;
+    const list = keys.split(",");
+    const onScroll = () => {
+      const el = track.current;
+      const travel = spacer.current?.offsetHeight ?? 0;
+      if (!el || !travel) return;
+      const into = STICK_TOP - el.getBoundingClientRect().top;
+      setPinned(into >= 0 && into <= travel);
+      const i = Math.min(list.length - 1, Math.max(0, Math.floor((into / travel) * list.length)));
+      setActive(list[i]);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [scrollMode, keys]);
+
+  // After X, the spacer is gone: jump to just past the showcase so the page carries on.
+  useEffect(() => {
+    const el = track.current;
+    if (closed && skipTo.current !== null && el) {
+      window.scrollTo({ top: el.getBoundingClientRect().bottom + window.scrollY - STICK_TOP + 24 });
+      skipTo.current = null;
+    }
+  }, [closed]);
+
+  function choose(key: string) {
+    const el = track.current;
+    const travel = spacer.current?.offsetHeight ?? 0;
+    if (!scrollMode || !el || !travel) return setActive(key);
+    // In scroll mode a tab click scrolls to that tab's stretch, so scrolling and tabs stay in step.
+    const i = tabs.findIndex((t) => t.key === key);
+    const start = el.getBoundingClientRect().top + window.scrollY - STICK_TOP;
+    window.scrollTo({ top: start + ((i + 0.5) / tabs.length) * travel, behavior: "smooth" });
+  }
+
+  function close() {
+    skipTo.current = 1; // measured after the showcase shrinks back, in the effect above
+    setClosed(true);
+  }
 
   return (
-    <div className="rounded-[1.75rem] bg-gradient-to-br from-sage via-accent-soft to-clay p-2.5 sm:p-5">
+    // overflow-anchor: none, or the browser shifts the page when a taller tab appears and skips a tab.
+    <div ref={track} className="relative [overflow-anchor:none]">
+      <div
+        className={cn(
+          "rounded-[1.75rem] bg-gradient-to-br from-sage via-accent-soft to-clay p-2.5 sm:p-5",
+          // Pinned (after Calendly's): the frame fills the screen under the header, the panel centred in it,
+          // and widens to the edges of the hero sheet.
+          scrollMode && "sticky z-10 flex flex-col items-center justify-center px-10! py-6! transition-[margin] duration-500 ease-out",
+          pinned && "-mx-10 lg:-mx-16",
+        )}
+        style={scrollMode ? { top: STICK_TOP, height: `calc(100vh - ${STICK_TOP + 8}px)` } : undefined}
+      >
+      {pinned && (
+        <button
+          type="button"
+          onClick={close}
+          aria-label="Stop scrolling through features"
+          title="Skip"
+          className="absolute right-6 top-6 z-20 grid size-12 place-items-center rounded-xl bg-white/45 text-ink ring-1 ring-white/70 backdrop-blur-sm animate-fade-in hover:bg-white/70"
+        >
+          <X className="size-5" aria-hidden />
+        </button>
+      )}
+      <div className={cn(scrollMode && "w-full max-w-6xl")}>
       {/* The tabs: icons on a pill, labels under them from tablets up. */}
       <div role="tablist" aria-label="Features" className="-mx-1 flex justify-start gap-2 overflow-x-auto px-1 pb-3 sm:justify-center sm:pb-4">
         {tabs.map((t) => {
@@ -112,7 +233,7 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
               id={`tab-${t.key}`}
               aria-selected={on}
               aria-controls="feature-panel"
-              onClick={() => setActive(t.key)}
+              onClick={() => choose(t.key)}
               className={cn(
                 "flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
                 on ? "bg-surface text-ink shadow-sm ring-1 ring-accent/30" : "bg-surface/60 text-ink-2 hover:bg-surface/90 hover:text-ink",
@@ -131,9 +252,12 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
         id="feature-panel"
         role="tabpanel"
         aria-labelledby={`tab-${tab.key}`}
-        className="grid grid-cols-[minmax(0,1fr)] items-center gap-6 rounded-[1.25rem] bg-surface p-4 sm:gap-8 sm:p-10 lg:grid-cols-2 lg:gap-14 lg:p-12"
+        className={cn(
+          "grid grid-cols-[minmax(0,1fr)] items-center gap-6 rounded-[1.25rem] bg-surface p-4 sm:gap-8 sm:p-10 lg:grid-cols-2 lg:gap-14",
+          scrollMode ? "lg:p-8" : "lg:p-12",
+        )}
       >
-        <div>
+        <div key={tab.key} className={cn(scrollMode && "motion-safe:animate-fade-in")}>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-accent">
             <tab.icon className="size-4" aria-hidden />
             {tab.label}
@@ -145,10 +269,26 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
             <ArrowRight className="size-4" aria-hidden />
           </Link>
         </div>
-        <div className={cn("flex min-h-[15rem] items-center justify-center overflow-hidden rounded-[1.25rem] p-3 sm:min-h-[26rem] sm:p-10", tab.tint)}>
-          {tab.visual}
-        </div>
+        {scrollMode ? (
+          // Pinned: one fixed height for every tab (so the panel fits the screen and never jumps),
+          // with tall pictures scaled down to fit.
+          <div className={cn("h-[28rem] overflow-hidden rounded-[1.25rem] p-6", tab.tint)}>
+            <FitToBox watch={tab.key}>
+              <div key={tab.key} className="flex w-full justify-center motion-safe:animate-fade-in">
+                {tab.visual}
+              </div>
+            </FitToBox>
+          </div>
+        ) : (
+          <div className={cn("flex min-h-[15rem] items-center justify-center overflow-hidden rounded-[1.25rem] p-3 sm:min-h-[26rem] sm:p-10", tab.tint)}>
+            {tab.visual}
+          </div>
+        )}
       </div>
+      </div>
+      </div>
+      {/* The scroll distance that moves through the tabs; only in scroll mode. */}
+      {scrollMode && <div ref={spacer} aria-hidden style={{ height: `${tabs.length * STEP_VH}vh` }} />}
     </div>
   );
 }

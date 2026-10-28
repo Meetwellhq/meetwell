@@ -136,8 +136,9 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
         {deleted && <Alert tone="success">Your account and card have been deleted.</Alert>}
 
         {/* Hero */}
-        {/* max-sm:px-0! because Panel's own px-5 otherwise wins on phones and squeezes the feature tabs. */}
-        <Panel className="overflow-hidden px-0 pb-0 max-sm:px-0! sm:px-0 lg:px-0">
+        {/* max-sm:px-0! because Panel's own px-5 otherwise wins on phones and squeezes the feature tabs.
+            overflow-clip, not hidden: hidden would stop the feature tabs from sticking while you scroll. */}
+        <Panel className="overflow-clip px-0 pb-0 max-sm:px-0! sm:px-0 lg:px-0 lg:pb-0!">
           <div className="px-5 text-center sm:px-10">
             {/* Text on this page scales with the screen width (text-fluid-* in globals.css). */}
             <h1 className="mx-auto max-w-4xl font-display text-fluid-hero leading-[0.98] tracking-tight text-ink">
@@ -165,7 +166,8 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
           <div id="how-it-works" className="mx-2 mt-8 scroll-mt-20 sm:mx-10 sm:mt-12 lg:mx-16">
             <FeatureTabs qrSvg={qr} spark={spark} />
           </div>
-          <div className="h-3 sm:h-10 lg:h-16" />
+          {/* Small on laptops, so the enlarged feature frame ends close to the next section. */}
+          <div className="h-3 sm:h-10 lg:h-4" />
         </Panel>
 
         {/* Before, during and after you meet: white cards stacking on light grey. */}
