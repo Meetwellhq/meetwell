@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, ExternalLink, Pencil, Trash2, X } from "lucide-react";
+import { Download, ExternalLink, Eye, EyeOff, Pencil, Trash2, X } from "lucide-react";
 import { useActionState, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -259,8 +259,8 @@ function DeleteEvent({ event }: { event: AdminEvent }) {
   const hasHistory = event.payments > 0 || (event.free_conversations ?? 0) > 0;
   return (
     <>
-      <Button size="sm" variant="ghost" icon={<Trash2 className="size-4" />} onClick={() => setConfirming(true)} className="text-danger! hover:text-danger!">
-        Delete
+      <Button size="sm" variant="ghost" icon={<Trash2 className="size-4" />} onClick={() => setConfirming(true)} className="text-danger! hover:text-danger!" title="Delete">
+        <span className="max-sm:sr-only">Delete</span>
       </Button>
       <Dialog
         open={confirming}
@@ -306,6 +306,8 @@ function ActiveToggle({ event }: { event: AdminEvent }) {
       size="sm"
       variant="ghost"
       loading={pending}
+      icon={event.active ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+      title={event.active ? "Hide page" : "Show page again"}
       onClick={() =>
         start(async () => {
           const { error } = await adminSetEventActive(event.slug, !event.active);
@@ -313,7 +315,7 @@ function ActiveToggle({ event }: { event: AdminEvent }) {
         })
       }
     >
-      {event.active ? "Hide page" : "Show page again"}
+      <span className="max-sm:sr-only">{event.active ? "Hide page" : "Show page again"}</span>
     </Button>
   );
 }
@@ -354,13 +356,13 @@ export function EventCard({
           </a>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <a href={`/e/${event.slug}/qr`} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink">
+          <a href={`/e/${event.slug}/qr`} title="Download event QR" className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink">
             <Download className="size-4" aria-hidden />
-            Event QR
+            <span className="max-sm:sr-only">Event QR</span>
           </a>
           {!editing && (
-            <Button size="sm" variant="ghost" icon={<Pencil className="size-4" />} onClick={() => setEditing(true)}>
-              Edit
+            <Button size="sm" variant="ghost" icon={<Pencil className="size-4" />} onClick={() => setEditing(true)} title="Edit">
+              <span className="max-sm:sr-only">Edit</span>
             </Button>
           )}
           {who === "admin" && (
