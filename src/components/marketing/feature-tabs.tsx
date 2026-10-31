@@ -261,7 +261,7 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
           scrollMode ? "lg:p-8" : "lg:p-12",
         )}
       >
-        <div key={tab.key} className={cn(scrollMode && "motion-safe:animate-fade-in")}>
+        <div key={tab.key} className="motion-safe:animate-fade-in">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-accent">
             <tab.icon className="size-4" aria-hidden />
             {tab.label}
@@ -285,7 +285,9 @@ export function FeatureTabs({ qrSvg, spark }: { qrSvg: string; spark: boolean })
           </div>
         ) : (
           <div className={cn("flex min-h-[15rem] items-center justify-center overflow-hidden rounded-[1.25rem] p-3 sm:min-h-[26rem] sm:p-10", tab.tint)}>
-            {tab.visual}
+            <div key={tab.key} className="flex w-full min-w-0 justify-center motion-safe:animate-fade-in">
+              {tab.visual}
+            </div>
           </div>
         )}
       </div>

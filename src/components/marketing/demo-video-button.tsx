@@ -43,7 +43,7 @@ export function DemoVideoButton({ className }: { className?: string }) {
         onClick={(e) => {
           if (e.target === e.currentTarget) close();
         }}
-        className="m-auto max-h-none max-w-none bg-transparent p-4 backdrop:bg-ink/80 backdrop:backdrop-blur-sm"
+        className="m-auto max-h-none max-w-none bg-transparent p-4 transition-[opacity,scale] duration-[250ms] ease-out backdrop:bg-ink/80 backdrop:backdrop-blur-sm backdrop:transition-opacity backdrop:duration-200 starting:scale-[0.96] starting:opacity-0 backdrop:starting:opacity-0"
       >
         <div className="relative">
           <video

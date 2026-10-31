@@ -117,7 +117,7 @@ export function SiteNav({
             {open === g.label && (
               // pt-2 keeps the hover alive while the pointer moves down into the panel.
               <div className="absolute left-0 top-full z-50 pt-2">
-                <ul className="grid w-[34rem] grid-cols-2 gap-1 rounded-2xl border border-border bg-surface p-3 shadow-xl">
+                <ul className="grid w-[34rem] origin-top-left grid-cols-2 gap-1 rounded-2xl border border-border bg-surface p-3 shadow-xl transition-[opacity,scale] duration-150 ease-out starting:scale-[0.97] starting:opacity-0">
                   {g.items.map((it) => (
                     <li key={it.href + it.label}>
                       <MenuLink item={it} />
@@ -156,7 +156,7 @@ export function SiteNav({
         </button>
       </div>
       {mobile && (
-        <div className="fixed inset-x-0 bottom-0 top-16 z-50 overflow-y-auto bg-surface px-4 pb-8 pt-2 lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 top-16 z-50 overflow-y-auto bg-surface px-4 pb-8 pt-2 transition-[opacity,translate] duration-200 ease-out starting:-translate-y-2 starting:opacity-0 lg:hidden">
           {groups.map((g) => (
             <details key={g.label} className="group border-b border-border">
               <summary className="flex cursor-pointer list-none items-center justify-between py-4 text-[17px] font-medium text-ink [&::-webkit-details-marker]:hidden">

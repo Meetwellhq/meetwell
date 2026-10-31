@@ -22,6 +22,7 @@ import { DemoVideoButton } from "@/components/marketing/demo-video-button";
 import { FeatureTabs } from "@/components/marketing/feature-tabs";
 import { UseCaseCarousel } from "@/components/marketing/use-case-carousel";
 import { HighlightsStrip, Journey, Panel } from "@/components/marketing/landing";
+import { RevealOnce } from "@/components/marketing/reveal-once";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { Avatar } from "@/components/ui/avatar";
@@ -88,16 +89,16 @@ const moments = [
       { icon: BookUser, text: "Signed in? They land in your Contacts too" },
     ],
     visual: (
-      <span className="flex w-full max-w-[20rem] flex-col gap-2">
-        <span className="flex items-center gap-2 rounded-xl bg-surface px-4 py-3.5 text-[15px] text-ink shadow-md">
+      <RevealOnce className="flex w-full max-w-[20rem] flex-col gap-2">
+        <span className="flex items-center gap-2 rounded-xl bg-surface px-4 py-3.5 text-[15px] text-ink shadow-md transition-[opacity,translate] duration-[400ms] ease-out group-data-waiting:translate-y-2 group-data-waiting:opacity-0">
           <Check className="size-4 text-accent" />
           Contact saved
         </span>
-        <span className="ml-6 flex items-center gap-2 rounded-xl bg-surface px-4 py-3.5 text-[15px] text-ink shadow-md">
+        <span className="ml-6 flex items-center gap-2 rounded-xl bg-surface px-4 py-3.5 text-[15px] text-ink shadow-md transition-[opacity,translate] delay-150 duration-[400ms] ease-out group-data-waiting:translate-y-2 group-data-waiting:opacity-0">
           <BookUser className="size-4 text-accent" />
           Added to Contacts
         </span>
-      </span>
+      </RevealOnce>
     ),
     tint: "bg-clay",
   },
