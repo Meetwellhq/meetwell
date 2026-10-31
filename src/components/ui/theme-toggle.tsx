@@ -12,6 +12,12 @@ function apply(theme: Theme) {
   const root = document.documentElement;
   if (theme === "system") delete root.dataset.theme;
   else root.dataset.theme = theme;
+  // The phone's status bar follows the choice too, not just the device setting.
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
+    meta.dataset.media ??= meta.media;
+    const device = meta.dataset.media;
+    meta.media = theme === "system" ? device : device.includes(theme) ? "all" : "not all";
+  });
 }
 
 const OPTIONS = [
@@ -30,8 +36,11 @@ function useTheme() {
       saved = localStorage.getItem(THEME_KEY);
     } catch {}
     // Reading the saved choice has to wait until the page runs in the browser.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (saved === "light" || saved === "dark") setTheme(saved);
+    if (saved === "light" || saved === "dark") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTheme(saved);
+      apply(saved);
+    }
   }, []);
 
   const choose = (next: Theme) => {

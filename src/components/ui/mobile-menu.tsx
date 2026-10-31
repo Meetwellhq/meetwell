@@ -78,7 +78,7 @@ export function MobileMenu({
           <nav
             id="mobile-menu"
             aria-label={label}
-            className="fixed inset-y-0 left-0 z-50 flex h-dvh w-[85vw] max-w-sm flex-col gap-5 overflow-y-auto border-r border-border bg-surface px-4 pb-6 shadow-xl"
+            className="fixed inset-y-0 left-0 z-50 flex h-dvh w-[85vw] max-w-sm select-none flex-col gap-5 overflow-y-auto overscroll-contain border-r border-border bg-surface px-4 pb-6 shadow-xl"
           >
             <div className="-mx-4 flex h-15 shrink-0 items-center justify-between border-b border-border px-4">
               <Logo large beta={beta} />

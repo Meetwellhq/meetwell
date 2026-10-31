@@ -1,3 +1,4 @@
+import type { Viewport } from "next";
 import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { AccountMenu, DashboardNav } from "@/components/dashboard/dashboard-nav";
@@ -8,6 +9,14 @@ import { isMentor } from "@/lib/matching/constants";
 import { isSparkOn } from "@/lib/spark";
 import { Logo } from "@/components/marketing/logo";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
+
+// The phone's status bar matches the dashboard header (--surface), not the page background.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1e1b" },
+  ],
+};
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   const user = await getCurrentUser();
