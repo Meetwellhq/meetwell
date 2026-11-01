@@ -105,8 +105,11 @@ type Step = { icon: LucideIcon; text: string };
  */
 export function Journey({
   moments,
+  numbered = true,
 }: {
   moments: { title: string; body: string; steps: Step[]; visual: ReactNode; tint: string }[];
+  /** Show "Step 1, 2…" above each title; off when the cards aren't steps in an order. */
+  numbered?: boolean;
 }) {
   // Each card sticks a little lower than the one before, so as you scroll they
   // stack like a deck (each earlier card's top edge peeks out above the next).
@@ -121,7 +124,7 @@ export function Journey({
           className="sticky grid grid-cols-[minmax(0,1fr)] items-center gap-6 rounded-[1.25rem] bg-surface p-5 sm:min-h-[26rem] sm:gap-8 sm:p-10 lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-14"
         >
           <div>
-            <p className="text-sm font-medium text-accent">Step {i + 1}</p>
+            {numbered && <p className="text-sm font-medium text-accent">Step {i + 1}</p>}
             <h3 className="mt-1 font-display text-fluid-h3 leading-tight tracking-tight text-ink">{m.title}</h3>
             <p className="mt-2 max-w-lg text-fluid-small leading-relaxed text-ink-2 sm:mt-3">{m.body}</p>
             {m.steps.length > 0 && (

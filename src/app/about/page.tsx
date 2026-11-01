@@ -2,7 +2,7 @@ import { ArrowRight, BookUser, MessageSquareText, QrCode, Sparkles, Wallet } fro
 import type { Metadata } from "next";
 import Image from "next/image";
 import { SocialIcon } from "@/components/icons/social-icon";
-import { Panel } from "@/components/marketing/landing";
+import { Journey, Panel } from "@/components/marketing/landing";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { ButtonLink } from "@/components/ui/button";
@@ -77,20 +77,28 @@ export default async function AboutPage() {
           </div>
         </Panel>
 
-        {/* What */}
-        <Panel>
-          <h2 className="font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">What {APP_NAME} does</h2>
-          <ul className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {offer.map((w) => (
-              <li key={w.title} className="rounded-[1rem] border border-border bg-surface p-6">
-                <span className="grid size-10 place-items-center rounded-full bg-accent-soft text-accent">
-                  <w.icon className="size-5" aria-hidden />
-                </span>
-                <h3 className="mt-5 font-semibold text-ink">{w.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{w.body}</p>
-              </li>
-            ))}
-          </ul>
+        {/* What: the landing page's stacking cards, without step numbers (these aren't steps in an order). */}
+        <Panel className="bg-surface-2!">
+          <div className="max-w-2xl">
+            <p className="text-sm font-medium uppercase tracking-wider text-accent">What we do</p>
+            <h2 className="mt-2 font-display text-fluid-h2 leading-[1.05] tracking-tight text-ink">What {APP_NAME} does</h2>
+          </div>
+          <div className="mt-7 sm:mt-10">
+            <Journey
+              numbered={false}
+              moments={offer.map((w, i) => ({
+                title: w.title,
+                body: w.body,
+                steps: [],
+                tint: i % 2 ? "bg-clay" : "bg-sage",
+                visual: (
+                  <span className="grid size-24 place-items-center rounded-[1.75rem] bg-surface shadow-md sm:size-28">
+                    <w.icon className="size-10 text-accent sm:size-12" />
+                  </span>
+                ),
+              }))}
+            />
+          </div>
         </Panel>
 
         {/* Founder */}
