@@ -80,7 +80,9 @@ every migration.
 - **Private beta switch**: `SIGNUPS_OPEN` in `src/lib/config.ts` (false). The database also
   enforces invite-only sign-up (see access codes).
 - **Waiting list**: `/early-access`, `joinWaitlist` in `src/lib/auth/actions.ts`. Duplicate
-  emails show an error. New joiners get a founder welcome email.
+  emails show an error. New joiners get a founder welcome email. Each person gets a waiting-list number
+  (`join_number`, in order of joining; `join_waitlist_numbered`, `20261129000000_waitlist_number.sql`), shown on
+  screen and in the welcome email.
 - **Waiting-list updates**: people are told on sign-up they'll get occasional updates. Each
   waitlist row has a private `unsubscribe_token`; `/unsubscribe?t=…` sets `unsubscribed_at`
   (invites still go out). Any update email must include that link and skip unsubscribed people.

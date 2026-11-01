@@ -457,6 +457,23 @@ describe("reminder status on the admin page", () => {
   });
 });
 
+describe("waitlist numbers", () => {
+  it("numbers everyone in the order they joined, with no gaps for duplicates", async () => {
+    const all = (await db.query<{ join_number: number }>("select join_number from public.waitlist order by created_at, email")).rows;
+    expect(all.map((r) => r.join_number)).toEqual(all.map((_, i) => i + 1));
+    const [first] = await as<{ unsubscribe_token: string; join_number: number }>(
+      null,
+      "select * from public.join_waitlist_numbered('number@test', 'Nia Number')",
+    );
+    expect(first.join_number).toBe(all.length + 1);
+    expect(first.unsubscribe_token).toMatch(/^[0-9a-f-]{36}$/);
+    expect(await as(null, "select * from public.join_waitlist_numbered(' NUMBER@test', 'Again')")).toEqual([]);
+    const [next] = await as<{ join_number: number }>(null, "select join_number from public.join_waitlist_numbered('next@test', 'Ned Next')");
+    expect(next.join_number).toBe(all.length + 2);
+    await expect(as(null, "select nextval('public.waitlist_join_number_seq')")).rejects.toThrow(/permission denied/);
+  });
+});
+
 describe("waitlist updates and unsubscribe", () => {
   it("returns a private unsubscribe token on first join only", async () => {
     const [{ t }] = await as<{ t: string | null }>(null, "select public.join_waitlist_with_token('updates@test', 'Uma Updates') as t");

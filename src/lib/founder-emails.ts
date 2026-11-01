@@ -107,10 +107,11 @@ export function waitlistEmail({
   photoUrl,
   replyEmail,
   unsubscribeToken,
-}: Common & { unsubscribeToken: string }) {
+  joinNumber,
+}: Common & { unsubscribeToken: string; joinNumber: number }) {
   const firstName = firstNameOf(fullName);
   const paragraphs = [
-    `I'm so happy to have you here, and thank you for joining the ${appName} private beta.`,
+    `I'm so happy to have you here, and thank you for joining the ${appName} private beta. You're number ${joinNumber.toLocaleString("en-US")} on the waiting list.`,
     `A little about ${appName}: it gives you a networking card with its own QR code. Someone scans it with their phone camera, saves your contact in one tap, and gets a ready-made first message, so following up is easy. No app needed.`,
     `I'm ${FOUNDER_NAME}, the founder. I'm letting people in a few at a time so I can listen properly to everyone early on. When your spot is ready, I'll send you an access code.`,
   ];

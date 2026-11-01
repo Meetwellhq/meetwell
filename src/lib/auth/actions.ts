@@ -292,8 +292,8 @@ export async function joinWaitlist(_: AuthFormState, formData: FormData): Promis
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), email, values };
 
   const supabase = await createClient();
-  // Returns the person's unsubscribe token, or null if the email was already on the list.
-  const { data: unsubscribeToken, error } = await supabase.rpc("join_waitlist_with_token", {
+  // Returns the person's unsubscribe token and number, or no row if the email was already on the list.
+  const { data, error } = await supabase.rpc("join_waitlist_numbered", {
     p_email: parsed.data.email,
     p_full_name: parsed.data.fullName,
   });
@@ -301,7 +301,8 @@ export async function joinWaitlist(_: AuthFormState, formData: FormData): Promis
     console.error("join_waitlist failed", error.code, error.message);
     return { error: "We couldn't add you right now. Please try again in a moment.", email };
   }
-  if (typeof unsubscribeToken !== "string") {
+  const joined = (data as { unsubscribe_token: string; join_number: number }[] | null)?.[0];
+  if (!joined) {
     return {
       fieldErrors: { email: "This email is already on the waiting list. We'll be in touch when your invite is ready." },
       email,
@@ -309,9 +310,9 @@ export async function joinWaitlist(_: AuthFormState, formData: FormData): Promis
     };
   }
   // Only new emails get the confirmation, so the form can't be used to spam an inbox.
-  await sendWaitlistEmail(parsed.data.email, parsed.data.fullName, unsubscribeToken);
+  await sendWaitlistEmail(parsed.data.email, parsed.data.fullName, joined.unsubscribe_token, joined.join_number);
   return {
-    message: `You've joined the Meetwell waiting list! We'll email ${parsed.data.email} when your invite is ready.`,
+    message: `You're number ${joined.join_number.toLocaleString("en-US")} on the Meetwell waiting list! We'll email ${parsed.data.email} when your invite is ready.`,
   };
 }
 

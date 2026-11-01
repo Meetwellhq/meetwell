@@ -5,10 +5,11 @@ const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "h
 
 describe("waitlist email", () => {
   it("greets by first name and signs off from the founder with a photo", () => {
-    const { subject, text, html } = waitlistEmail({ ...base, fullName: "  Ada Obi ", unsubscribeToken: "11111111-2222-3333-4444-555555555555" });
+    const { subject, text, html } = waitlistEmail({ ...base, fullName: "  Ada Obi ", unsubscribeToken: "11111111-2222-3333-4444-555555555555", joinNumber: 1284 });
     expect(subject).toBe("Thanks for joining the Meetwell private beta");
     expect(text.startsWith("Hi Ada,")).toBe(true);
     expect(text).toContain("I'm so happy to have you here");
+    expect(text).toContain("You're number 1,284 on the waiting list.");
     expect(html).toContain('src="https://meetwell.me/founder/rasheed.jpg"');
     expect(html).toContain("Founder, Meetwell");
     expect(text).toContain("Drop me a line at support@meetwell.me.");
@@ -16,7 +17,7 @@ describe("waitlist email", () => {
   });
 
   it("escapes names typed into the public form", () => {
-    const { html } = waitlistEmail({ ...base, fullName: '<img src=x onerror="alert(1)">', unsubscribeToken: "11111111-2222-3333-4444-555555555555" });
+    const { html } = waitlistEmail({ ...base, fullName: '<img src=x onerror="alert(1)">', unsubscribeToken: "11111111-2222-3333-4444-555555555555", joinNumber: 1284 });
     expect(html).not.toContain("<img src=x");
     expect(html).toContain("&lt;img");
   });
@@ -56,7 +57,7 @@ describe("reminder emails", () => {
 
 describe("waitlist updates", () => {
   it("welcome email mentions occasional updates and links to unsubscribe", () => {
-    const { text, html } = waitlistEmail({ ...base, fullName: "Ada", unsubscribeToken: "11111111-2222-3333-4444-555555555555" });
+    const { text, html } = waitlistEmail({ ...base, fullName: "Ada", unsubscribeToken: "11111111-2222-3333-4444-555555555555", joinNumber: 1284 });
     expect(text).toContain("short updates");
     expect(text).toContain("https://meetwell.me/unsubscribe?t=11111111-2222-3333-4444-555555555555");
     expect(html).toContain('href="https://meetwell.me/unsubscribe?t=11111111-2222-3333-4444-555555555555"');
@@ -254,7 +255,7 @@ describe("logo in emails", () => {
   it("puts the Meetwell logo at the top of founder and message emails", async () => {
     const { waitlistEmail, newMessageEmail } = await import("@/lib/founder-emails");
     const logo = 'src="https://meetwell.me/email/logo.png"';
-    expect(waitlistEmail({ ...base, fullName: "Ada", unsubscribeToken: "11111111-2222-3333-4444-555555555555" }).html).toContain(logo);
+    expect(waitlistEmail({ ...base, fullName: "Ada", unsubscribeToken: "11111111-2222-3333-4444-555555555555", joinNumber: 1284 }).html).toContain(logo);
     expect(
       newMessageEmail({
         ...base, fullName: "Ada", senderName: "Tunde", senderTitle: null, senderAvatar: null,
