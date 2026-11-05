@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Stageshow animation kit, copied in as-is from the stageshow skill.
+    "src/components/stageshow/**",
   ]),
 ]);
 

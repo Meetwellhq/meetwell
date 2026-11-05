@@ -27,6 +27,7 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { Avatar } from "@/components/ui/avatar";
 import { ButtonLink } from "@/components/ui/button";
+import { ScanHero } from "@/components/marketing/scan-hero";
 import { Alert } from "@/components/ui/misc";
 import { getSiteUrl, isSupabaseConfigured, JOIN_CTA, SIGNUPS_OPEN } from "@/lib/config";
 import { qrSvg } from "@/lib/qr";
@@ -167,6 +168,11 @@ export default async function LandingPage({ searchParams }: PageProps<"/">) {
               <DemoVideoButton />
             </div>
             <p className="mt-4 text-sm text-ink-3">Free · No app needed · Works with any phone camera</p>
+          </div>
+
+          {/* The promise above, shown: a phone scans a card, it opens, the contact is saved. */}
+          <div className="mx-auto mt-8 w-full max-w-[440px] px-4 sm:mt-12 sm:px-0">
+            <ScanHero />
           </div>
 
           <div className="mt-8 sm:mt-12">
