@@ -2142,3 +2142,91 @@ describe("shared access codes", () => {
     expect(await as(ALICE, "select active from public.admin_shared_codes() where code = 'DEVFEST-STOP'")).toEqual([{ active: false }]);
   });
 });
+
+describe("partner radar", () => {
+  const SECRET = "test-secret-that-is-long-enough-1234567890"; // stored by the reminders tests
+
+  it("is for admins only", async () => {
+    await expect(as(BOB, "select * from public.admin_list_radar()")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.admin_get_radar_pitch()")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select public.admin_set_radar_pitch('a', 'b', 'c')")).rejects.toThrow(/Not allowed/);
+    await expect(
+      as(BOB, "select public.admin_add_radar_event('X', '2026-12-01', null, null, null, null, null, null, null, null)"),
+    ).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_list_radar()")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.radar_events")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.radar_pitch")).rejects.toThrow(/permission denied/);
+  });
+
+  it("adds an event by hand, moves it along and starts the follow-up clock once", async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    const [{ id }] = await as<{ id: string }>(
+      ALICE,
+      "select public.admin_add_radar_event(' DevFest Lagos 2026 ', '2026-12-05', null, 'Tech & startup', 'in person', 'Landmark Centre', 'GDG Lagos', 'https://devfest.ng', 'hi@gdg.ng', 'Developers swap details') as id",
+    );
+    expect(id).toBe("2026-12-05-devfest-lagos-2026");
+    await expect(
+      as(ALICE, "select public.admin_add_radar_event('DevFest Lagos 2026', '2026-12-05', null, null, null, null, null, null, null, null)"),
+    ).rejects.toThrow(/already on the radar/);
+    await expect(
+      as(ALICE, "select public.admin_add_radar_event('Bad link', '2026-12-05', null, null, null, null, null, 'javascript:alert(1)', null, null)"),
+    ).rejects.toThrow(/check/);
+
+    const [row] = await as<{ name: string; end_date: string; status: string; source: string }>(
+      ALICE,
+      "select name, end_date::text, status, source from public.admin_list_radar() where id = $1",
+      [id],
+    );
+    expect(row).toMatchObject({ name: "DevFest Lagos 2026", end_date: "2026-12-05", status: "new", source: "manual" });
+
+    await as(ALICE, "select public.admin_set_radar_status($1, 'contacted')", [id]);
+    const [{ contacted_on: first }] = await as<{ contacted_on: string }>(ALICE, "select contacted_on::text from public.admin_list_radar() where id = $1", [id]);
+    expect(first).not.toBeNull();
+    await db.query("update public.radar_events set contacted_on = '2026-11-01' where id = $1", [id]);
+    await as(ALICE, "select public.admin_set_radar_status($1, 'talking')", [id]);
+    await as(ALICE, "select public.admin_set_radar_status($1, 'contacted')", [id]);
+    expect(await as(ALICE, "select contacted_on::text from public.admin_list_radar() where id = $1", [id])).toEqual([{ contacted_on: "2026-11-01" }]);
+    await expect(as(ALICE, "select public.admin_set_radar_status($1, 'spammed')", [id])).rejects.toThrow(/check/);
+
+    await as(ALICE, "select public.admin_mark_radar_followed_up($1)", [id]);
+    await as(ALICE, "select public.admin_set_radar_details($1, ' Spoke to Ada ', ' ada@gdg.ng ')", [id]);
+    const [done] = await as<{ followed_up_on: string | null; notes: string; contact: string }>(
+      ALICE,
+      "select followed_up_on::text, notes, contact from public.admin_list_radar() where id = $1",
+      [id],
+    );
+    expect(done).toMatchObject({ notes: "Spoke to Ada", contact: "ada@gdg.ng" });
+    expect(done.followed_up_on).not.toBeNull();
+
+    await as(ALICE, "select public.admin_delete_radar_event($1)", [id]);
+    expect(await as(ALICE, "select id from public.admin_list_radar() where id = $1", [id])).toEqual([]);
+  });
+
+  it("keeps one pitch", async () => {
+    expect(await as(ALICE, "select * from public.admin_get_radar_pitch()")).toEqual([{ pitch: "", offer: "", sender: "" }]);
+    await as(ALICE, "select public.admin_set_radar_pitch(' Meetwell is a card ', 'Free', 'Rasheed')");
+    await as(ALICE, "select public.admin_set_radar_pitch('Meetwell is a QR card', 'Free', 'Rasheed')");
+    expect(await as(ALICE, "select * from public.admin_get_radar_pitch()")).toEqual([
+      { pitch: "Meetwell is a QR card", offer: "Free", sender: "Rasheed" },
+    ]);
+  });
+
+  it("takes the weekly search's finds with the cron secret, never overwriting what's there", async () => {
+    const finds = JSON.stringify([
+      { name: "Lagos AI Summit 2026", start: "2026-12-10", venue: "Eko Hotel", hook: "Big AI crowd", subject: "Meetwell x Lagos AI" },
+      { id: "2026-12-12-online-meetup", name: "Online meetup", start: "2026-12-12", format: "online" },
+    ]);
+    await expect(as(null, "select public.radar_import_events('wrong', $1::jsonb)", [finds])).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select public.radar_import_events($1, $2::jsonb)", [SECRET, finds])).rejects.toThrow(/permission denied/);
+    expect(await as(null, "select public.radar_import_events($1, $2::jsonb) as n", [SECRET, finds])).toEqual([{ n: 2 }]);
+
+    await as(ALICE, "select public.admin_set_radar_status('2026-12-10-lagos-ai-summit-2026', 'talking')");
+    expect(await as(null, "select public.radar_import_events($1, $2::jsonb) as n", [SECRET, finds])).toEqual([{ n: 0 }]);
+    expect(
+      await as(ALICE, "select status, source, format, subject from public.admin_list_radar() where id like '2026-12-1%' order by id"),
+    ).toEqual([
+      { status: "talking", source: "weekly-search", format: "in person", subject: "Meetwell x Lagos AI" },
+      { status: "new", source: "weekly-search", format: "online", subject: null },
+    ]);
+  });
+});
