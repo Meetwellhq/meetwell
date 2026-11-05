@@ -2216,17 +2216,41 @@ describe("partner radar", () => {
       { name: "Lagos AI Summit 2026", start: "2026-12-10", venue: "Eko Hotel", hook: "Big AI crowd", subject: "Meetwell x Lagos AI" },
       { id: "2026-12-12-online-meetup", name: "Online meetup", start: "2026-12-12", format: "online" },
     ]);
-    await expect(as(null, "select public.radar_import_events('wrong', $1::jsonb)", [finds])).rejects.toThrow(/Not allowed/);
-    await expect(as(BOB, "select public.radar_import_events($1, $2::jsonb)", [SECRET, finds])).rejects.toThrow(/permission denied/);
-    expect(await as(null, "select public.radar_import_events($1, $2::jsonb) as n", [SECRET, finds])).toEqual([{ n: 2 }]);
+    await expect(as(null, "select * from public.radar_import_events('wrong', $1::jsonb)", [finds])).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.radar_import_events($1, $2::jsonb)", [SECRET, finds])).rejects.toThrow(/permission denied/);
+    expect(await as(null, "select count(*)::int as n from public.radar_import_events($1, $2::jsonb)", [SECRET, finds])).toEqual([{ n: 2 }]);
 
     await as(ALICE, "select public.admin_set_radar_status('2026-12-10-lagos-ai-summit-2026', 'talking')");
-    expect(await as(null, "select public.radar_import_events($1, $2::jsonb) as n", [SECRET, finds])).toEqual([{ n: 0 }]);
+    expect(await as(null, "select count(*)::int as n from public.radar_import_events($1, $2::jsonb)", [SECRET, finds])).toEqual([{ n: 0 }]);
     expect(
       await as(ALICE, "select status, source, format, subject from public.admin_list_radar() where id like '2026-12-1%' order by id"),
     ).toEqual([
       { status: "talking", source: "weekly-search", format: "in person", subject: "Meetwell x Lagos AI" },
       { status: "new", source: "weekly-search", format: "online", subject: null },
     ]);
+  });
+
+  it("reminds the founder once when a follow-up is due", async () => {
+    const today = (await db.query<{ d: string }>("select ((now() at time zone 'Africa/Lagos')::date)::text as d")).rows[0].d;
+    const finds = JSON.stringify([
+      { id: "2099-01-01-due", name: "Due one", start: "2099-01-01" },
+      { id: "2099-01-02-fresh", name: "Fresh one", start: "2099-01-02" },
+      { id: "2099-01-03-done", name: "Followed up", start: "2099-01-03" },
+    ]);
+    await as(null, "select * from public.radar_import_events($1, $2::jsonb)", [SECRET, finds]);
+    await db.query(
+      "update public.radar_events set status = 'contacted', contacted_on = $1::date - 4 where id in ('2099-01-01-due', '2099-01-03-done')",
+      [today],
+    );
+    await db.query("update public.radar_events set status = 'contacted', contacted_on = $1::date - 1 where id = '2099-01-02-fresh'", [today]);
+    await db.query("update public.radar_events set followed_up_on = $1::date where id = '2099-01-03-done'", [today]);
+
+    await expect(as(null, "select * from public.claim_radar_reminders('wrong')")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.claim_radar_reminders($1)", [SECRET])).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select public.radar_check_token($1)", [SECRET])).rejects.toThrow(/permission denied/);
+    expect(await as(null, "select id from public.claim_radar_reminders($1) where id like '2099-%'", [SECRET])).toEqual([{ id: "2099-01-01-due" }]);
+    expect(await as(null, "select id from public.claim_radar_reminders($1) where id like '2099-%'", [SECRET])).toEqual([]);
+    expect(await as(null, "select sender from public.radar_pitch_for_job($1)", [SECRET])).toEqual([{ sender: "Rasheed" }]);
+    await expect(as(BOB, "select * from public.radar_pitch_for_job($1)", [SECRET])).rejects.toThrow(/permission denied/);
   });
 });

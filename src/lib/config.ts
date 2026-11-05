@@ -3,6 +3,8 @@ export const APP_TAGLINE = "Meet someone. Make it a connection.";
 export const SUPPORT_EMAIL = "support@meetwell.me";
 /** The main inbox: general hello, reports about people, and security issues. */
 export const INFO_EMAIL = "info@meetwell.me";
+/** The admin account's inbox: partner radar finds and follow-up reminders go here. */
+export const ADMIN_EMAIL = "admin@meetwell.me";
 /** Meetwell's own social accounts, shown in the footer. Empty ones are hidden. */
 export const SOCIAL_LINKS: { platform: "linkedin" | "instagram" | "x" | "youtube"; label: string; url: string }[] = [
   { platform: "linkedin", label: "LinkedIn", url: "https://www.linkedin.com/company/meet-well-me" },

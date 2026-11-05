@@ -1,3 +1,5 @@
+import { sendRadarFindsEmail } from "@/lib/email";
+import type { RadarEvent } from "@/lib/radar";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -6,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
  * `{ "events": [{ "name", "start", "end", "category", "format", "venue",
  * "organizer", "link", "contact", "angle", "hook", "idea", "subject" }] }`.
  * Events already on the radar are left alone. The database checks the secret again.
+ * The founder gets one email at the admin inbox listing the events that were new.
  */
 export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -22,5 +25,7 @@ export async function POST(request: Request) {
     console.error("radar_import_events failed", error.code, error.message);
     return Response.json({ error: "Couldn't add the events. Check each has a name and a start date (YYYY-MM-DD)." }, { status: 400 });
   }
-  return Response.json({ added: data, sent: body.events.length });
+  const added = (data ?? []) as RadarEvent[];
+  const emailed = await sendRadarFindsEmail(added);
+  return Response.json({ added: added.length, sent: body.events.length, emailed });
 }

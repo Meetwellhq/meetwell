@@ -4,10 +4,12 @@ import {
   sendIncompleteProfileEmail,
   sendInviteReminderEmail,
   sendNoScansEmail,
+  sendRadarRemindersEmail,
   sendRenewalReminderEmail,
   sendSavebackEmail,
 } from "@/lib/email";
 import type { Saver } from "@/lib/founder-emails";
+import type { RadarEvent, RadarPitch } from "@/lib/radar";
 import { createClient } from "@/lib/supabase/server";
 
 // Sending is paced to stay under Resend's rate limit, so allow time for a full batch.
@@ -101,6 +103,16 @@ export async function GET(request: Request) {
     if (ok) tally.sent++;
     else tally.failed++;
     await pause(600);
+  }
+
+  // Partner radar: one email to the founder listing follow-ups that just became due (once per event).
+  const { data: dueFollowUps, error: radarError } = await supabase.rpc("claim_radar_reminders", { p_token: secret });
+  if (radarError) console.error("claim_radar_reminders failed", radarError.code, radarError.message);
+  if (dueFollowUps?.length) {
+    const { data: pitchRows } = await supabase.rpc("radar_pitch_for_job", { p_token: secret });
+    const pitch = ((pitchRows ?? [])[0] as RadarPitch | undefined) ?? { pitch: "", offer: "", sender: "" };
+    const ok = await sendRadarRemindersEmail(dueFollowUps as RadarEvent[], pitch);
+    results.radar_follow_ups = { sent: ok ? dueFollowUps.length : 0, failed: ok ? 0 : dueFollowUps.length };
   }
 
   console.log("Reminders run", JSON.stringify(results));

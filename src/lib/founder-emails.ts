@@ -911,3 +911,145 @@ export function eventSpeakerEmail(
     after: [`Download your badge QR code: ${badge}`],
   });
 }
+
+/* ---- Partner radar: notes to the founder's own inbox ---- */
+
+/** A web search for the organiser's contact email. */
+export function contactSearchUrl(e: { name: string; organizer?: string | null }) {
+  return `https://www.google.com/search?q=${encodeURIComponent(`${e.organizer || e.name} contact email`)}`;
+}
+
+/** One event in a radar email, already worded (see src/lib/radar.ts). */
+export type RadarEmailEvent = {
+  name: string;
+  /** "Friday 20 November" or "13 to 15 November". */
+  when: string;
+  where: string | null;
+  /** The organiser's email, or null when the search found none. */
+  to: string | null;
+  angle: string | null;
+  /** The event page and the organiser, for finding a contact. */
+  link?: string | null;
+  organizer?: string | null;
+  /** Reminders only: the follow-up, ready to copy. */
+  followUp?: { subject: string; body: string; sentOn: string };
+};
+
+/** Logo, a heading, the events as cards, a button to the radar page. No greeting or sign-off: it's a note to self. */
+function radarLayout({ appName, siteUrl, heading, intro, events, cta }: {
+  appName: string;
+  siteUrl: string;
+  heading: string;
+  intro: string;
+  events: RadarEmailEvent[];
+  cta: string;
+}) {
+  const page = `${siteUrl}/admin/radar`;
+  const card = (e: RadarEmailEvent) => {
+    const meta = [e.when, e.where].filter(Boolean).map((s) => escapeHtml(s!)).join(" · ");
+    const to = e.to
+      ? `Send to <strong>${escapeHtml(e.to)}</strong>`
+      : `<span style="color:#93370d">No email found yet</span>`;
+    const find = e.to
+      ? ""
+      : `<p style="margin:12px 0 0;font-size:14px">${
+          e.link ? `<a href="${escapeHtml(e.link)}" style="color:#1f4d3f;font-weight:600">Event page</a> &nbsp;·&nbsp; ` : ""
+        }<a href="${escapeHtml(contactSearchUrl(e))}" style="color:#1f4d3f;font-weight:600">Search for a contact</a></p>`;
+    const follow = e.followUp
+      ? `<p style="margin:12px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#5c5c57">Follow-up · first email sent ${escapeHtml(e.followUp.sentOn)}</p>
+      <p style="margin:0 0 6px;font-size:14px"><strong>Subject:</strong> ${escapeHtml(e.followUp.subject)}</p>
+      <p style="margin:0;padding:12px 14px;background:#fafaf8;border:1px solid #e7e6e1;border-radius:8px;font-size:14px;line-height:1.55;white-space:pre-wrap">${escapeHtml(e.followUp.body)}</p>`
+      : "";
+    return `<tr><td style="padding:16px 18px;border:1px solid #e7e6e1;border-radius:12px;background:#ffffff">
+      <p style="margin:0;font-size:17px;font-weight:600;line-height:1.35;color:#141413">${escapeHtml(e.name)}</p>
+      <p style="margin:4px 0 0;font-size:14px;color:#57554f">${meta}</p>
+      <p style="margin:4px 0 0;font-size:14px;color:#57554f">${to}</p>
+      ${e.angle ? `<p style="margin:10px 0 0;font-size:14px;color:#141413"><strong>Why ${escapeHtml(appName)} fits:</strong> ${escapeHtml(e.angle)}</p>` : ""}
+      ${find}
+      ${follow}
+    </td></tr>
+    <tr><td style="height:10px;line-height:10px;font-size:0">&nbsp;</td></tr>`;
+  };
+  const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#1c1c1a;font-size:16px;line-height:1.6;background:#fafaf8">
+  ${emailLogo(siteUrl, appName)}
+  <p style="margin:24px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#1f4d3f;font-weight:600">Partner radar</p>
+  <p style="margin:0;font-size:22px;font-weight:600;line-height:1.3;color:#141413">${escapeHtml(heading)}</p>
+  <p style="margin:8px 0 20px;color:#57554f">${escapeHtml(intro)}</p>
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:separate">
+    ${events.map(card).join("\n    ")}
+  </table>
+  ${button(page, cta)}
+  ${emailSocials(siteUrl, appName)}
+</div>`;
+  const text = [
+    heading,
+    intro,
+    ...events.map((e) =>
+      [
+        e.name,
+        [e.when, e.where].filter(Boolean).join(" · "),
+        e.to ? `Send to: ${e.to}` : "No email found yet",
+        e.angle ? `Why ${appName} fits: ${e.angle}` : "",
+        !e.to && e.link ? `Event page: ${e.link}` : "",
+        !e.to ? `Search for a contact: ${contactSearchUrl(e)}` : "",
+        e.followUp ? `Follow-up (first email sent ${e.followUp.sentOn})\nSubject: ${e.followUp.subject}\n\n${e.followUp.body}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    ),
+    `${cta}: ${page}`,
+  ].join("\n\n");
+  return { html, text };
+}
+
+/** The search found new events with an organiser email, ready to write to. Those without one get radarNoEmailEmail. */
+export function radarFindsEmail({ appName, siteUrl, events }: { appName: string; siteUrl: string; events: RadarEmailEvent[] }) {
+  const n = events.length;
+  const subject = n === 1 ? `New on the radar: ${events[0].name}` : `${n} new events on the partner radar`;
+  return {
+    subject,
+    ...radarLayout({
+      appName,
+      siteUrl,
+      heading: n === 1 ? "1 new event found" : `${n} new events found`,
+      intro: "Each has an organiser email and a partner email ready on the radar page. The best time to write is 10 to 24 days before the event.",
+      events,
+      cta: "Open partner radar",
+    }),
+  };
+}
+
+/** New finds with no organiser email: where to look, so the founder can add one on the radar page. */
+export function radarNoEmailEmail({ appName, siteUrl, events }: { appName: string; siteUrl: string; events: RadarEmailEvent[] }) {
+  const n = events.length;
+  const subject = n === 1 ? `Find a contact for ${events[0].name}` : `${n} new events need a contact email`;
+  return {
+    subject,
+    ...radarLayout({
+      appName,
+      siteUrl,
+      heading: n === 1 ? "1 event needs a contact email" : `${n} events need a contact email`,
+      intro:
+        "The search couldn't find an email for these organisers. Look on the event page or search for one, then add it in the organiser's email box on the radar page. The partner email is ready as soon as you do.",
+      events,
+      cta: "Add contact emails",
+    }),
+  };
+}
+
+/** Follow-ups now due: organisers emailed a few days ago who haven't replied. One reminder per event. */
+export function radarRemindersEmail({ appName, siteUrl, events }: { appName: string; siteUrl: string; events: RadarEmailEvent[] }) {
+  const n = events.length;
+  const subject = n === 1 ? `Follow up with ${events[0].name}` : `${n} partner follow-ups are due`;
+  return {
+    subject,
+    ...radarLayout({
+      appName,
+      siteUrl,
+      heading: n === 1 ? "1 follow-up is due" : `${n} follow-ups are due`,
+      intro: "No reply yet to these partner emails. Send the follow-up as a reply to your first email so it stays in the same thread, then mark it sent on the radar page. This is the only reminder for each.",
+      events,
+      cta: "Mark follow-ups as sent",
+    }),
+  };
+}

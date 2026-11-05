@@ -1,5 +1,6 @@
 import "server-only";
-import { APP_NAME, getSiteUrl, SUPPORT_EMAIL } from "./config";
+import { ADMIN_EMAIL, APP_NAME, getSiteUrl, SUPPORT_EMAIL } from "./config";
+import { dateText, followUpEmail, hasEmail, shortDate, type RadarEvent, type RadarPitch } from "./radar";
 import { isSparkOn } from "./spark";
 import { fieldLabel } from "./matching/constants";
 import type { TemplateId } from "./admin/campaigns";
@@ -23,6 +24,10 @@ import {
   noScansEmail,
   partnerAccessEmail,
   publishCardEmail,
+  radarFindsEmail,
+  radarNoEmailEmail,
+  radarRemindersEmail,
+  type RadarEmailEvent,
   renewalReminderEmail,
   sparkBetaEmail,
   sparkPausedEmail,
@@ -242,5 +247,48 @@ export function sendFeedbackEmail(kind: FeedbackKind, message: string, from: { n
   return send(SUPPORT_EMAIL, feedbackEmail({ kind, message, page, appName: APP_NAME, ...from }), {
     from: `${APP_NAME} feedback <noreply@meetwell.me>`,
     replyTo: from.email,
+  });
+}
+
+/** Partner radar: a radar event as the founder's emails show it. */
+function radarItem(e: RadarEvent): RadarEmailEvent {
+  return {
+    name: e.name,
+    when: dateText(e),
+    where: e.format === "online" ? ["Online", e.venue].filter(Boolean).join(", ") : e.venue,
+    to: hasEmail(e) ? e.contact : null,
+    angle: e.angle,
+    link: e.link,
+    organizer: e.organizer,
+  };
+}
+
+const RADAR_FROM = `${APP_NAME} partner radar <noreply@meetwell.me>`;
+
+/**
+ * The weekly search added events: tell the founder, at the admin inbox. Two
+ * emails: the events with an organiser email (ready to write to), and a
+ * separate one for those without, with where to look. Each is skipped when empty.
+ */
+export async function sendRadarFindsEmail(events: RadarEvent[]) {
+  const site = getSiteUrl();
+  const ready = events.filter(hasEmail).map(radarItem);
+  const missing = events.filter((e) => !hasEmail(e)).map(radarItem);
+  const sent = { ready: false, missing: false };
+  if (ready.length) sent.ready = await send(ADMIN_EMAIL, radarFindsEmail({ appName: APP_NAME, siteUrl: site, events: ready }), { from: RADAR_FROM, replyTo: null });
+  if (missing.length) sent.missing = await send(ADMIN_EMAIL, radarNoEmailEmail({ appName: APP_NAME, siteUrl: site, events: missing }), { from: RADAR_FROM, replyTo: null });
+  return sent;
+}
+
+/** Follow-ups that just became due, each with its follow-up text ready to copy. */
+export function sendRadarRemindersEmail(events: RadarEvent[], pitch: RadarPitch) {
+  if (events.length === 0) return Promise.resolve(false);
+  const items = events.map((e) => {
+    const { subject, body } = followUpEmail(e, pitch);
+    return { ...radarItem(e), followUp: { subject, body, sentOn: e.contacted_on ? shortDate(e.contacted_on) : "recently" } };
+  });
+  return send(ADMIN_EMAIL, radarRemindersEmail({ appName: APP_NAME, siteUrl: getSiteUrl(), events: items }), {
+    from: RADAR_FROM,
+    replyTo: null,
   });
 }

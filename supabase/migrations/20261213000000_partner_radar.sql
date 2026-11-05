@@ -33,9 +33,14 @@ create table if not exists public.radar_events (
   -- The 3-day follow-up clock starts the first time it's marked Contacted
   contacted_on date,
   followed_up_on date,
+  -- When the daily job last emailed the founder that its follow-up is due (once per event)
+  reminded_on date,
   updated_at timestamptz not null default now(),
   check (end_date is null or end_date >= start_date)
 );
+
+-- Added after the first draft of this file ran on the test project
+alter table public.radar_events add column if not exists reminded_on date;
 
 -- The founder's pitch, written once and dropped into every partner email
 create table if not exists public.radar_pitch (
@@ -216,47 +221,99 @@ begin
 end;
 $$;
 
--- The weekly search adds its finds here (cron secret). An event already on the
--- radar is left as it is, so its stage and notes are never overwritten.
--- Returns how many were new.
-create or replace function public.radar_import_events(p_token text, p_events jsonb)
-returns integer
+-- Checks the cron secret for the server jobs below
+create or replace function public.radar_check_token(p_token text)
+returns void
 language plpgsql
+stable
 security definer
 set search_path = ''
 as $$
 declare
   v_secret text;
-  v_added integer;
 begin
   select s.value into v_secret from public.internal_settings s where s.key = 'cron_secret';
   if v_secret is null or char_length(v_secret) < 32 or p_token is distinct from v_secret then
     raise exception 'Not allowed' using errcode = '42501';
   end if;
+end;
+$$;
+
+-- The weekly search adds its finds here (cron secret). An event already on the
+-- radar is left as it is, so its stage and notes are never overwritten.
+-- Returns the events that were new, for the email to the founder.
+drop function if exists public.radar_import_events(text, jsonb);
+create function public.radar_import_events(p_token text, p_events jsonb)
+returns setof public.radar_events
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.radar_check_token(p_token);
   if jsonb_typeof(p_events) is distinct from 'array' or jsonb_array_length(p_events) > 100 then
     raise exception 'Send a list of up to 100 events' using errcode = '22023';
   end if;
 
+  return query
   with incoming as (
     select e,
            coalesce(nullif(e->>'id', ''), public.radar_event_id((e->>'start')::date, e->>'name')) as id
     from jsonb_array_elements(p_events) e
-  ), added as (
-    insert into public.radar_events (id, name, start_date, end_date, category, format, venue, organizer, link,
-                                     contact, angle, hook, idea, offer, subject, source, found_on)
-    select i.id, btrim(i.e->>'name'), (i.e->>'start')::date, coalesce((i.e->>'end')::date, (i.e->>'start')::date),
-           nullif(i.e->>'category', ''), coalesce(nullif(i.e->>'format', ''), 'in person'), nullif(i.e->>'venue', ''),
-           nullif(i.e->>'organizer', ''), nullif(i.e->>'link', ''), nullif(i.e->>'contact', ''), nullif(i.e->>'angle', ''),
-           nullif(i.e->>'hook', ''), nullif(i.e->>'idea', ''), nullif(i.e->>'offer', ''), nullif(i.e->>'subject', ''),
-           'weekly-search', coalesce((i.e->>'found')::date, (now() at time zone 'Africa/Lagos')::date)
-    from incoming i
-    on conflict (id) do nothing
-    returning 1
   )
-  select count(*) into v_added from added;
-  return v_added;
+  insert into public.radar_events (id, name, start_date, end_date, category, format, venue, organizer, link,
+                                   contact, angle, hook, idea, offer, subject, source, found_on)
+  select i.id, btrim(i.e->>'name'), (i.e->>'start')::date, coalesce((i.e->>'end')::date, (i.e->>'start')::date),
+         nullif(i.e->>'category', ''), coalesce(nullif(i.e->>'format', ''), 'in person'), nullif(i.e->>'venue', ''),
+         nullif(i.e->>'organizer', ''), nullif(i.e->>'link', ''), nullif(i.e->>'contact', ''), nullif(i.e->>'angle', ''),
+         nullif(i.e->>'hook', ''), nullif(i.e->>'idea', ''), nullif(i.e->>'offer', ''), nullif(i.e->>'subject', ''),
+         'weekly-search', coalesce((i.e->>'found')::date, (now() at time zone 'Africa/Lagos')::date)
+  from incoming i
+  on conflict (id) do nothing
+  returning *;
 end;
 $$;
+
+-- For the daily job: events whose one follow-up is due (Contacted 3 or more days
+-- ago, no reply, no follow-up yet, not over). Each is claimed once, so the
+-- founder gets one reminder per event.
+create or replace function public.claim_radar_reminders(p_token text)
+returns setof public.radar_events
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_today date := (now() at time zone 'Africa/Lagos')::date;
+begin
+  perform public.radar_check_token(p_token);
+  return query
+  update public.radar_events r
+     set reminded_on = v_today
+   where r.status = 'contacted'
+     and r.followed_up_on is null
+     and r.reminded_on is null
+     and r.contacted_on <= v_today - 3
+     and coalesce(r.end_date, r.start_date) >= v_today
+  returning r.*;
+end;
+$$;
+
+-- The founder's pitch, for the follow-up text in the reminder email
+create or replace function public.radar_pitch_for_job(p_token text)
+returns table (pitch text, offer text, sender text)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.radar_check_token(p_token);
+  return query select p.pitch, p.offer, p.sender from public.radar_pitch p where p.id;
+end;
+$$;
+
 
 revoke all on function public.admin_list_radar() from public, anon;
 revoke all on function public.admin_get_radar_pitch() from public, anon;
@@ -266,7 +323,10 @@ revoke all on function public.admin_set_radar_status(text, text) from public, an
 revoke all on function public.admin_set_radar_details(text, text, text) from public, anon;
 revoke all on function public.admin_mark_radar_followed_up(text) from public, anon;
 revoke all on function public.admin_delete_radar_event(text) from public, anon;
+revoke all on function public.radar_check_token(text) from public, anon, authenticated;
 revoke all on function public.radar_import_events(text, jsonb) from public, authenticated;
+revoke all on function public.claim_radar_reminders(text) from public, authenticated;
+revoke all on function public.radar_pitch_for_job(text) from public, authenticated;
 grant execute on function public.admin_list_radar() to authenticated;
 grant execute on function public.admin_get_radar_pitch() to authenticated;
 grant execute on function public.admin_set_radar_pitch(text, text, text) to authenticated;
@@ -275,5 +335,7 @@ grant execute on function public.admin_set_radar_status(text, text) to authentic
 grant execute on function public.admin_set_radar_details(text, text, text) to authenticated;
 grant execute on function public.admin_mark_radar_followed_up(text) to authenticated;
 grant execute on function public.admin_delete_radar_event(text) to authenticated;
--- The import is called by the server with the cron secret, like claim_reminders
+-- Called by the server with the cron secret, like claim_reminders
 grant execute on function public.radar_import_events(text, jsonb) to anon;
+grant execute on function public.claim_radar_reminders(text) to anon;
+grant execute on function public.radar_pitch_for_job(text) to anon;

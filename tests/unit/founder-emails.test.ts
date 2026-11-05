@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, sparkBetaEmail, sparkPausedEmail, savebackEmail, waitlistEmail } from "@/lib/founder-emails";
+import { inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, radarFindsEmail, radarNoEmailEmail, radarRemindersEmail, sparkBetaEmail, sparkPausedEmail, savebackEmail, waitlistEmail } from "@/lib/founder-emails";
 
 const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "support@meetwell.me" };
 
@@ -319,5 +319,45 @@ describe("event speaker email", () => {
       dates: "5 Dec 2026", venue: null, partnerName: "ThinkUX", published: true,
     });
     expect(live.text).not.toContain("isn't published yet");
+  });
+});
+
+describe("partner radar emails", () => {
+  const event = { name: "DevFest <Lagos>", when: "Friday 20 November", where: "Landmark Centre", to: "hi@gdg.ng", angle: "Developers swap details" };
+
+  it("lists new finds with a button to the radar", () => {
+    const one = radarFindsEmail({ appName: "Meetwell", siteUrl: "https://meetwell.me", events: [event] });
+    expect(one.subject).toBe("New on the radar: DevFest <Lagos>");
+    expect(one.html).toContain("DevFest &lt;Lagos&gt;");
+    expect(one.html).toContain("https://meetwell.me/admin/radar");
+    expect(one.html).toContain("/email/logo.png");
+    const two = radarFindsEmail({ appName: "Meetwell", siteUrl: "https://meetwell.me", events: [event, { ...event, to: null }] });
+    expect(two.subject).toBe("2 new events on the partner radar");
+    expect(two.text).toContain("No email found yet");
+  });
+
+  it("sends events with no email separately, with where to look", () => {
+    const missing = radarNoEmailEmail({
+      appName: "Meetwell",
+      siteUrl: "https://meetwell.me",
+      events: [{ ...event, to: null, link: "https://devfest.ng", organizer: "GDG Lagos" }],
+    });
+    expect(missing.subject).toBe("Find a contact for DevFest <Lagos>");
+    expect(missing.html).toContain('href="https://devfest.ng"');
+    expect(missing.html).toContain("https://www.google.com/search?q=GDG%20Lagos%20contact%20email");
+    expect(missing.text).toContain("Event page: https://devfest.ng");
+    // An event that has an email gets no search link
+    expect(radarFindsEmail({ appName: "Meetwell", siteUrl: "https://meetwell.me", events: [event] }).html).not.toContain("google.com");
+  });
+
+  it("puts the follow-up text in the reminder", () => {
+    const due = radarRemindersEmail({
+      appName: "Meetwell",
+      siteUrl: "https://meetwell.me",
+      events: [{ ...event, followUp: { subject: "Re: Hello", body: "Checking in", sentOn: "31 Oct" } }],
+    });
+    expect(due.subject).toBe("Follow up with DevFest <Lagos>");
+    expect(due.text).toContain("Subject: Re: Hello\n\nChecking in");
+    expect(due.html).toContain("first email sent 31 Oct");
   });
 });
