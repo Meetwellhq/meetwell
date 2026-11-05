@@ -2253,4 +2253,12 @@ describe("partner radar", () => {
     expect(await as(null, "select sender from public.radar_pitch_for_job($1)", [SECRET])).toEqual([{ sender: "Rasheed" }]);
     await expect(as(BOB, "select * from public.radar_pitch_for_job($1)", [SECRET])).rejects.toThrow(/permission denied/);
   });
+
+  it("tells the weekly search what's already there, names and dates only", async () => {
+    await expect(as(null, "select * from public.radar_known_events('wrong')")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.radar_known_events($1)", [SECRET])).rejects.toThrow(/permission denied/);
+    const rows = await as<Record<string, unknown>>(null, "select * from public.radar_known_events($1) where id like '2099-%'", [SECRET]);
+    expect(rows.map((r) => r.id)).toEqual(["2099-01-01-due", "2099-01-02-fresh", "2099-01-03-done"]);
+    expect(Object.keys(rows[0]).sort()).toEqual(["end_date", "id", "name", "start_date"]);
+  });
 });
