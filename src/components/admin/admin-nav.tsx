@@ -3,6 +3,7 @@
 import {
   HandHeart,
   CreditCard,
+  HandCoins,
   LayoutDashboard,
   Lightbulb,
   ListOrdered,
@@ -36,6 +37,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
       { href: "/admin/outreach", label: "Outreach", icon: Send },
       { href: "/admin/partners", label: "Partners", icon: Handshake },
       { href: "/admin/radar", label: "Partner radar", icon: Radar },
+      { href: "/admin/funding", label: "Funding radar", icon: HandCoins },
       { href: "/admin/codes", label: "Shared codes", icon: Ticket },
     ],
   },

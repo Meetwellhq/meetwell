@@ -1,6 +1,7 @@
 import "server-only";
 import { ADMIN_EMAIL, APP_NAME, getSiteUrl, SUPPORT_EMAIL, WHATSAPP_COMMUNITY_URL, WHATSAPP_FEEDBACK_URL } from "./config";
-import { dateText, followUpEmail, hasEmail, shortDate, type RadarEvent, type RadarPitch } from "./radar";
+import { deadlineText, kindLabel, type Funding } from "./funding";
+import { dateText, followUpEmail, hasEmail, lagosToday, shortDate, type RadarEvent, type RadarPitch } from "./radar";
 import { isSparkOn } from "./spark";
 import { fieldLabel } from "./matching/constants";
 import type { TemplateId } from "./admin/campaigns";
@@ -24,6 +25,9 @@ import {
   noScansEmail,
   partnerAccessEmail,
   publishCardEmail,
+  fundingDeadlinesEmail,
+  fundingFindsEmail,
+  type FundingEmailItem,
   radarFindsEmail,
   radarNoEmailEmail,
   radarRemindersEmail,
@@ -289,6 +293,41 @@ export function sendRadarRemindersEmail(events: RadarEvent[], pitch: RadarPitch)
   });
   return send(ADMIN_EMAIL, radarRemindersEmail({ appName: APP_NAME, siteUrl: getSiteUrl(), events: items }), {
     from: RADAR_FROM,
+    replyTo: null,
+  });
+}
+
+/** Funding radar: an opportunity as the founder's emails show it. */
+function fundingItem(f: Funding, today: string): FundingEmailItem {
+  const where = f.region === "Global" ? "Worldwide" : f.region;
+  const equity = f.equity_free === true ? "Equity-free" : f.equity_free === false ? "Takes equity" : null;
+  return {
+    name: f.name,
+    meta: [kindLabel(f.kind), f.funder, where, f.amount, equity].filter(Boolean).join(" · "),
+    deadline: deadlineText(f, today).text,
+    fit: f.fit,
+    link: f.link,
+  };
+}
+
+const FUNDING_FROM = `${APP_NAME} funding radar <noreply@meetwell.me>`;
+
+/** The weekly search added grants or programmes: tell the founder, at the admin inbox. */
+export function sendFundingFindsEmail(items: Funding[]) {
+  if (items.length === 0) return Promise.resolve(false);
+  const today = lagosToday();
+  return send(ADMIN_EMAIL, fundingFindsEmail({ appName: APP_NAME, siteUrl: getSiteUrl(), items: items.map((f) => fundingItem(f, today)) }), {
+    from: FUNDING_FROM,
+    replyTo: null,
+  });
+}
+
+/** Deadlines a week away for ones not applied to yet. */
+export function sendFundingDeadlinesEmail(items: Funding[]) {
+  if (items.length === 0) return Promise.resolve(false);
+  const today = lagosToday();
+  return send(ADMIN_EMAIL, fundingDeadlinesEmail({ appName: APP_NAME, siteUrl: getSiteUrl(), items: items.map((f) => fundingItem(f, today)) }), {
+    from: FUNDING_FROM,
     replyTo: null,
   });
 }

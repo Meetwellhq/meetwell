@@ -4,11 +4,13 @@ import {
   sendIncompleteProfileEmail,
   sendInviteReminderEmail,
   sendNoScansEmail,
+  sendFundingDeadlinesEmail,
   sendRadarRemindersEmail,
   sendRenewalReminderEmail,
   sendSavebackEmail,
 } from "@/lib/email";
 import type { Saver } from "@/lib/founder-emails";
+import type { Funding } from "@/lib/funding";
 import type { RadarEvent, RadarPitch } from "@/lib/radar";
 import { createClient } from "@/lib/supabase/server";
 
@@ -113,6 +115,14 @@ export async function GET(request: Request) {
     const pitch = ((pitchRows ?? [])[0] as RadarPitch | undefined) ?? { pitch: "", offer: "", sender: "" };
     const ok = await sendRadarRemindersEmail(dueFollowUps as RadarEvent[], pitch);
     results.radar_follow_ups = { sent: ok ? dueFollowUps.length : 0, failed: ok ? 0 : dueFollowUps.length };
+  }
+
+  // Funding radar: one email to the founder listing deadlines a week away, not applied to yet (once per deadline).
+  const { data: dueDeadlines, error: fundingError } = await supabase.rpc("claim_funding_reminders", { p_token: secret });
+  if (fundingError) console.error("claim_funding_reminders failed", fundingError.code, fundingError.message);
+  if (dueDeadlines?.length) {
+    const ok = await sendFundingDeadlinesEmail(dueDeadlines as Funding[]);
+    results.funding_deadlines = { sent: ok ? dueDeadlines.length : 0, failed: ok ? 0 : dueDeadlines.length };
   }
 
   console.log("Reminders run", JSON.stringify(results));

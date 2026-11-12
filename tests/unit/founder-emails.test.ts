@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, radarFindsEmail, radarNoEmailEmail, radarRemindersEmail, sparkBetaEmail, sparkPausedEmail, savebackEmail, waitlistEmail } from "@/lib/founder-emails";
+import { fundingDeadlinesEmail, fundingFindsEmail, inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, radarFindsEmail, radarNoEmailEmail, radarRemindersEmail, sparkBetaEmail, sparkPausedEmail, savebackEmail, waitlistEmail } from "@/lib/founder-emails";
 
 const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "support@meetwell.me" };
 
@@ -383,5 +383,22 @@ describe("partner radar emails", () => {
     expect(due.subject).toBe("Follow up with DevFest <Lagos>");
     expect(due.text).toContain("Subject: Re: Hello\n\nChecking in");
     expect(due.html).toContain("first email sent 31 Oct");
+  });
+});
+
+describe("funding radar emails", () => {
+  const item = { name: "Lagos <Grant>", meta: "Grant · Nigeria", deadline: "Closes 1 Dec · 19 days", fit: "Lagos startups", link: "https://example.org/apply" };
+
+  it("lists new finds with a link to apply and to the page", () => {
+    const { subject, html, text } = fundingFindsEmail({ appName: "Meetwell", siteUrl: "https://meetwell.me", items: [item] });
+    expect(subject).toBe("New funding to look at: Lagos <Grant>");
+    expect(html).toContain("Lagos &lt;Grant&gt;");
+    expect(html).toContain('href="https://example.org/apply"');
+    expect(html).toContain('href="https://meetwell.me/admin/funding"');
+    expect(text).toContain("Closes 1 Dec · 19 days");
+  });
+
+  it("counts deadlines in the subject", () => {
+    expect(fundingDeadlinesEmail({ appName: "Meetwell", siteUrl: "https://meetwell.me", items: [item, item] }).subject).toBe("2 funding deadlines this week");
   });
 });

@@ -2279,3 +2279,95 @@ describe("partner radar", () => {
     expect(Object.keys(rows[0]).sort()).toEqual(["end_date", "id", "name", "start_date"]);
   });
 });
+
+describe("funding radar", () => {
+  const SECRET = "test-secret-that-is-long-enough-1234567890"; // stored by the reminders tests
+  const today = async () => (await db.query<{ d: string }>("select ((now() at time zone 'Africa/Lagos')::date)::text as d")).rows[0].d;
+
+  it("is for admins only", async () => {
+    await expect(as(BOB, "select * from public.admin_list_funding()")).rejects.toThrow(/Not allowed/);
+    await expect(
+      as(BOB, "select public.admin_add_funding('Some grant', null, null, null, null, null, null, null, null, null)"),
+    ).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_list_funding()")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.funding_opportunities")).rejects.toThrow(/permission denied/);
+  });
+
+  it("adds one by hand, moves it along and keeps the first applied date", async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    const [{ id }] = await as<{ id: string }>(
+      ALICE,
+      "select public.admin_add_funding(' Lagos Startup Grant 2027 ', 'LSETF', 'grant', '₦5,000,000', true, '2099-03-01', 'Nigeria', 'https://lsetf.ng', 'Lagos startups', 'Lagos-based') as id",
+    );
+    expect(id).toBe("lagos-startup-grant-2027");
+    await expect(
+      as(ALICE, "select public.admin_add_funding('Lagos Startup Grant 2027', null, null, null, null, null, null, null, null, null)"),
+    ).rejects.toThrow(/already on the funding radar/);
+    await expect(
+      as(ALICE, "select public.admin_add_funding('Bad link fund', null, null, null, null, null, null, 'javascript:alert(1)', null, null)"),
+    ).rejects.toThrow(/check/);
+
+    await as(ALICE, "select public.admin_set_funding_status($1, 'applied')", [id]);
+    await db.query("update public.funding_opportunities set applied_on = '2026-11-01' where id = $1", [id]);
+    await as(ALICE, "select public.admin_set_funding_status($1, 'shortlisted')", [id]);
+    await as(ALICE, "select public.admin_set_funding_status($1, 'applied')", [id]);
+    expect(await as(ALICE, "select applied_on::text, status, source, equity_free from public.admin_list_funding() where id = $1", [id])).toEqual([
+      { applied_on: "2026-11-01", status: "applied", source: "manual", equity_free: true },
+    ]);
+    await expect(as(ALICE, "select public.admin_set_funding_status($1, 'begged')", [id])).rejects.toThrow(/check/);
+
+    await as(ALICE, "select public.admin_set_funding_details($1, ' Pitch deck sent ', '2099-03-15')", [id]);
+    expect(await as(ALICE, "select notes, deadline::text from public.admin_list_funding() where id = $1", [id])).toEqual([
+      { notes: "Pitch deck sent", deadline: "2099-03-15" },
+    ]);
+    await as(ALICE, "select public.admin_delete_funding($1)", [id]);
+    expect(await as(ALICE, "select id from public.admin_list_funding() where id = $1", [id])).toEqual([]);
+  });
+
+  it("takes the weekly search's finds with the cron secret, skipping past deadlines and never overwriting", async () => {
+    const finds = JSON.stringify([
+      { name: "Africa Founders Fund", funder: "AFF", kind: "accelerator", amount: "$100,000", equity_free: false, deadline: "2099-05-01", region: "Africa" },
+      { name: "Rolling Grant", kind: "grant" },
+      { name: "Closed Prize", deadline: "2000-01-01" },
+    ]);
+    await expect(as(null, "select * from public.funding_import('wrong', $1::jsonb)", [finds])).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.funding_import($1, $2::jsonb)", [SECRET, finds])).rejects.toThrow(/permission denied/);
+    expect(await as(null, "select id from public.funding_import($1, $2::jsonb) order by id", [SECRET, finds])).toEqual([
+      { id: "africa-founders-fund" },
+      { id: "rolling-grant" },
+    ]);
+
+    await as(ALICE, "select public.admin_set_funding_status('africa-founders-fund', 'preparing')");
+    expect(await as(null, "select count(*)::int as n from public.funding_import($1, $2::jsonb)", [SECRET, finds])).toEqual([{ n: 0 }]);
+    expect(await as(ALICE, "select id, status, kind, equity_free, source from public.admin_list_funding() order by id")).toEqual([
+      { id: "africa-founders-fund", status: "preparing", kind: "accelerator", equity_free: false, source: "weekly-search" },
+      { id: "rolling-grant", status: "new", kind: "grant", equity_free: null, source: "weekly-search" },
+    ]);
+
+    const known = await as<Record<string, unknown>>(null, "select * from public.funding_known($1)", [SECRET]);
+    expect(Object.keys(known[0]).sort()).toEqual(["deadline", "funder", "id", "name"]);
+    await expect(as(BOB, "select * from public.funding_known($1)", [SECRET])).rejects.toThrow(/permission denied/);
+  });
+
+  it("reminds the founder once, a week before a deadline, unless already applied", async () => {
+    const d = await today();
+    await as(null, "select * from public.funding_import($1, $2::jsonb)", [
+      SECRET,
+      JSON.stringify([
+        { name: "Soon Fund", deadline: d },
+        { name: "Later Fund", deadline: "2099-12-01" },
+        { name: "Applied Fund", deadline: d },
+      ]),
+    ]);
+    await db.query("update public.funding_opportunities set deadline = $1::date + 5 where id = 'soon-fund'", [d]);
+    await as(ALICE, "select public.admin_set_funding_status('applied-fund', 'applied')");
+
+    await expect(as(null, "select * from public.claim_funding_reminders('wrong')")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.claim_funding_reminders($1)", [SECRET])).rejects.toThrow(/permission denied/);
+    expect(await as(null, "select id from public.claim_funding_reminders($1)", [SECRET])).toEqual([{ id: "soon-fund" }]);
+    expect(await as(null, "select id from public.claim_funding_reminders($1)", [SECRET])).toEqual([]);
+    // A moved deadline gets its own reminder
+    await as(ALICE, "select public.admin_set_funding_details('soon-fund', null, $1::date + 6)", [d]);
+    expect(await as(null, "select id from public.claim_funding_reminders($1)", [SECRET])).toEqual([{ id: "soon-fund" }]);
+  });
+});

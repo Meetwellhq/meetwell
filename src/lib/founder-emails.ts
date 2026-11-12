@@ -1065,3 +1065,85 @@ export function radarRemindersEmail({ appName, siteUrl, events }: { appName: str
     }),
   };
 }
+
+/** Funding radar: an opportunity as the founder's emails show it. */
+export type FundingEmailItem = {
+  name: string;
+  /** "Grant · Africa · Up to $50,000 · Equity-free" */
+  meta: string;
+  /** "Closes 1 Dec · 19 days", or "Rolling or no date yet" */
+  deadline: string;
+  fit: string | null;
+  link: string | null;
+};
+
+function fundingLayout({ appName, siteUrl, heading, intro, items, cta }: {
+  appName: string;
+  siteUrl: string;
+  heading: string;
+  intro: string;
+  items: FundingEmailItem[];
+  cta: string;
+}) {
+  const page = `${siteUrl}/admin/funding`;
+  const card = (f: FundingEmailItem) => `<tr><td style="padding:16px 18px;border:1px solid #e7e6e1;border-radius:12px;background:#ffffff">
+      <p style="margin:0;font-size:17px;font-weight:600;line-height:1.35;color:#141413">${escapeHtml(f.name)}</p>
+      <p style="margin:4px 0 0;font-size:14px;color:#57554f">${escapeHtml(f.meta)}</p>
+      <p style="margin:4px 0 0;font-size:14px;color:#141413"><strong>${escapeHtml(f.deadline)}</strong></p>
+      ${f.fit ? `<p style="margin:10px 0 0;font-size:14px;color:#141413"><strong>Why it fits ${escapeHtml(appName)}:</strong> ${escapeHtml(f.fit)}</p>` : ""}
+      ${f.link ? `<p style="margin:12px 0 0;font-size:14px"><a href="${escapeHtml(f.link)}" style="color:#1f4d3f;font-weight:600">Details and how to apply</a></p>` : ""}
+    </td></tr>
+    <tr><td style="height:10px;line-height:10px;font-size:0">&nbsp;</td></tr>`;
+  const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#1c1c1a;font-size:16px;line-height:1.6;background:#fafaf8">
+  ${emailLogo(siteUrl, appName)}
+  <p style="margin:24px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#1f4d3f;font-weight:600">Funding radar</p>
+  <p style="margin:0;font-size:22px;font-weight:600;line-height:1.3;color:#141413">${escapeHtml(heading)}</p>
+  <p style="margin:8px 0 20px;color:#57554f">${escapeHtml(intro)}</p>
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:separate">
+    ${items.map(card).join("\n    ")}
+  </table>
+  ${button(page, cta)}
+  ${emailSocials(siteUrl, appName)}
+</div>`;
+  const text = [
+    heading,
+    intro,
+    ...items.map((f) =>
+      [f.name, f.meta, f.deadline, f.fit ? `Why it fits ${appName}: ${f.fit}` : "", f.link ? `Details: ${f.link}` : ""].filter(Boolean).join("\n"),
+    ),
+    `${cta}: ${page}`,
+  ].join("\n\n");
+  return { html, text };
+}
+
+/** The weekly search found new grants or programmes. */
+export function fundingFindsEmail({ appName, siteUrl, items }: { appName: string; siteUrl: string; items: FundingEmailItem[] }) {
+  const n = items.length;
+  return {
+    subject: n === 1 ? `New funding to look at: ${items[0].name}` : `${n} new funding opportunities to look at`,
+    ...fundingLayout({
+      appName,
+      siteUrl,
+      heading: n === 1 ? "1 new opportunity found" : `${n} new opportunities found`,
+      intro: "Nearest deadline first. Check each on the funder's own page before you apply, then set its stage on the funding radar.",
+      items,
+      cta: "Open funding radar",
+    }),
+  };
+}
+
+/** Deadlines a week away or less for ones not applied to yet. One reminder per deadline. */
+export function fundingDeadlinesEmail({ appName, siteUrl, items }: { appName: string; siteUrl: string; items: FundingEmailItem[] }) {
+  const n = items.length;
+  return {
+    subject: n === 1 ? `${items[0].name} closes soon` : `${n} funding deadlines this week`,
+    ...fundingLayout({
+      appName,
+      siteUrl,
+      heading: n === 1 ? "1 deadline is a week away" : `${n} deadlines are a week away`,
+      intro: "You haven't marked these as applied yet. Apply now, or set them to Skipped on the funding radar if they're not a fit. This is the only reminder for each.",
+      items,
+      cta: "Open funding radar",
+    }),
+  };
+}
