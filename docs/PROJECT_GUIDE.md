@@ -212,6 +212,14 @@ every migration.
   `src/lib/partners/actions.ts`, the shared `EventCard` with `who="team"`); deleting and hiding stay admin-only. Speakers
   are added straight away (Rasheed's choice, 27 Oct 2026). Partners never see a speaker's email: the server gets it from
   `claim_event_speaker_email` (cron secret), once per speaker per event (`event_speaker_emails`, kept after removal).
+- **Funding radar**: `/admin/funding` (`20261216000000_funding_radar.sql`, `src/lib/funding.ts`,
+  `src/components/admin/funding-board.tsx`). Grants, accelerators, competitions, fellowships, investors and loans that
+  suit Meetwell: amount, equity-free or not, deadline (empty = rolling), Nigeria/Africa/Global, who can apply, why it fits,
+  what to prepare, a stage (New, Preparing, Applied, Shortlisted, Won, Not this time, Skipped) and notes. A weekly
+  claude.ai scheduled task searches the web and posts finds to `/api/funding/import` with the partner radar's
+  `RADAR_IMPORT_SECRET` (GET lists what's there; POST `{ items: [...] }` adds new ones, skips past deadlines, never
+  overwrites); new finds are emailed to admin@meetwell.me. The daily reminders job emails once when a deadline is 7 days
+  away for anything still New or Preparing (`claim_funding_reminders`; a changed deadline gets its own reminder).
 - **Outreach tracker**: `/admin/outreach` (`20261113000000_outreach.sql`, `src/lib/outreach.ts`). Rasheed adds
   people he finds on X one at a time or by pasting a list (one per line: handle or link, optional name and note;
   `parseOutreachList`); names are optional ("Hi there") and editable. Each person gets a single-use access code (60 days), a "Copy message"
