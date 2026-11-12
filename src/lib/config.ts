@@ -10,6 +10,9 @@ export const SOCIAL_LINKS: { platform: "linkedin" | "instagram" | "x"; label: st
   { platform: "x", label: "X", url: "https://x.com/trymeetwell" },
 ];
 
+/** Invite link to the Meetwell WhatsApp community, shared in the waiting-list welcome email. Empty hides it. */
+export const WHATSAPP_COMMUNITY_URL = "";
+
 /** The registered company behind Meetwell (CAC, Companies and Allied Matters Act 2020). */
 export const COMPANY_NAME = "Meet Well Limited";
 export const COMPANY_RC = "RC 9952279";

@@ -108,7 +108,8 @@ export function waitlistEmail({
   replyEmail,
   unsubscribeToken,
   joinNumber,
-}: Common & { unsubscribeToken: string; joinNumber: number }) {
+  whatsappUrl,
+}: Common & { unsubscribeToken: string; joinNumber: number; whatsappUrl?: string }) {
   const firstName = firstNameOf(fullName);
   const paragraphs = [
     `I'm so happy to have you here, and thank you for joining the ${appName} private beta. You're number ${joinNumber.toLocaleString("en-US")} on the waiting list.`,
@@ -119,6 +120,8 @@ export function waitlistEmail({
   const ask =
     "In the meantime, I'd love to know where you usually meet new people: events, work, church, campus? Drop me a line at";
 
+  const community = "Join our WhatsApp community to meet other early members and hear Meetwell news first.";
+
   const updates = "Now and then I'll also send you short updates, like new members you might want to meet.";
   const unsubscribe = unsubscribeUrl(siteUrl, unsubscribeToken);
 
@@ -126,6 +129,7 @@ export function waitlistEmail({
   const text = [
     `Hi ${firstName},`,
     ...paragraphs,
+    ...(whatsappUrl ? [`${community}\n${whatsappUrl}`] : []),
     `${ask} ${replyEmail}.`,
     `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
     `${updates} Don't want them? Unsubscribe: ${unsubscribe}`,
@@ -137,6 +141,7 @@ export function waitlistEmail({
     photoUrl,
     bodyHtml: [
       ...paragraphs.map(p),
+      ...(whatsappUrl ? [p(community), button(whatsappUrl, "Join the WhatsApp community")] : []),
       `<p>${escapeHtml(ask)} <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
     ].join("\n  "),
     footerHtml: `${escapeHtml(updates)} Don't want them? <a href="${unsubscribe}" style="color:#5c5c57">Unsubscribe</a>.`,

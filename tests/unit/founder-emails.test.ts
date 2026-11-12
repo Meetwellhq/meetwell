@@ -23,6 +23,22 @@ describe("waitlist email", () => {
   });
 });
 
+describe("waitlist email WhatsApp community", () => {
+  const token = "11111111-2222-3333-4444-555555555555";
+  it("invites to the community when a link is set", () => {
+    const { text, html } = waitlistEmail({ ...base, fullName: "Ada", unsubscribeToken: token, joinNumber: 7, whatsappUrl: "https://chat.whatsapp.com/AbC123" });
+    expect(text).toContain("Join our WhatsApp community");
+    expect(text).toContain("https://chat.whatsapp.com/AbC123");
+    expect(html).toContain('href="https://chat.whatsapp.com/AbC123"');
+    expect(html).toContain("Join the WhatsApp community");
+  });
+
+  it("leaves it out when there is no link", () => {
+    const { text } = waitlistEmail({ ...base, fullName: "Ada", unsubscribeToken: token, joinNumber: 7 });
+    expect(text).not.toContain("WhatsApp");
+  });
+});
+
 describe("invite email", () => {
   it("links to the access-code page with the code filled in", () => {
     const { subject, text, html } = inviteEmail({ ...base, fullName: "Ada Obi", code: "MW-1A2B-3C4D-5E6F" });
