@@ -33,6 +33,13 @@ describe("waitlist email WhatsApp community", () => {
     expect(html).toContain("Join the WhatsApp community");
   });
 
+  it("adds the feedback group link when set", () => {
+    const { text, html } = waitlistEmail({ ...base, fullName: "Ada", unsubscribeToken: token, joinNumber: 7, feedbackUrl: "https://chat.whatsapp.com/Fb456" });
+    expect(text).toContain("Join our feedback group on WhatsApp");
+    expect(text).toContain("https://chat.whatsapp.com/Fb456");
+    expect(html).toContain('href="https://chat.whatsapp.com/Fb456"');
+  });
+
   it("leaves it out when there is no link", () => {
     const { text } = waitlistEmail({ ...base, fullName: "Ada", unsubscribeToken: token, joinNumber: 7 });
     expect(text).not.toContain("WhatsApp");

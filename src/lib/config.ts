@@ -12,6 +12,8 @@ export const SOCIAL_LINKS: { platform: "linkedin" | "instagram" | "x"; label: st
 
 /** Invite link to the Meetwell WhatsApp community, shared in the waiting-list welcome email. Empty hides it. */
 export const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/FeEjj3TDwC2AzXOHm5iCTk";
+/** Invite link to the private beta feedback group on WhatsApp, also in the welcome email. Empty hides it. */
+export const WHATSAPP_FEEDBACK_URL = "https://chat.whatsapp.com/E2DE0BNRNJnGQPvTHImZpw";
 
 /** The registered company behind Meetwell (CAC, Companies and Allied Matters Act 2020). */
 export const COMPANY_NAME = "Meet Well Limited";

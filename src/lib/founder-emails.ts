@@ -109,7 +109,8 @@ export function waitlistEmail({
   unsubscribeToken,
   joinNumber,
   whatsappUrl,
-}: Common & { unsubscribeToken: string; joinNumber: number; whatsappUrl?: string }) {
+  feedbackUrl,
+}: Common & { unsubscribeToken: string; joinNumber: number; whatsappUrl?: string; feedbackUrl?: string }) {
   const firstName = firstNameOf(fullName);
   const paragraphs = [
     `I'm so happy to have you here, and thank you for joining the ${appName} private beta. You're number ${joinNumber.toLocaleString("en-US")} on the waiting list.`,
@@ -121,6 +122,7 @@ export function waitlistEmail({
     "In the meantime, I'd love to know where you usually meet new people: events, work, church, campus? Drop me a line at";
 
   const community = "Join our WhatsApp community to meet other early members and hear Meetwell news first.";
+  const feedback = "Want to help shape the private beta? Join our feedback group on WhatsApp and tell us what you think.";
 
   const updates = "Now and then I'll also send you short updates, like new members you might want to meet.";
   const unsubscribe = unsubscribeUrl(siteUrl, unsubscribeToken);
@@ -130,6 +132,7 @@ export function waitlistEmail({
     `Hi ${firstName},`,
     ...paragraphs,
     ...(whatsappUrl ? [`${community}\n${whatsappUrl}`] : []),
+    ...(feedbackUrl ? [`${feedback}\n${feedbackUrl}`] : []),
     `${ask} ${replyEmail}.`,
     `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
     `${updates} Don't want them? Unsubscribe: ${unsubscribe}`,
@@ -142,6 +145,9 @@ export function waitlistEmail({
     bodyHtml: [
       ...paragraphs.map(p),
       ...(whatsappUrl ? [p(community), button(whatsappUrl, "Join the WhatsApp community")] : []),
+      ...(feedbackUrl
+        ? [`<p>${escapeHtml(feedback)} <a href="${feedbackUrl}" style="color:#1f4d3f">Join the feedback group</a>.</p>`]
+        : []),
       `<p>${escapeHtml(ask)} <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
     ].join("\n  "),
     footerHtml: `${escapeHtml(updates)} Don't want them? <a href="${unsubscribe}" style="color:#5c5c57">Unsubscribe</a>.`,

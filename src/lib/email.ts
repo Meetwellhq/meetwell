@@ -1,5 +1,5 @@
 import "server-only";
-import { APP_NAME, getSiteUrl, SUPPORT_EMAIL, WHATSAPP_COMMUNITY_URL } from "./config";
+import { APP_NAME, getSiteUrl, SUPPORT_EMAIL, WHATSAPP_COMMUNITY_URL, WHATSAPP_FEEDBACK_URL } from "./config";
 import { fieldLabel } from "./matching/constants";
 import type { TemplateId } from "./admin/campaigns";
 import {
@@ -77,7 +77,7 @@ async function send(to: string, content: EmailContent, options?: SendOptions) {
 
 /** "Thanks for joining the private beta." */
 export function sendWaitlistEmail(to: string, fullName: string, unsubscribeToken: string, joinNumber: number) {
-  return send(to, waitlistEmail({ ...common(fullName), unsubscribeToken, joinNumber, whatsappUrl: WHATSAPP_COMMUNITY_URL }));
+  return send(to, waitlistEmail({ ...common(fullName), unsubscribeToken, joinNumber, whatsappUrl: WHATSAPP_COMMUNITY_URL, feedbackUrl: WHATSAPP_FEEDBACK_URL }));
 }
 
 /** "Your invite is ready", with a link that fills in the personal access code. */
