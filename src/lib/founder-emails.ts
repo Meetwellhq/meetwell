@@ -266,6 +266,23 @@ export function draftReminderEmail(args: Common) {
 }
 
 /** One-off, sent by the admin to everyone whose card is still a draft. */
+/** One-off: Spark is paused until Meetwell has 5,000 members with about as many mentors as mentees. */
+export function sparkPausedEmail(args: Common) {
+  return note({
+    ...args,
+    subject: `Spark is taking a break until ${args.appName} has 5,000 members`,
+    before: [
+      "A quick update on Spark, our AI introductions.",
+      "Spark works best when there are plenty of experienced people to introduce you to, and plenty of people who want to learn from them. We're not there yet, so I've paused Spark for now. It comes back once Meetwell has 5,000 members, with about as many mentors as mentees.",
+      "Until then you won't get new introductions, and Spark won't show in your dashboard. Everything else works as before: your card, QR code, contacts and messages.",
+      "If you bought Spark credits, reply to this email and I'll refund any you haven't used.",
+      "You can help us get there sooner. Your card works as an invite, so anyone who scans it can join without a code.",
+    ],
+    cta: { href: `${args.siteUrl}/dashboard`, label: "Share my card" },
+    after: ["You'll be the first to know when Spark is back."],
+  });
+}
+
 export function publishCardEmail(args: Common) {
   return note({
     ...args,
@@ -292,16 +309,19 @@ export function addPhotoEmail(args: Common) {
   });
 }
 
-/** Sent from the admin's New email page to members whose profile is under 80%. */
-export function finishProfileEmail(args: Common) {
+/** Sent from the admin's New email page to members whose profile is under 80%. `spark` = Spark switched on. */
+export function finishProfileEmail(args: Common & { spark?: boolean }) {
+  const spark = args.spark ?? true;
   return note({
     ...args,
     subject: `A few details to finish your ${args.appName} profile`,
     before: [
       "Your profile is nearly there. A few more details and it's complete.",
-      `Once it reaches 80%, Spark can start introducing you to people in your field. Your Spark page shows exactly what's missing.`,
+      spark
+        ? `Once it reaches 80%, Spark can start introducing you to people in your field. Your Spark page shows exactly what's missing.`
+        : "A complete card gets saved and answered more often. Your Profile page shows exactly what's missing.",
     ],
-    cta: { href: `${args.siteUrl}/dashboard/matches`, label: "Finish my profile" },
+    cta: { href: `${args.siteUrl}${spark ? "/dashboard/matches" : "/dashboard/profile"}`, label: "Finish my profile" },
   });
 }
 
@@ -314,7 +334,7 @@ export function noScansEmail(args: Common) {
       "Your card is live. The best way to use it is in person, the next time you meet someone.",
       "A simple trick: save your QR code to your phone's photos, or set it as your lock screen. When someone asks for your number, just show it. They scan it with their camera and save your details in one tap.",
     ],
-    cta: { href: `${args.siteUrl}/dashboard/qr`, label: "Open my QR code" },
+    cta: { href: `${args.siteUrl}/dashboard`, label: "Open my QR code" },
     after: [ONLY_ONCE],
   });
 }
@@ -398,9 +418,17 @@ export const RECOMMENDABLE_MIN_YEARS = 4;
  * else hears that a photo is the first step to getting Spark introductions.
  */
 export function incompleteProfileEmail(
-  args: Common & { completeness: number; hasPhoto: boolean; experienceYears: number | null; fieldName: string | null },
+  args: Common & {
+    completeness: number;
+    hasPhoto: boolean;
+    experienceYears: number | null;
+    fieldName: string | null;
+    /** Spark switched on. While it's paused the email talks about the card and mentoring instead. */
+    spark?: boolean;
+  },
 ) {
   const { appName, siteUrl, completeness, hasPhoto, experienceYears, fieldName } = args;
+  if (args.spark === false) return incompleteProfileNoSpark(args);
   const progress = `Your ${appName} profile is ${completeness}% complete.`;
   const finish = "Then add the last few details listed on your Spark page.";
 
@@ -440,6 +468,56 @@ export function incompleteProfileEmail(
     before: [
       `${progress} Once it reaches 80%, Spark will start recommending experienced people in your field for you to meet and learn from, one a month.`,
       "The best first step is a clear photo of you. Experienced members are far more likely to reply when they can see who's reaching out.",
+    ],
+    cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },
+    after: [finish, ONLY_ONCE],
+  });
+}
+
+/** The profile reminder while Spark is paused: no Spark, links to the dashboard. */
+function incompleteProfileNoSpark(
+  args: Common & { completeness: number; hasPhoto: boolean; experienceYears: number | null; fieldName: string | null },
+) {
+  const { appName, siteUrl, completeness, hasPhoto, experienceYears, fieldName } = args;
+  const progress = `Your ${appName} profile is ${completeness}% complete.`;
+  const senior = experienceYears !== null && experienceYears >= RECOMMENDABLE_MIN_YEARS;
+  const finish = "Then add the last few details your Profile page lists.";
+
+  if (hasPhoto) {
+    return reminder({
+      ...args,
+      subject: `Your ${appName} profile is ${completeness}% done`,
+      before: [
+        senior
+          ? `${progress} At 80% you can apply to be a mentor on ${appName} and earn from what you know.`
+          : `${progress} A complete card gets saved and answered more often.`,
+        "A few more details will get you there, and your Profile page shows exactly what's missing.",
+      ],
+      cta: { href: `${siteUrl}/dashboard/profile`, label: "Complete my profile" },
+      after: [ONLY_ONCE],
+    });
+  }
+
+  if (senior) {
+    const inField = fieldName ? ` in ${fieldName.toLowerCase()}` : "";
+    return reminder({
+      ...args,
+      subject: "People want to learn from you. Add your photo",
+      before: [
+        `With ${experienceYears} years${inField}, you're exactly the kind of person people earlier in their careers want to learn from. As a mentor on ${appName}, you can earn from what you know.`,
+        `A clear photo makes all the difference: people are far more likely to save your contact and reach out when they can see who they're meeting. ${progress} Add your photo and finish your profile to apply as a mentor.`,
+      ],
+      cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },
+      after: [finish, ONLY_ONCE],
+    });
+  }
+
+  return reminder({
+    ...args,
+    subject: `Add a photo to your ${appName} card`,
+    before: [
+      `${progress} The best first step is a clear photo of you.`,
+      "People are far more likely to save your contact and reply when they can see who they're meeting.",
     ],
     cta: { href: `${siteUrl}/dashboard/profile`, label: "Add my photo" },
     after: [finish, ONLY_ONCE],
@@ -575,6 +653,73 @@ export function partnerAccessEmail({ fullName, appName, siteUrl, photoUrl, reply
 export const messageEmailsOffUrl = (siteUrl: string, token: string) =>
   `${siteUrl}/unsubscribe/messages?t=${encodeURIComponent(token)}`;
 
+/** Link that turns off "saved your card back" emails (no login needed). */
+export const savebackEmailsOffUrl = (siteUrl: string, token: string) =>
+  `${siteUrl}/unsubscribe/contacts?t=${encodeURIComponent(token)}`;
+
+export type Saver = { full_name: string; slug: string; avatar_url: string | null; title: string | null; organization: string | null };
+
+/**
+ * Daily, when people whose card you saved have saved yours back: one email
+ * listing them, each linking to their card, with a one-click way to turn these off.
+ */
+export function savebackEmail({ fullName, appName, siteUrl, photoUrl, replyEmail, savers, token }: Common & { savers: Saver[]; token: string }) {
+  const firstName = firstNameOf(fullName);
+  const first = savers[0];
+  const firstFirst = firstNameOf(first.full_name);
+  const subject =
+    savers.length === 1 ? `${first.full_name} saved your card back` : `${savers.length} people saved your card back`;
+  const lead =
+    savers.length === 1
+      ? `You saved ${first.full_name}'s card, and now ${firstFirst} has saved yours too. It's a good moment to say hello.`
+      : "You saved their cards, and now they've saved yours too. It's a good moment to say hello.";
+  const line = (s: Saver) => [s.title, s.organization].filter(Boolean).join(" · ");
+  const contacts = `${siteUrl}/dashboard/contacts`;
+  const off = savebackEmailsOffUrl(siteUrl, token);
+  const smallPrint = "You get this when someone saves your card back. Turn these emails off anytime.";
+
+  const text = [
+    `Hi ${firstName},`,
+    lead,
+    ...savers.map((s) => `${s.full_name}${line(s) ? `, ${line(s)}` : ""}: ${siteUrl}/p/${s.slug}`),
+    `Open your contacts: ${contacts}`,
+    `${FOUNDER_NAME}\nFounder, ${appName}\n${siteUrl}`,
+    `${smallPrint} ${off}`,
+  ].join("\n\n");
+
+  // Their photo (or initials in a green circle), name and title, each linking to their card.
+  const face = (s: Saver) =>
+    s.avatar_url
+      ? `<img src="${escapeHtml(s.avatar_url)}" width="44" height="44" alt="" style="display:block;width:44px;height:44px;border-radius:50%;object-fit:cover">`
+      : `<div style="width:44px;height:44px;border-radius:50%;background:#e8f0ec;color:#1f4d3f;font-weight:600;font-size:16px;line-height:44px;text-align:center">${escapeHtml(initialsOf(s.full_name))}</div>`;
+  const people = savers
+    .map((s) => {
+      const card = `${siteUrl}/p/${encodeURIComponent(s.slug)}`;
+      return `<tr>
+        <td width="56" style="width:56px;padding:10px 0;border-bottom:1px solid #ecebe6;vertical-align:middle"><a href="${card}" style="text-decoration:none">${face(s)}</a></td>
+        <td style="padding:10px 0;border-bottom:1px solid #ecebe6;vertical-align:middle">
+          <a href="${card}" style="color:#1c1c1a;text-decoration:none;font-weight:600">${escapeHtml(s.full_name)}</a>
+          ${line(s) ? `<br><span style="color:#5c5c57;font-size:14px">${escapeHtml(line(s))}</span>` : ""}
+        </td>
+      </tr>`;
+    })
+    .join("");
+  const html = founderLayout({
+    firstName,
+    appName,
+    siteUrl,
+    photoUrl,
+    bodyHtml: [
+      p(lead),
+      `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:8px 0">${people}</table>`,
+      button(contacts, "Open my contacts"),
+      `<p>Questions? Write to me at <a href="mailto:${replyEmail}" style="color:#1f4d3f">${replyEmail}</a>.</p>`,
+    ].join("\n  "),
+    footerHtml: `${escapeHtml(smallPrint)} <a href="${off}" style="color:#5c5c57">Turn off</a>`,
+  });
+  return { subject, text, html };
+}
+
 function initialsOf(name: string) {
   // Only words that start with a letter, so stray symbols don't become initials.
   const parts = name.trim().split(/\s+/).filter((w) => /^\p{L}/u.test(w));
@@ -705,7 +850,7 @@ export function withdrawalSentEmail(args: Common & { amount: string; bank: strin
     before: [
       `Your withdrawal of ${args.amount} has been sent to your ${args.bank} account. It usually arrives within a few hours.`,
     ],
-    cta: { href: `${args.siteUrl}/dashboard/mentor`, label: "View your wallet" },
+    cta: { href: `${args.siteUrl}/dashboard/mentor/wallet`, label: "View your wallet" },
   });
 }
 
@@ -731,4 +876,192 @@ export function renewalReminderEmail(args: Common & { mentorName: string; mentor
 export function messageFromLine(senderName: string, appName: string) {
   const name = senderName.replace(/\s+/g, " ").replace(/["<>\\]/g, "").trim().slice(0, 80) || `A ${appName} member`;
   return `"${name} via ${appName}" <messages-noreply@meetwell.me>`;
+}
+
+export const FEEDBACK_KINDS = ["idea", "problem", "other"] as const;
+export type FeedbackKind = (typeof FEEDBACK_KINDS)[number];
+const FEEDBACK_LABEL: Record<FeedbackKind, string> = { idea: "Idea", problem: "Problem", other: "Feedback" };
+
+/** A member's feedback from the dashboard, sent to the support inbox. Reply goes to the member. */
+export function feedbackEmail(args: { kind: FeedbackKind; message: string; name: string; email: string; page: string; appName: string }) {
+  const label = FEEDBACK_LABEL[args.kind];
+  const subject = `${label} from ${args.name.replace(/\s+/g, " ").trim().slice(0, 60) || "a member"}`;
+  const text = `${args.message}\n\n${args.name} <${args.email}>\nPage: ${args.page}\n\nReply to this email to answer them.`;
+  const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1c1c1a">
+  <p style="margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#5c5c57">${escapeHtml(label)} · ${escapeHtml(args.appName)}</p>
+  <p style="white-space:pre-wrap;margin:0 0 16px">${escapeHtml(args.message)}</p>
+  <p style="margin:0;color:#5c5c57;font-size:14px">${escapeHtml(args.name)} &lt;${escapeHtml(args.email)}&gt;<br>Page: ${escapeHtml(args.page)}</p>
+  <p style="margin:16px 0 0;color:#5c5c57;font-size:13px">Reply to this email to answer them.</p>
+</div>`;
+  return { subject, text, html };
+}
+
+/** Added as a speaker at a partner's event: their event page, their badge QR, and what it does. */
+export function eventSpeakerEmail(
+  args: Common & {
+    eventName: string;
+    eventSlug: string;
+    profileSlug: string;
+    dates: string;
+    venue: string | null;
+    partnerName: string;
+    published: boolean;
+  },
+) {
+  const where = [args.dates, args.venue].filter(Boolean).join(", ");
+  const event = `${args.siteUrl}/e/${encodeURIComponent(args.eventSlug)}`;
+  const badge = `${event}/qr?speaker=${encodeURIComponent(args.profileSlug)}`;
+  return note({
+    ...args,
+    subject: `You're a speaker at ${args.eventName} on ${args.appName}`,
+    before: [
+      `${args.partnerName} has added you as a speaker at ${args.eventName} (${where}). Your card is now on the event's page, with everyone else speaking.`,
+      `You also get your own QR code for your badge or your last slide. People who scan it open your card, save your contact in one tap and can follow up after the event. If you mentor on ${args.appName}, they can message you from there too.`,
+      ...(args.published ? [] : [`Your card isn't published yet, so people can't see it. Publish it from your dashboard before the event.`]),
+    ],
+    cta: { href: event, label: "See the event page" },
+    after: [`Download your badge QR code: ${badge}`],
+  });
+}
+
+/* ---- Partner radar: notes to the founder's own inbox ---- */
+
+/** A web search for the organiser's contact email. */
+export function contactSearchUrl(e: { name: string; organizer?: string | null }) {
+  return `https://www.google.com/search?q=${encodeURIComponent(`${e.organizer || e.name} contact email`)}`;
+}
+
+/** One event in a radar email, already worded (see src/lib/radar.ts). */
+export type RadarEmailEvent = {
+  name: string;
+  /** "Friday 20 November" or "13 to 15 November". */
+  when: string;
+  where: string | null;
+  /** The organiser's email, or null when the search found none. */
+  to: string | null;
+  angle: string | null;
+  /** The event page and the organiser, for finding a contact. */
+  link?: string | null;
+  organizer?: string | null;
+  /** Reminders only: the follow-up, ready to copy. */
+  followUp?: { subject: string; body: string; sentOn: string };
+};
+
+/** Logo, a heading, the events as cards, a button to the radar page. No greeting or sign-off: it's a note to self. */
+function radarLayout({ appName, siteUrl, heading, intro, events, cta }: {
+  appName: string;
+  siteUrl: string;
+  heading: string;
+  intro: string;
+  events: RadarEmailEvent[];
+  cta: string;
+}) {
+  const page = `${siteUrl}/admin/radar`;
+  const card = (e: RadarEmailEvent) => {
+    const meta = [e.when, e.where].filter(Boolean).map((s) => escapeHtml(s!)).join(" · ");
+    const to = e.to
+      ? `Send to <strong>${escapeHtml(e.to)}</strong>`
+      : `<span style="color:#93370d">No email found yet</span>`;
+    const find = e.to
+      ? ""
+      : `<p style="margin:12px 0 0;font-size:14px">${
+          e.link ? `<a href="${escapeHtml(e.link)}" style="color:#1f4d3f;font-weight:600">Event page</a> &nbsp;·&nbsp; ` : ""
+        }<a href="${escapeHtml(contactSearchUrl(e))}" style="color:#1f4d3f;font-weight:600">Search for a contact</a></p>`;
+    const follow = e.followUp
+      ? `<p style="margin:12px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#5c5c57">Follow-up · first email sent ${escapeHtml(e.followUp.sentOn)}</p>
+      <p style="margin:0 0 6px;font-size:14px"><strong>Subject:</strong> ${escapeHtml(e.followUp.subject)}</p>
+      <p style="margin:0;padding:12px 14px;background:#fafaf8;border:1px solid #e7e6e1;border-radius:8px;font-size:14px;line-height:1.55;white-space:pre-wrap">${escapeHtml(e.followUp.body)}</p>`
+      : "";
+    return `<tr><td style="padding:16px 18px;border:1px solid #e7e6e1;border-radius:12px;background:#ffffff">
+      <p style="margin:0;font-size:17px;font-weight:600;line-height:1.35;color:#141413">${escapeHtml(e.name)}</p>
+      <p style="margin:4px 0 0;font-size:14px;color:#57554f">${meta}</p>
+      <p style="margin:4px 0 0;font-size:14px;color:#57554f">${to}</p>
+      ${e.angle ? `<p style="margin:10px 0 0;font-size:14px;color:#141413"><strong>Why ${escapeHtml(appName)} fits:</strong> ${escapeHtml(e.angle)}</p>` : ""}
+      ${find}
+      ${follow}
+    </td></tr>
+    <tr><td style="height:10px;line-height:10px;font-size:0">&nbsp;</td></tr>`;
+  };
+  const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#1c1c1a;font-size:16px;line-height:1.6;background:#fafaf8">
+  ${emailLogo(siteUrl, appName)}
+  <p style="margin:24px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#1f4d3f;font-weight:600">Partner radar</p>
+  <p style="margin:0;font-size:22px;font-weight:600;line-height:1.3;color:#141413">${escapeHtml(heading)}</p>
+  <p style="margin:8px 0 20px;color:#57554f">${escapeHtml(intro)}</p>
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:separate">
+    ${events.map(card).join("\n    ")}
+  </table>
+  ${button(page, cta)}
+  ${emailSocials(siteUrl, appName)}
+</div>`;
+  const text = [
+    heading,
+    intro,
+    ...events.map((e) =>
+      [
+        e.name,
+        [e.when, e.where].filter(Boolean).join(" · "),
+        e.to ? `Send to: ${e.to}` : "No email found yet",
+        e.angle ? `Why ${appName} fits: ${e.angle}` : "",
+        !e.to && e.link ? `Event page: ${e.link}` : "",
+        !e.to ? `Search for a contact: ${contactSearchUrl(e)}` : "",
+        e.followUp ? `Follow-up (first email sent ${e.followUp.sentOn})\nSubject: ${e.followUp.subject}\n\n${e.followUp.body}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    ),
+    `${cta}: ${page}`,
+  ].join("\n\n");
+  return { html, text };
+}
+
+/** The search found new events with an organiser email, ready to write to. Those without one get radarNoEmailEmail. */
+export function radarFindsEmail({ appName, siteUrl, events }: { appName: string; siteUrl: string; events: RadarEmailEvent[] }) {
+  const n = events.length;
+  const subject = n === 1 ? `New on the radar: ${events[0].name}` : `${n} new events on the partner radar`;
+  return {
+    subject,
+    ...radarLayout({
+      appName,
+      siteUrl,
+      heading: n === 1 ? "1 new event found" : `${n} new events found`,
+      intro: "Each has an organiser email and a partner email ready on the radar page. The best time to write is 10 to 24 days before the event.",
+      events,
+      cta: "Open partner radar",
+    }),
+  };
+}
+
+/** New finds with no organiser email: where to look, so the founder can add one on the radar page. */
+export function radarNoEmailEmail({ appName, siteUrl, events }: { appName: string; siteUrl: string; events: RadarEmailEvent[] }) {
+  const n = events.length;
+  const subject = n === 1 ? `Find a contact for ${events[0].name}` : `${n} new events need a contact email`;
+  return {
+    subject,
+    ...radarLayout({
+      appName,
+      siteUrl,
+      heading: n === 1 ? "1 event needs a contact email" : `${n} events need a contact email`,
+      intro:
+        "The search couldn't find an email for these organisers. Look on the event page or search for one, then add it in the organiser's email box on the radar page. The partner email is ready as soon as you do.",
+      events,
+      cta: "Add contact emails",
+    }),
+  };
+}
+
+/** Follow-ups now due: organisers emailed a few days ago who haven't replied. One reminder per event. */
+export function radarRemindersEmail({ appName, siteUrl, events }: { appName: string; siteUrl: string; events: RadarEmailEvent[] }) {
+  const n = events.length;
+  const subject = n === 1 ? `Follow up with ${events[0].name}` : `${n} partner follow-ups are due`;
+  return {
+    subject,
+    ...radarLayout({
+      appName,
+      siteUrl,
+      heading: n === 1 ? "1 follow-up is due" : `${n} follow-ups are due`,
+      intro: "No reply yet to these partner emails. Send the follow-up as a reply to your first email so it stays in the same thread, then mark it sent on the radar page. This is the only reminder for each.",
+      events,
+      cta: "Mark follow-ups as sent",
+    }),
+  };
 }

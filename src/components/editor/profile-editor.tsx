@@ -22,6 +22,8 @@ type Props = {
   siteHost: string;
   /** Years of experience and field (saved separately from the card; never shown on it). */
   initialExperience?: Experience;
+  /** Whether Spark is switched on (changes the wording of the experience step). */
+  spark?: boolean;
 };
 
 const STEPS = [
@@ -38,7 +40,7 @@ function stepOf(errorKey: string) {
   return idx === -1 ? 0 : idx;
 }
 
-export function ProfileEditor({ mode, initial, userId, email, siteHost, initialExperience }: Props) {
+export function ProfileEditor({ mode, initial, userId, email, siteHost, initialExperience, spark = true }: Props) {
   const router = useRouter();
   const toast = useToast();
   const [values, setValues] = useState<FormValues>(() => toFormValues(initial, email));
@@ -138,14 +140,16 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
         </div>
 
         <h1 className="mt-8 text-2xl font-semibold tracking-tight">{current.title}</h1>
-        <p className="mt-1 text-ink-2">{current.description}</p>
+        <p className="mt-1 text-ink-2">
+          {current.key === "experience" && !spark ? "This decides whether you can mentor on Meetwell." : current.description}
+        </p>
 
         {formError && <Alert tone="danger" className="mt-6">{formError}</Alert>}
 
         <div className="mt-8">
           {current.key === "basics" && <BasicsSection values={values} errors={errors} set={set} userId={userId} slugLocked={slugLocked} siteHost={siteHost} />}
           {current.key === "experience" && (
-            <ExperienceFields value={experience} onChange={changeExperience} errors={experienceErrors} />
+            <ExperienceFields value={experience} onChange={changeExperience} errors={experienceErrors} spark={spark} />
           )}
           {current.key === "contact" && <ContactSection values={values} errors={errors} set={set} />}
           {current.key === "social" && <SocialSection values={values} errors={errors} set={set} />}
@@ -202,14 +206,16 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
     });
 
   const sections = [
-    { title: "About you", body: <BasicsSection values={values} errors={errors} set={set} userId={userId} slugLocked={slugLocked} siteHost={siteHost} /> },
+    // ids let the Profile strength checklist jump to a section (see components/dashboard/profile-strength.tsx).
+    { id: "edit-about", title: "About you", body: <BasicsSection values={values} errors={errors} set={set} userId={userId} slugLocked={slugLocked} siteHost={siteHost} /> },
     {
+      id: "edit-experience",
       title: "Your experience",
-      body: <ExperienceFields value={experience} onChange={changeExperience} errors={experienceErrors} />,
+      body: <ExperienceFields value={experience} onChange={changeExperience} errors={experienceErrors} spark={spark} />,
     },
-    { title: "Contact details", body: <ContactSection values={values} errors={errors} set={set} /> },
-    { title: "Social links", body: <SocialSection values={values} errors={errors} set={set} /> },
-    { title: "Networking goals", body: <GoalsSection values={values} errors={errors} set={set} /> },
+    { id: "edit-contact", title: "Contact details", body: <ContactSection values={values} errors={errors} set={set} /> },
+    { id: "edit-social", title: "Social links", body: <SocialSection values={values} errors={errors} set={set} /> },
+    { id: "edit-goals", title: "Networking goals", body: <GoalsSection values={values} errors={errors} set={set} /> },
   ];
 
   return (
@@ -217,7 +223,7 @@ export function ProfileEditor({ mode, initial, userId, email, siteHost, initialE
       <div className="flex flex-col gap-6 pb-24">
         {formError && <Alert tone="danger">{formError}</Alert>}
         {sections.map((s) => (
-          <Card key={s.title} className="p-5 sm:p-6">
+          <Card key={s.title} id={s.id} className="scroll-mt-6 p-5 sm:p-6">
             <h2 className="mb-5 text-base font-semibold">{s.title}</h2>
             {s.body}
           </Card>

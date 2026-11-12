@@ -13,7 +13,7 @@ const mail = (
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy notice" updated="October 24, 2026">
+    <LegalPage title="Privacy notice" updated="October 26, 2026">
       <section>
         <p>
           This notice explains what personal data {APP_NAME} collects, why, and the rights you have. We follow the
@@ -23,6 +23,12 @@ export default function PrivacyPage() {
         <p className="mt-3">
           {COMPANY_NAME} ({COMPANY_RC}), the company that runs {APP_NAME} from Lagos, Nigeria, is the data controller.
           Our data protection contact can be reached at {mail} for anything about your data.
+        </p>
+        <p className="mt-3 rounded-lg bg-surface-2 px-4 py-3">
+          <strong>Spark is paused.</strong> Our AI matching feature, Spark, is switched off for now. While it&apos;s paused
+          we don&apos;t run any matching, recommend anyone, or send your details to our AI provider. Matching details you
+          added before stay saved, and you can ask us to delete them at {mail}. The parts of this notice about Spark apply
+          again only once it&apos;s back on.
         </p>
       </section>
 
@@ -56,7 +62,8 @@ export default function PrivacyPage() {
           <strong>Contacts:</strong> when you open someone&apos;s card while logged in, we keep it in your Contacts with
           the date, whether you scanned their QR code, and any note you add. Before you have an account, the cards you
           open are kept only on your own phone, in your browser, and reach us only if you sign up. If you keep
-          someone&apos;s card and you have a card of your own, they can see that you saved them.
+          someone&apos;s card and you have a card of your own, they can see that you saved them. If they had already
+          saved your card, we email them that you saved theirs back (they can turn these emails off).
         </p>
         <p className="mt-3">
           <strong>If you join through a partner&apos;s link</strong> (for example an event you spoke at): we record

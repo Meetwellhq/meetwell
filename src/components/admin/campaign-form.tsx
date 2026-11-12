@@ -14,7 +14,16 @@ const fieldClass =
  * page recounts the people and redraws the preview. Picking another email
  * loads its suggested audience.
  */
-export function CampaignForm({ audience, counts }: { audience: Audience; counts: { mentor: number; mentee: number; unset: number; all: number } }) {
+export function CampaignForm({
+  audience,
+  counts,
+  spark = true,
+}: {
+  audience: Audience;
+  counts: { mentor: number; mentee: number; unset: number; all: number };
+  /** While Spark is paused, "Try Spark" isn't offered. */
+  spark?: boolean;
+}) {
   const router = useRouter();
   const go = (next: Record<string, string>) => router.replace(`/admin/announcements/new?${new URLSearchParams(next)}`, { scroll: false });
   const change = (key: string, value: string) => go({ ...audienceParams(audience), [key]: value });
@@ -23,7 +32,7 @@ export function CampaignForm({ audience, counts }: { audience: Audience; counts:
     <div className="flex flex-col gap-5">
       <Field label="Email">
         <select className={fieldClass} value={audience.template} onChange={(e) => go({ template: e.target.value })}>
-          {TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+          {TEMPLATES.filter((t) => spark || t.id !== "spark_beta").map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
         </select>
         <p className="mt-1.5 text-xs text-ink-3">{TEMPLATES.find((t) => t.id === audience.template)?.about}</p>
       </Field>

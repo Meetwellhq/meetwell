@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createClient, getCurrentUser } from "../supabase/server";
 
 const slugOk = (s: unknown): s is string => typeof s === "string" && /^[a-z0-9-]{1,64}$/i.test(s);
@@ -40,4 +41,24 @@ export async function removeContact(slug: string): Promise<{ error?: string }> {
   if (error) return { error: "Couldn't remove them." };
   revalidatePath("/dashboard/contacts");
   return {};
+}
+
+/** Settings: "saved your card back" emails on or off. */
+export async function setSavebackEmails(on: boolean): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("set_saveback_emails", { p_on: on });
+  if (error) return { error: "Couldn't save. Please try again." };
+  revalidatePath("/dashboard/settings");
+  return {};
+}
+
+export type UnsubscribeSavebackState = { done?: boolean; error?: string };
+
+/** One-click "turn off" from the email link (no login). */
+export async function unsubscribeSavebackEmails(_: UnsubscribeSavebackState, formData: FormData): Promise<UnsubscribeSavebackState> {
+  const token = z.uuid().safeParse(formData.get("token"));
+  if (!token.success) return { error: "This link isn't valid. Turn emails off in Settings instead." };
+  const { data, error } = await (await createClient()).rpc("unsubscribe_saveback_emails", { p_token: token.data });
+  if (error || data !== true) return { error: "This link isn't valid. Turn emails off in Settings instead." };
+  return { done: true };
 }

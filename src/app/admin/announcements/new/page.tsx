@@ -5,6 +5,7 @@ import { NotReady, PageTitle } from "@/components/admin/admin-ui";
 import { CampaignForm, CampaignSendButton, CampaignTestButton } from "@/components/admin/campaign-form";
 import { audienceArgs, audienceParams, parseAudience, ROLES, TEMPLATES } from "@/lib/admin/campaigns";
 import { previewCampaignEmail } from "@/lib/email";
+import { isSparkOn } from "@/lib/spark";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "New email · Admin" };
@@ -33,7 +34,7 @@ export default async function NewEmailPage({ searchParams }: PageProps<"/admin/a
 
   const list = (people.data ?? []) as { email: string; full_name: string | null }[];
   const counts = Object.fromEntries(ROLES.map((r, i) => [r, (roleCounts[i].data as number | null) ?? 0])) as Record<(typeof ROLES)[number], number>;
-  const email = previewCampaignEmail(audience.template, list[0]?.full_name ?? null);
+  const email = await previewCampaignEmail(audience.template, list[0]?.full_name ?? null);
   const shown = list.slice(0, 8);
 
   return (
@@ -52,7 +53,7 @@ export default async function NewEmailPage({ searchParams }: PageProps<"/admin/a
         <div className="flex flex-col gap-6">
           <section className="rounded-xl border border-border bg-surface p-5">
             <h2 className="mb-4 text-lg font-semibold text-ink">Who gets it</h2>
-            <CampaignForm audience={audience} counts={counts} />
+            <CampaignForm audience={audience} counts={counts} spark={await isSparkOn()} />
           </section>
 
           <section className="rounded-xl border border-border bg-surface p-5">

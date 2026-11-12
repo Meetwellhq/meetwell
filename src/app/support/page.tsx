@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { APP_NAME, COMPANY_NAME, COMPANY_RC, INFO_EMAIL, isSupabaseConfigured, SUPPORT_EMAIL } from "@/lib/config";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { isSparkOn } from "@/lib/spark";
 
 export const metadata: Metadata = {
   title: "Support",
@@ -36,8 +37,8 @@ const infoMail = (
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mt-14">
-      <h2 className="font-display text-3xl tracking-tight text-ink">{title}</h2>
-      <div className="mt-4 space-y-4 text-[17px] leading-relaxed text-ink-2">{children}</div>
+      <h2 className="font-display text-fluid-h3 tracking-tight text-ink">{title}</h2>
+      <div className="mt-4 space-y-4 text-fluid-body leading-relaxed text-ink-2">{children}</div>
     </section>
   );
 }
@@ -55,13 +56,13 @@ function Items({ items }: { items: { label: string; body: ReactNode }[] }) {
 }
 
 export default async function SupportPage() {
-  const signedIn = await isSignedIn();
+  const [signedIn, spark] = await Promise.all([isSignedIn(), isSparkOn()]);
 
   return (
-    <div className="flex min-h-full flex-col bg-surface">
+    <div className="light-only flex min-h-full flex-col bg-surface">
       <SiteHeader signedIn={signedIn} />
       <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-14 sm:py-20">
-        <h1 className="font-display text-4xl leading-none tracking-tight text-ink sm:text-5xl">Support</h1>
+        <h1 className="font-display text-fluid-page leading-none tracking-tight text-ink">Support</h1>
         <p className="mt-5 text-ink-3">Last updated 22 October 2026.</p>
 
         <Section title="Get in touch">
@@ -91,7 +92,9 @@ export default async function SupportPage() {
               { label: "Joining and logging in", body: "Access codes, joining through someone's card, confirming your email and resetting your password." },
               { label: "Your card and QR code", body: "Editing your card, publishing it, and QR codes or saved contacts that don't work as expected." },
               { label: "Contacts", body: "Cards that didn't show up in your Contacts, or exporting them to your phone." },
-              { label: "Spark", body: "Introductions you didn't get, your free introductions each month, and Spark credits." },
+              ...(spark
+                ? [{ label: "Spark", body: "Introductions you didn't get, your free introductions each month, and Spark credits." }]
+                : []),
               { label: "Mentoring and payments", body: "Becoming a mentor, paying to message a mentor, refunds, earnings and withdrawals." },
               { label: "Messages and safety", body: "Blocking, reporting someone, or anything that broke our community rules." },
               {
@@ -112,7 +115,7 @@ export default async function SupportPage() {
 
         <Section title="Refunds">
           <p>
-            Unused Spark credits bought in the last 14 days can be refunded. If a mentor doesn&apos;t reply within 7
+            {spark && "Unused Spark credits bought in the last 14 days can be refunded. "}If a mentor doesn&apos;t reply within 7
             days of your payment, you get a full refund. Email {mail} with your payment reference. Our{" "}
             <Link href="/terms" className="text-ink underline decoration-border-strong underline-offset-4">
               Terms

@@ -1,26 +1,30 @@
 "use client";
 
 import {
-  BadgeCheck,
+  HandHeart,
   CreditCard,
   LayoutDashboard,
+  Lightbulb,
   ListOrdered,
   LogOut,
   Megaphone,
   MessagesSquare,
+  Radar,
   Send,
   Handshake,
+  Ticket,
   Users,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MobileMenu } from "@/components/ui/mobile-menu";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/cn";
 
 type Item = { href: string; label: string; icon: LucideIcon; count?: keyof Counts };
-/** Things waiting on the admin: invites to send, open reports, mentor applications plus withdrawals to approve. */
-export type Counts = { waiting: number; reports: number; mentors: number };
+/** Things waiting on the admin: invites to send, open reports, mentor applications plus withdrawals to approve, new ideas. */
+export type Counts = { waiting: number; reports: number; mentors: number; ideas: number };
 
 const SECTIONS: { title: string; items: Item[] }[] = [
   {
@@ -31,12 +35,14 @@ const SECTIONS: { title: string; items: Item[] }[] = [
       { href: "/admin/users", label: "Users", icon: Users },
       { href: "/admin/outreach", label: "Outreach", icon: Send },
       { href: "/admin/partners", label: "Partners", icon: Handshake },
+      { href: "/admin/radar", label: "Partner radar", icon: Radar },
+      { href: "/admin/codes", label: "Shared codes", icon: Ticket },
     ],
   },
   {
     title: "Mentoring",
     items: [
-      { href: "/admin/mentors", label: "Mentors", icon: BadgeCheck, count: "mentors" },
+      { href: "/admin/mentors", label: "Mentors", icon: HandHeart, count: "mentors" },
       { href: "/admin/messages", label: "Messages", icon: MessagesSquare, count: "reports" },
     ],
   },
@@ -45,19 +51,20 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     items: [
       { href: "/admin/payments", label: "Payments", icon: CreditCard },
       { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
+      { href: "/admin/ideas", label: "Ideas", icon: Lightbulb, count: "ideas" },
     ],
   },
 ];
 
 const isActive = (pathname: string, href: string) => (href === "/admin" ? pathname === href : pathname.startsWith(href));
 
-function CountBadge({ n, active }: { n: number; active: boolean }) {
+function CountBadge({ n }: { n: number }) {
   if (!n) return null;
   return (
     <span
       className={cn(
         "ml-auto rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
-        active ? "bg-surface/20 text-white" : "bg-accent text-white",
+        "bg-accent text-white",
       )}
     >
       {n > 99 ? "99+" : n}
@@ -65,38 +72,33 @@ function CountBadge({ n, active }: { n: number; active: boolean }) {
   );
 }
 
-/** Admin sidebar on large screens; a scrollable row of tabs on small ones. */
-export function AdminNav({ counts }: { counts: Counts }) {
+/**
+ * The admin menu: the sidebar on large screens (`sidebar`), and on phones and
+ * tablets a menu button at the top right whose drop-down lists the same groups
+ * with their counts (`menu`).
+ */
+export function AdminNav({ counts, placement }: { counts: Counts; placement: "sidebar" | "menu" }) {
   const pathname = usePathname();
-  const all = SECTIONS.flatMap((s) => s.items);
+
+  if (placement === "menu") {
+    return (
+      <MobileMenu
+        label="Admin"
+        beta={false}
+        isActive={isActive}
+        sections={SECTIONS.map((s) => ({
+          title: s.title,
+          items: s.items.map(({ count, ...item }) => ({ ...item, badge: count ? counts[count] : 0 })),
+        }))}
+      />
+    );
+  }
 
   return (
     <>
-      {/* Small screens: one scrollable row. */}
-      <nav aria-label="Admin" className="flex gap-1.5 overflow-x-auto rounded-2xl bg-surface p-2 lg:hidden">
-        {all.map((item) => {
-          const active = isActive(pathname, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm",
-                active ? "bg-accent font-medium text-white" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
-              )}
-            >
-              <item.icon className="size-4" aria-hidden />
-              {item.label}
-              {item.count && <CountBadge n={counts[item.count]} active={active} />}
-            </Link>
-          );
-        })}
-      </nav>
-
       {/* Large screens: the sidebar. */}
-      <aside className="hidden lg:block">
-        <nav aria-label="Admin" className="sticky top-6 flex flex-col gap-6 rounded-2xl bg-surface p-4">
+      <aside className="hidden w-60 shrink-0 border-r border-border bg-surface lg:block">
+        <nav aria-label="Admin" className="sticky top-[calc(3.75rem+1px)] flex max-h-[calc(100dvh-3.75rem-1px)] flex-col gap-6 overflow-y-auto p-4">
           {SECTIONS.map((section) => (
             <div key={section.title} className="flex flex-col gap-1">
               <p className="px-3 pb-1 text-sm text-ink-3">{section.title}</p>
@@ -109,12 +111,12 @@ export function AdminNav({ counts }: { counts: Counts }) {
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] transition-colors",
-                      active ? "bg-accent font-medium text-white" : "text-ink hover:bg-surface-2",
+                      active ? "bg-surface-2 font-medium text-ink" : "text-ink hover:bg-surface-2",
                     )}
                   >
                     <item.icon className="size-[18px] shrink-0" aria-hidden />
                     {item.label}
-                    {item.count && <CountBadge n={counts[item.count]} active={active} />}
+                    {item.count && <CountBadge n={counts[item.count]} />}
                   </Link>
                 );
               })}

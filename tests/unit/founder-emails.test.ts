@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, sparkBetaEmail, waitlistEmail } from "@/lib/founder-emails";
+import { inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, radarFindsEmail, radarNoEmailEmail, radarRemindersEmail, sparkBetaEmail, sparkPausedEmail, savebackEmail, waitlistEmail } from "@/lib/founder-emails";
 
 const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "support@meetwell.me" };
 
@@ -74,7 +74,7 @@ describe("reminder emails", () => {
   it("draft and no-scan reminders point to the right dashboard pages", async () => {
     const { draftReminderEmail, noScansEmail } = await import("@/lib/founder-emails");
     expect(draftReminderEmail({ ...base, fullName: null }).html).toContain('href="https://meetwell.me/dashboard/profile"');
-    expect(noScansEmail({ ...base, fullName: "Quinn" }).html).toContain('href="https://meetwell.me/dashboard/qr"');
+    expect(noScansEmail({ ...base, fullName: "Quinn" }).html).toContain('href="https://meetwell.me/dashboard"');
   });
 });
 
@@ -194,6 +194,32 @@ describe("partner access email", () => {
   });
 });
 
+describe("Spark paused email", () => {
+  it("explains the pause, the 5,000 goal, refunds and links to the QR page", () => {
+    const { subject, text, html } = sparkPausedEmail({ ...base, fullName: "Ada Obi" });
+    expect(subject).toBe("Spark is taking a break until Meetwell has 5,000 members");
+    expect(text.startsWith("Hi Ada,")).toBe(true);
+    expect(text).toContain("about as many mentors as mentees");
+    expect(text).toContain("refund");
+    expect(html).toContain('href="https://meetwell.me/dashboard"');
+  });
+});
+
+describe("saved your card back email", () => {
+  const amaka = { full_name: "Amaka Obi", slug: "amaka", avatar_url: null, title: "Designer", organization: "Paystack" };
+  it("names one person, links their card and has a turn-off link", () => {
+    const { subject, text, html } = savebackEmail({ ...base, fullName: "Tunde Bello", savers: [amaka], token: "11111111-2222-3333-4444-555555555555" });
+    expect(subject).toBe("Amaka Obi saved your card back");
+    expect(text).toContain("now Amaka has saved yours too");
+    expect(html).toContain('href="https://meetwell.me/p/amaka"');
+    expect(html).toContain("/unsubscribe/contacts?t=11111111-2222-3333-4444-555555555555");
+  });
+  it("groups several people", () => {
+    const { subject } = savebackEmail({ ...base, fullName: "Tunde", savers: [amaka, { ...amaka, slug: "b", full_name: "Bisi <b>" }], token: "t" });
+    expect(subject).toBe("2 people saved your card back");
+  });
+});
+
 describe("new message email", () => {
   it("shows the sender and a preview like LinkedIn, links to the chat, escapes text, and can be turned off", () => {
     const { subject, text, html } = newMessageEmail({
@@ -285,5 +311,77 @@ describe("logo in emails", () => {
         preview: "Hi", conversationId: 1, offToken: "11111111-2222-3333-4444-555555555555",
       }).html,
     ).toContain(logo);
+  });
+});
+
+describe("feedback email", () => {
+  it("names the kind and sender, keeps the message, and escapes HTML", async () => {
+    const { feedbackEmail } = await import("@/lib/founder-emails");
+    const e = feedbackEmail({ kind: "problem", message: "The <QR> page\nis slow", name: "Ada Obi", email: "ada@x.com", page: "/dashboard", appName: "Meetwell" });
+    expect(e.subject).toBe("Problem from Ada Obi");
+    expect(e.text).toContain("The <QR> page\nis slow");
+    expect(e.html).toContain("The &lt;QR&gt; page");
+    expect(e.html).not.toContain("<QR>");
+    expect(e.text).toContain("Page: /dashboard");
+  });
+});
+
+describe("event speaker email", () => {
+  it("names the event, links its page and the speaker's badge QR, and nudges an unpublished card", async () => {
+    const { eventSpeakerEmail } = await import("@/lib/founder-emails");
+    const e = eventSpeakerEmail({
+      ...base, fullName: "Ada Obi", eventName: "ThinkUX Day", eventSlug: "thinkux-day", profileSlug: "ada",
+      dates: "5 Dec 2026", venue: "Lagos", partnerName: "ThinkUX", published: false,
+    });
+    expect(e.subject).toBe("You're a speaker at ThinkUX Day on Meetwell");
+    expect(e.html).toContain('href="https://meetwell.me/e/thinkux-day"');
+    expect(e.text).toContain("https://meetwell.me/e/thinkux-day/qr?speaker=ada");
+    expect(e.text).toContain("ThinkUX Day (5 Dec 2026, Lagos)");
+    expect(e.text).toContain("isn't published yet");
+    const live = eventSpeakerEmail({
+      ...base, fullName: "Ada Obi", eventName: "ThinkUX Day", eventSlug: "thinkux-day", profileSlug: "ada",
+      dates: "5 Dec 2026", venue: null, partnerName: "ThinkUX", published: true,
+    });
+    expect(live.text).not.toContain("isn't published yet");
+  });
+});
+
+describe("partner radar emails", () => {
+  const event = { name: "DevFest <Lagos>", when: "Friday 20 November", where: "Landmark Centre", to: "hi@gdg.ng", angle: "Developers swap details" };
+
+  it("lists new finds with a button to the radar", () => {
+    const one = radarFindsEmail({ appName: "Meetwell", siteUrl: "https://meetwell.me", events: [event] });
+    expect(one.subject).toBe("New on the radar: DevFest <Lagos>");
+    expect(one.html).toContain("DevFest &lt;Lagos&gt;");
+    expect(one.html).toContain("https://meetwell.me/admin/radar");
+    expect(one.html).toContain("/email/logo.png");
+    const two = radarFindsEmail({ appName: "Meetwell", siteUrl: "https://meetwell.me", events: [event, { ...event, to: null }] });
+    expect(two.subject).toBe("2 new events on the partner radar");
+    expect(two.text).toContain("No email found yet");
+  });
+
+  it("sends events with no email separately, with where to look", () => {
+    const missing = radarNoEmailEmail({
+      appName: "Meetwell",
+      siteUrl: "https://meetwell.me",
+      events: [{ ...event, to: null, link: "https://devfest.ng", organizer: "GDG Lagos" }],
+    });
+    expect(missing.subject).toBe("Find a contact for DevFest <Lagos>");
+    expect(missing.html).toContain('href="https://devfest.ng"');
+    expect(missing.html).toContain("https://www.google.com/search?q=GDG%20Lagos%20contact%20email");
+    expect(missing.text).toContain("Event page: https://devfest.ng");
+    // An event that has an email gets no search link
+    expect(radarFindsEmail({ appName: "Meetwell", siteUrl: "https://meetwell.me", events: [event] }).html).not.toContain("google.com");
+  });
+
+  it("puts the follow-up text in the reminder", () => {
+    const due = radarRemindersEmail({
+      appName: "Meetwell",
+      siteUrl: "https://meetwell.me",
+      events: [{ ...event, followUp: { subject: "Re: Hello", body: "Checking in", sentOn: "31 Oct" } }],
+    });
+    expect(due.subject).toBe("Follow up with DevFest <Lagos>");
+    expect(due.text).toContain("Subject: Re: Hello\n\nChecking in");
+    expect(due.html).toContain("first email sent 31 Oct");
   });
 });

@@ -1,60 +1,67 @@
+import type { Viewport } from "next";
 import { redirect } from "next/navigation";
-import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import type { CSSProperties } from "react";
+import { AccountMenu, DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { DeviceCardsImporter } from "@/components/dashboard/device-cards-importer";
 import { ExperiencePrompt } from "@/components/matching/experience-prompt";
 import { InstallApp } from "@/components/pwa/install-app";
 import { isMentor } from "@/lib/matching/constants";
+import { isSparkOn } from "@/lib/spark";
 import { Logo } from "@/components/marketing/logo";
-import { Avatar } from "@/components/ui/avatar";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
+
+// The phone's status bar matches the dashboard header (--surface), not the page background.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1e1b" },
+  ],
+};
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in?next=/dashboard");
   const supabase = await createClient();
-  const [{ data: isAdmin }, { data: profile }, conversations, unread, partners] = await Promise.all([
+  const [{ data: isAdmin }, { data: profile }, conversations, unread, partners, spark] = await Promise.all([
     supabase.rpc("is_admin"),
     supabase.from("profiles").select("field, experience_years, full_name, avatar_url").eq("user_id", user.id).maybeSingle(),
     supabase.rpc("my_conversations"),
     supabase.rpc("my_unread_messages"),
     supabase.rpc("my_partners"),
+    isSparkOn(),
   ]);
   const messages = (conversations.data ?? []).length > 0 ? { unread: Number(unread.data ?? 0) } : null;
   // Admin accounts are only for running Meetwell: they live in /admin, not here.
   if (isAdmin === true) redirect("/admin");
 
   const name = profile?.full_name?.trim() || user.email || "You";
+  const nav = { messages, mentor: isMentor(profile?.experience_years), partner: (partners.data ?? []).length > 0, spark };
 
   return (
-    <div className="flex-1 bg-surface-2/60">
-      {/* Bottom padding on phones so the bottom bar never covers the page. */}
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 pt-4 pb-28 sm:px-5 sm:pt-6 lg:pb-6">
-        <header className="flex items-center justify-between gap-4 rounded-2xl bg-surface px-4 py-3 sm:px-5">
-          <Logo />
+    <div className="flex flex-1 flex-col bg-surface">
+      {/* Full width, edge to edge, and stays at the top; the phone menu drops down under it. */}
+      <header className="sticky top-0 z-30 border-b border-border bg-surface">
+        {/* h-15 (60px): the sidebar sticks just under it (see the navs). */}
+        <div className="relative flex h-15 items-center justify-between gap-4 px-4 sm:px-5">
+          <Logo large />
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-3">
-              <Avatar name={name} src={profile?.avatar_url} className="size-8 text-xs" />
-              <span className="hidden flex-col leading-tight sm:flex">
-                <span className="max-w-[14rem] truncate text-sm font-medium text-ink">{name}</span>
-                <span className="max-w-[14rem] truncate text-xs text-ink-3">{user.email}</span>
-              </span>
-            </div>
+            {/* Laptops and up: the avatar and its menu. Phones and tablets: the menu button. */}
+            <AccountMenu me={{ name, email: user.email ?? null, avatarUrl: profile?.avatar_url ?? null }} className="hidden lg:block" />
+            <DashboardNav placement="menu" {...nav} />
           </div>
-        </header>
-
-        <InstallApp variant="banner" />
-
-        <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
-          <DashboardNav
-            messages={messages}
-            mentor={isMentor(profile?.experience_years)}
-            partner={(partners.data ?? []).length > 0}
-            avatar={{ name, src: profile?.avatar_url ?? null }}
-          />
-          <main className="min-w-0 rounded-2xl bg-surface p-4 sm:p-6">{children}</main>
         </div>
+      </header>
+
+      {/* The sidebar runs down the left edge; the page fills the rest. */}
+      <div className="flex flex-1">
+        <DashboardNav placement="sidebar" {...nav} />
+        {/* Cards in the dashboard are 12px round (Card reads --card-radius). */}
+        <main className="flex min-w-0 flex-1 flex-col gap-4 bg-surface p-4 sm:p-6 lg:p-8" style={{ "--card-radius": "0.75rem" } as CSSProperties}>
+          <InstallApp variant="banner" />
+          <div>{children}</div>
+        </main>
       </div>
-      {profile && profile.experience_years === null && <ExperiencePrompt initialField={profile.field} />}
+      {profile && profile.experience_years === null && <ExperiencePrompt initialField={profile.field} spark={spark} />}
       <DeviceCardsImporter />
     </div>
   );

@@ -3,6 +3,7 @@ import { AddOutreach, CopyMessageButton, EditableName, OpenOnX, OutreachStatusPi
 import { Badge, EmptyState } from "@/components/ui/misc";
 import type { OutreachStatus } from "@/lib/admin/actions";
 import { inviteLink, outreachMessage } from "@/lib/outreach";
+import { PaginatedList } from "@/components/ui/paginated-list";
 
 export type OutreachRow = {
   id: number;
@@ -41,7 +42,7 @@ export function OutreachList({ rows, site }: { rows: OutreachRow[]; site: string
           <EmptyState title="No one on the list yet" description="Add someone you'd like to invite from X." />
         </div>
       ) : (
-        <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+        <PaginatedList className="divide-y divide-border rounded-xl border border-border bg-surface">
           {rows.map((r) => {
             const link = r.access_code ? inviteLink(site, r.access_code) : site;
             return (
@@ -72,7 +73,7 @@ export function OutreachList({ rows, site }: { rows: OutreachRow[]; site: string
               </li>
             );
           })}
-        </ul>
+        </PaginatedList>
       )}
     </>
   );

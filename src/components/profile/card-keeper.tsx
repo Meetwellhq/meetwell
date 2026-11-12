@@ -10,6 +10,8 @@ import { cn } from "@/lib/cn";
 
 export type Viewer = "visitor" | "member" | "owner";
 
+const BAR_LINK = "sticky bottom-4 mb-4 select-none transition-[background-color,scale] duration-100 ease-out hover:bg-accent-hover active:scale-[0.98]";
+
 /**
  * The bar that floats at the bottom of a card, and what opening a card does:
  * - a logged-in member keeps the card in their Contacts;
@@ -45,7 +47,7 @@ export function CardKeeper({
 
   if (viewer === "member") {
     return (
-      <Link href="/dashboard/contacts" className={cn(barClass, "sticky bottom-4 mb-4 transition-colors hover:bg-accent-hover")}>
+      <Link href="/dashboard/contacts" className={cn(barClass, BAR_LINK)}>
         <span className="flex items-center gap-2 text-[15px] font-semibold">
           <Check className="size-5" aria-hidden />
           {firstName} is in your contacts
@@ -57,7 +59,7 @@ export function CardKeeper({
 
   if (viewer === "visitor" && kept > 0) {
     return (
-      <Link href={`/join?via=${encodeURIComponent(slug)}`} className={cn(barClass, "sticky bottom-4 mb-4 h-auto min-h-12 gap-3 py-2.5 transition-colors hover:bg-accent-hover")}>
+      <Link href={`/join?via=${encodeURIComponent(slug)}`} className={cn(barClass, BAR_LINK, "h-auto min-h-12 gap-3 py-2.5")}>
         <span className="flex min-w-0 items-center gap-2">
           <LogoMark inverted className="size-5 shrink-0" />
           <span className="min-w-0 text-[14px] font-semibold leading-snug">
@@ -70,7 +72,7 @@ export function CardKeeper({
   }
 
   return (
-    <Link href={fallback.href} className={cn(barClass, "sticky bottom-4 mb-4 transition-colors hover:bg-accent-hover")}>
+    <Link href={fallback.href} className={cn(barClass, BAR_LINK)}>
       {fallback.content}
     </Link>
   );

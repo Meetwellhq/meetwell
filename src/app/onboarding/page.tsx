@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ProfileEditor } from "@/components/editor/profile-editor";
+import { isSparkOn } from "@/lib/spark";
 import { Logo } from "@/components/marketing/logo";
 import { getSiteUrl } from "@/lib/config";
 import { getOwnProfile } from "@/lib/profiles/queries";
@@ -37,6 +38,7 @@ export default async function OnboardingPage() {
       </header>
       <main className="flex-1 px-4 py-10 sm:py-14">
         <ProfileEditor
+          spark={await isSparkOn()}
           mode="onboarding"
           initial={profile}
           userId={user.id}

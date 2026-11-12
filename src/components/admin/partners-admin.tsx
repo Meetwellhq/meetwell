@@ -14,6 +14,7 @@ import {
   adminSetPartnerActive,
 } from "@/lib/admin/actions";
 import { cn } from "@/lib/cn";
+import { PaginatedList } from "@/components/ui/paginated-list";
 
 export type PartnerRow = {
   id: string;
@@ -131,7 +132,7 @@ export function PartnerList({ rows }: { rows: PartnerRow[] }) {
         <span className="text-right">Mentors</span>
         <span />
       </div>
-      <ul className="divide-y divide-border">
+      <PaginatedList className="divide-y divide-border">
         {rows.map((p) => (
           <li key={p.id}>
             <Link
@@ -154,7 +155,7 @@ export function PartnerList({ rows }: { rows: PartnerRow[] }) {
             </Link>
           </li>
         ))}
-      </ul>
+      </PaginatedList>
     </div>
   );
 }

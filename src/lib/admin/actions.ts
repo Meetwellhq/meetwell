@@ -7,15 +7,19 @@ import {
   sendInviteEmail,
   sendMentorApprovedEmail,
   sendMentoringEmail,
+  sendEventSpeakerEmail,
   sendPartnerAccessEmail,
   sendPublishCardEmail,
   sendSparkBetaEmail,
+  sendSparkPausedEmail,
   sendWithdrawalSentEmail,
 } from "../email";
 import { refundPayment, sendTransfer } from "../payments/paystack";
+import { isSparkOn } from "../spark";
 import { createClient, getCurrentUser } from "../supabase/server";
 import { parseOutreachList, xHandle } from "../outreach";
 import { emailSchema } from "../validation";
+import { eventDates, linkName as partnerSlug } from "../events";
 
 export type InviteState = { ok?: boolean; error?: string };
 
@@ -51,6 +55,8 @@ const ANNOUNCEMENTS = {
   mentoring: sendMentoringEmail,
   // Only to people whose card is still a draft (the database picks them).
   publish_card: sendPublishCardEmail,
+  // Only to people who turned Spark on (the database picks them).
+  spark_paused: sendSparkPausedEmail,
 } satisfies Record<string, (to: string, fullName: string | null) => Promise<boolean>>;
 
 export type AnnouncementKind = keyof typeof ANNOUNCEMENTS;
@@ -64,6 +70,7 @@ export type AnnouncementKind = keyof typeof ANNOUNCEMENTS;
 export async function sendAnnouncement(kind: AnnouncementKind): Promise<AnnounceState> {
   const sendOne = ANNOUNCEMENTS[kind];
   if (!sendOne) return { error: "Unknown announcement." };
+  if (kind === "spark_beta" && !(await isSparkOn())) return { error: "Spark is paused, so this email can't be sent yet." };
   if (!(await getCurrentUser())) return { error: "Please log in again." };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_announcement_recipients", { p_kind: kind, p_limit: 40 });
@@ -101,6 +108,7 @@ export async function sendAnnouncement(kind: AnnouncementKind): Promise<Announce
 export async function sendCampaign(params: Record<string, string>): Promise<AnnounceState> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };
   const audience = parseAudience({ ...params, role: params.role ?? "all" });
+  if (audience.template === "spark_beta" && !(await isSparkOn())) return { error: "Spark is paused, so this email can't be sent yet." };
   const args = audienceArgs(audience);
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_email_audience", { ...args, p_limit: 40 });
@@ -328,16 +336,6 @@ export async function adminDeleteOutreach(id: number): Promise<{ error?: string 
   return {};
 }
 
-/** Turn a partner's name into its link name: "Think UX!" → "think-ux". */
-function partnerSlug(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40)
-    .replace(/-+$/, "");
-}
-
 /** Add a partner (an event platform). Its invite link is /join?partner=<slug>. */
 export async function adminCreatePartner(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };
@@ -421,19 +419,95 @@ export async function adminCreateEvent(partnerSlugValue: string, _: AdminFormSta
   return { ok: `Added ${name}. Now add its speakers.` };
 }
 
-/** Add a speaker to an event by their account email or card link. */
+/** Mark a member's idea done (or new again) on the admin Ideas page. */
+export async function adminSetIdeaDone(id: number, done: boolean): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_set_idea_done", { p_id: id, p_done: done });
+  if (error) return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't update that." };
+  revalidatePath("/admin", "layout");
+  return {};
+}
+
+/** Edit an event's name, dates, venue and description. Its link (and printed QR codes) stays the same. */
+export async function adminUpdateEvent(eventSlug: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const name = String(formData.get("name") ?? "").trim().slice(0, 120);
+  const startsOn = String(formData.get("startsOn") ?? "");
+  const endsOn = String(formData.get("endsOn") ?? "") || null;
+  const isDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
+  if (!name) return { error: "Add the event's name." };
+  if (!isDate(startsOn)) return { error: "Pick the date it starts." };
+  if (endsOn && (!isDate(endsOn) || endsOn < startsOn)) return { error: "The end date can't be before the start." };
+
+  const { error } = await (await createClient()).rpc("admin_update_event", {
+    p_event_slug: eventSlug,
+    p_name: name,
+    p_starts_on: startsOn,
+    p_ends_on: endsOn,
+    p_venue: String(formData.get("venue") ?? "").trim().slice(0, 120) || null,
+    p_about: String(formData.get("about") ?? "").trim().slice(0, 600) || null,
+  });
+  if (error) {
+    console.error("admin_update_event failed", error.code, error.message);
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't save the changes." };
+  }
+  revalidatePath("/admin", "layout");
+  revalidatePath(`/e/${eventSlug}`);
+  return { ok: "Saved." };
+}
+
+/** Delete an event that nothing has come from yet (no payments or conversations). Otherwise hide it. */
+export async function adminDeleteEvent(eventSlug: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_delete_event", { p_event_slug: eventSlug });
+  if (error) {
+    if (error.code === "23503") return { error: "This event already has payments or conversations, so it can't be deleted. Hide the page instead." };
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't delete the event." };
+  }
+  revalidatePath("/admin", "layout");
+  revalidatePath(`/e/${eventSlug}`);
+  return {};
+}
+
+type SpeakerAdded = {
+  full_name: string;
+  email: string;
+  profile_slug: string;
+  card_status: string;
+  added: boolean;
+  event_name: string;
+  starts_on: string;
+  ends_on: string | null;
+  venue: string | null;
+  partner_name: string;
+};
+
+/** Add a speaker to an event by their account email or card link, and email them about it (only the first time). */
 export async function adminAddEventSpeaker(eventSlug: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };
   const who = String(formData.get("who") ?? "").trim().slice(0, 200);
   if (!who) return { error: "Enter their email or card link." };
-  const { data, error } = await (await createClient()).rpc("admin_add_event_speaker", { p_event_slug: eventSlug, p_who: who });
+  const { data, error } = await (await createClient()).rpc("admin_add_event_speaker_details", { p_event_slug: eventSlug, p_who: who });
   if (error) {
     if (error.message.includes("No card found")) return { error: "No card found for that email or link. They need a Meetwell card first." };
     return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't add them." };
   }
   revalidatePath("/admin", "layout");
   revalidatePath(`/e/${eventSlug}`);
-  return { ok: `Added ${data as string}.` };
+  const s = ((data ?? []) as SpeakerAdded[])[0];
+  if (!s) return { ok: "Added." };
+  if (!s.added) return { ok: `${s.full_name} is already a speaker.` };
+  // Tell them they're on the event, with their badge QR.
+  const emailed = await sendEventSpeakerEmail(s.email, s.full_name, {
+    eventName: s.event_name,
+    eventSlug,
+    profileSlug: s.profile_slug,
+    dates: eventDates(s.starts_on, s.ends_on),
+    venue: s.venue,
+    partnerName: s.partner_name,
+    published: s.card_status === "published",
+  });
+  return { ok: emailed ? `Added ${s.full_name}. We emailed them.` : `Added ${s.full_name}. The email didn't send, so let them know.` };
 }
 
 export async function adminRemoveEventSpeaker(eventSlug: string, profileSlug: string): Promise<{ error?: string }> {
@@ -472,4 +546,50 @@ export async function adminRecordPartnerPayout(partnerId: string, _: AdminFormSt
   }
   revalidatePath("/admin", "layout");
   return { ok: "Payout recorded." };
+}
+
+/** Launch Spark (or pause it again) from the admin Overview. Every page is rebuilt so it shows or hides Spark at once. */
+export async function adminSetSparkEnabled(enabled: boolean): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_set_spark_enabled", { p_enabled: enabled });
+  if (error) return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't change Spark." };
+  revalidatePath("/", "layout");
+  return {};
+}
+
+/** A shared access code for an event: many sign-ups, up to a limit, until the end of its last day. */
+export async function adminCreateSharedCode(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const note = String(formData.get("note") ?? "").trim().slice(0, 120);
+  const code = String(formData.get("code") ?? "").trim().toUpperCase().replace(/\s+/g, "");
+  const maxUses = Number(formData.get("maxUses") ?? 0);
+  const endsOn = String(formData.get("endsOn") ?? "");
+  if (!note) return { error: "Add a name, like the event's." };
+  if (!/^[A-Z0-9-]{6,32}$/.test(code)) return { error: "The code needs 6 to 32 letters, numbers or dashes." };
+  if (!Number.isInteger(maxUses) || maxUses < 1 || maxUses > 100000) return { error: "Pick how many people can use it." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(endsOn)) return { error: "Pick the last day it works." };
+
+  const { error } = await (await createClient()).rpc("admin_create_shared_code", {
+    p_code: code,
+    p_note: note,
+    p_max_uses: maxUses,
+    p_ends_on: endsOn,
+  });
+  if (error) {
+    if (error.code === "23505") return { error: `The code ${code} is already used. Try another.` };
+    if (error.code === "22023") return { error: error.message.endsWith(".") ? error.message : `${error.message}.` };
+    console.error("admin_create_shared_code failed", error.code, error.message);
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't make the code." };
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: `Made ${code}. Share its link or QR code.` };
+}
+
+/** Turn a shared code off now. People who already joined keep their accounts. */
+export async function adminStopSharedCode(code: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_stop_shared_code", { p_code: code });
+  if (error) return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't turn it off." };
+  revalidatePath("/admin", "layout");
+  return {};
 }

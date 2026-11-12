@@ -26,7 +26,7 @@ function dismissedRecently() {
  * joined before sign-up asked). "Maybe later" hides it for 3 days. Not shown on
  * the Spark page, which asks in the page itself.
  */
-export function ExperiencePrompt({ initialField }: { initialField: string | null }) {
+export function ExperiencePrompt({ initialField, spark = true }: { initialField: string | null; spark?: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const pathname = usePathname();
@@ -65,9 +65,13 @@ export function ExperiencePrompt({ initialField }: { initialField: string | null
       open={open && !onSparkPage}
       onClose={later}
       title="How many years of experience do you have?"
-      description="Tell us and we'll personalise Meetwell for you, so you get the most out of Spark, our introductions feature."
+      description={
+        spark
+          ? "Tell us and we'll personalise Meetwell for you, so you get the most out of Spark, our introductions feature."
+          : "Tell us and we'll set Meetwell up for you, including mentoring if you have 4 or more years."
+      }
     >
-      <ExperienceFields value={value} onChange={setValue} errors={errors} />
+      <ExperienceFields value={value} onChange={setValue} errors={errors} spark={spark} />
       {error && (
         <Alert tone="danger" className="mt-4">
           {error}

@@ -81,7 +81,7 @@ every migration.
   enforces invite-only sign-up (see access codes).
 - **Waiting list**: `/early-access`, `joinWaitlist` in `src/lib/auth/actions.ts`. Duplicate
   emails show an error. New joiners get a founder welcome email. Each person gets a waiting-list number
-  (`join_number`, in order of joining; `join_waitlist_numbered`, `20261129000000_waitlist_number.sql`), shown on
+  (`join_number`, in order of joining; `join_waitlist_numbered`, `20261215000000_waitlist_number.sql`), shown on
   screen and in the welcome email.
 - **Waiting-list updates**: people are told on sign-up they'll get occasional updates. Each
   waitlist row has a private `unsubscribe_token`; `/unsubscribe?t=…` sets `unsubscribed_at`
@@ -92,6 +92,10 @@ every migration.
   refuses new accounts without a valid code and uses it up. Codes live in
   `public.access_codes`. To reopen public sign-up later: make `public.invite_only()` return
   false and set `SIGNUPS_OPEN = true`.
+- **Shared codes** (`/admin/codes`, `20261211000000_shared_codes.sql`): one access code for a whole event (first: DevFest
+  Abeokuta). Rasheed sets a name, the code, how many people and the last day (Lagos time); anyone can join with it (no
+  experience rule, unlike partner links). Each sign-up is kept in `code_signups` (who joined with it), and the page shows
+  joined and published counts, the link `/access-code?code=…` and a QR download (`/admin/codes/qr`). "Turn off" ends it at once.
 - **Log in page**: `/sign-in` shows the private beta chooser; `?method=email` shows the form.
 - **Cards**: public card `/p/[slug]` (`src/components/profile/profile-view.tsx`) with a
   floating green "Try it for free" bar. Editor in `/dashboard/profile`.
@@ -120,6 +124,14 @@ every migration.
   "Your experience", `saveExperience` in `src/lib/matching/actions.ts`) or on the Spark page if
   missing. 4+ members see a checklist and how often they were introduced (`my_spark_mentor_stats`).
   A manual review of 4+ members is planned before paid features; not built yet.
+- **Spark is PAUSED** (26 Oct 2026) until Meetwell has 5,000 users with about as many mentors as mentees (1:1;
+  `SPARK_LAUNCH_USERS` in `src/lib/spark.ts`). One switch: `public.spark_enabled()` (`20261129000000_spark_switch.sql`),
+  flipped by the "Spark launch" card on the admin Overview (`admin_set_spark_enabled`, progress from
+  `admin_spark_progress`; it rebuilds every page). Read it with `isSparkOn()`. While off, Spark is hidden completely:
+  menu, `/dashboard/matches` (redirects to /dashboard), landing, feature pages (`visibleFeatures`), footer, About,
+  Support, the Spark emails in admin; the matching job skips; credits can't be bought; experience wording and profile
+  emails have Spark-free versions; and the profile score counts 6 items (photo, title, bio, public contact, a social media link, years), in SQL and
+  in `profileCompleteness(p, spark)`. Database tests switch it on in setup. Terms and Privacy still describe Spark.
 - **Spark (AI Network Matching)**: `/dashboard/matches` (shown to members as "Spark"; the URL stays /matches so old email links work) (opt-in + private fields: field, experience,
   looking for, city; list of matches). Recommends only people with 4+ years, a profile
   photo and more experience than the member, in the same or a related field
@@ -131,7 +143,8 @@ every migration.
   experienced member is told. Up to ~60 members per run on the current Vercel plan.
   Only members with a confirmed account and a profile at least 80% complete are matched or
   recommended (`profile_completeness()` in SQL, `src/lib/matching/completeness.ts` for the page;
-  keep them in step). Members under 80% get a one-time `profile_incomplete` reminder; without a
+  keep them in step). While Spark is off the score counts 6 items (photo, title, bio, public contact, a social
+  media link, years; `20261203000000_profile_score_social.sql`), shown as Profile strength on Edit card. Members under 80% get a one-time `profile_incomplete` reminder; without a
   photo, 4+ years get "people want to learn from you" copy, others "a photo gets you matches".
 - **Spark credits (Paystack)**: members under 4 years buy packs on the Spark page (`SparkCredits`,
   `buyCredits` in `src/lib/payments/actions.ts`). Prices live in `public.credit_packs`
@@ -192,9 +205,13 @@ every migration.
   Step 3, event pages (`20261128000000_partner_events.sql`): public `/e/<slug>` with every speaker's card, an event QR
   (slides) and per-speaker QR (badges) from `/e/<slug>/qr[?speaker=]`. Speaker links carry `?event=<slug>` to the card,
   `/subscribe/<card>?event=` and `start_subscription_purchase(p_slug, p_event)`, which stores `payments.event_id` only if
-  the mentor speaks at that active event. Such a payment earns the **event's** partner 10% (no 12-month limit), even if
+  the mentor speaks at that active event. Such a payment earns the **event's** partner 10% for 12 months after the event's last day (`20261206000000_event_share_12_months.sql`; after that the normal sign-up rule applies), even if
   the mentor joined through another partner or none. Admins create events and add speakers (email or card link) on
-  `/admin/partners/<slug>`; partner teams see their events on the Partner tab (`my_partner_events`).
+  `/admin/partners/<slug>`; partner teams see their events on the Partner tab (`my_partner_events`). Partner teams can also
+  create events (live at once), edit them and add or remove speakers there (`20261210000000_partner_manage_events.sql`,
+  `src/lib/partners/actions.ts`, the shared `EventCard` with `who="team"`); deleting and hiding stay admin-only. Speakers
+  are added straight away (Rasheed's choice, 27 Oct 2026). Partners never see a speaker's email: the server gets it from
+  `claim_event_speaker_email` (cron secret), once per speaker per event (`event_speaker_emails`, kept after removal).
 - **Outreach tracker**: `/admin/outreach` (`20261113000000_outreach.sql`, `src/lib/outreach.ts`). Rasheed adds
   people he finds on X one at a time or by pasting a list (one per line: handle or link, optional name and note;
   `parseOutreachList`); names are optional ("Hi there") and editable. Each person gets a single-use access code (60 days), a "Copy message"

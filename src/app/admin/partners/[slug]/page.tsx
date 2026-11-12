@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/misc";
 import { getSiteUrl } from "@/lib/config";
 import { eventDates } from "@/lib/events";
 import { createClient } from "@/lib/supabase/server";
+import { PaginatedList } from "@/components/ui/paginated-list";
 
 export const metadata: Metadata = { title: "Partner · Admin" };
 
@@ -65,7 +66,7 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
           <h2 className="font-medium text-ink">Their earnings</h2>
           <p className="text-sm text-ink-2">
             10% of what their mentors are paid, for each mentor&apos;s first 12 months, plus 10% of every paid message
-            started from one of their event pages. It comes out of Meetwell&apos;s 20%.
+            started from one of their event pages, for 12 months after each event. It comes out of Meetwell&apos;s 20%.
           </p>
         </div>
         <Stats
@@ -78,7 +79,7 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
         />
         <RecordPayout partnerId={partner.id} availableKobo={money.available_kobo} />
         {ledger.length > 0 && (
-          <ul className="divide-y divide-border border-t border-border">
+          <PaginatedList className="divide-y divide-border border-t border-border">
             {ledger.map((l, i) => (
               <li key={i} className="flex items-center justify-between gap-3 py-2.5 text-sm">
                 <span className="min-w-0">
@@ -97,7 +98,7 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
                 </span>
               </li>
             ))}
-          </ul>
+          </PaginatedList>
         )}
       </section>
 
@@ -106,7 +107,8 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
           <h2 className="font-medium text-ink">Event pages</h2>
           <p className="text-sm text-ink-2">
             One page per event with every speaker&apos;s card and QR codes for badges and slides. When someone pays to
-            message a speaker from the event page, {partner.name} gets 10%, even if the speaker was already on Meetwell.
+            message a speaker from the event page, {partner.name} gets 10%, even if the speaker was already on Meetwell, for 12
+            months after the event.
           </p>
         </div>
         {eventsError ? (
@@ -145,7 +147,7 @@ function PeopleSection({ title, people, empty }: { title: string; people: Person
       {people.length === 0 ? (
         <p className="px-4 py-6 text-center text-sm text-ink-2">{empty}</p>
       ) : (
-        <ul className="divide-y divide-border">
+        <PaginatedList className="divide-y divide-border">
           {people.map((p) => (
             <li key={p.email} className="flex items-center gap-3 px-4 py-3">
               <Avatar name={p.full_name ?? p.email} src={p.avatar_url} className="size-10 text-sm" />
@@ -167,7 +169,7 @@ function PeopleSection({ title, people, empty }: { title: string; people: Person
               <span className="hidden shrink-0 text-xs text-ink-3 sm:inline">Joined {date(p.joined_at)}</span>
             </li>
           ))}
-        </ul>
+        </PaginatedList>
       )}
     </section>
   );

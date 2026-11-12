@@ -1,0 +1,350 @@
+/* Meetwell scan hero. Everything is scoped under .mw; screen sizes are iOS points. */
+.mw {
+  & .ss-stage {
+    --mw-green: #1f4d3f;
+    --mw-green-soft: #e8f0ec;
+    --mw-sand: #e4d6bd;
+    --mw-ink: #141413;
+    --mw-open: cubic-bezier(0.3, 0.75, 0.1, 1);
+    --ss-accent: var(--mw-green);
+    overflow: hidden;
+    border-radius: 20px;
+    background: #eef1ec;
+  }
+
+  /* Meetwell's own demo ground: sage at the top left, sand at the foot */
+  .mw-wash {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(80% 60% at 10% 0%, #d3e3da 0%, transparent 70%),
+      radial-gradient(80% 70% at 100% 100%, #e6d8bf 0%, transparent 70%),
+      linear-gradient(160deg, #e3ece6 0%, #ebe6db 100%);
+  }
+
+  /* Pinned from the top, runs off the bottom */
+  .mw-phone {
+    position: absolute;
+    top: 44px;
+    left: 50px;
+  }
+
+  & .ss-stage[data-layout='compact'] .mw-phone {
+    top: 20px;
+    left: 16px;
+  }
+
+  .mw-phone .ss-phone__screen {
+    font-family: var(--font-geist-sans), -apple-system, system-ui, sans-serif;
+  }
+
+  /* ---- The camera feed ---- */
+
+  .mw-feed {
+    position: absolute;
+    inset: 0;
+    background: #17130f;
+  }
+
+  /* A dim walnut table, out of focus, with two warm lights behind */
+  .mw-feed__blur {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(34% 18% at 82% 12%, rgba(255, 196, 120, 0.42), transparent 70%),
+      radial-gradient(26% 14% at 14% 20%, rgba(255, 220, 170, 0.26), transparent 70%),
+      radial-gradient(90% 60% at 50% 62%, #5b4330 0%, #3a2a1d 55%, #1f1712 100%);
+  }
+
+  .mw-print-slot {
+    position: absolute;
+    top: 236px;
+    left: 36px;
+    width: 330px;
+    height: 200px;
+    border-radius: 14px;
+    box-shadow: 0 18px 40px rgba(10, 6, 2, 0.55), 0 2px 6px rgba(10, 6, 2, 0.4);
+  }
+
+  /* The print is drawn once, by the Expand face over this slot; the slot keeps the shadow */
+  .mw-print-slot > .mw-print {
+    visibility: hidden;
+  }
+
+  .mw-print {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 330px;
+    height: 200px;
+    padding: 22px 22px 22px 24px;
+    border-radius: 14px;
+    background: linear-gradient(150deg, #ecdfc8 0%, var(--mw-sand) 60%, #d9c8aa 100%);
+    color: var(--mw-ink);
+  }
+
+  .mw-print__who {
+    display: grid;
+    align-content: space-between;
+    justify-items: start;
+    height: 100%;
+  }
+
+  .mw-print__name {
+    align-self: end;
+    font-family: var(--font-instrument-serif), Georgia, serif;
+    font-size: 30px;
+    line-height: 34px;
+    letter-spacing: -0.01em;
+  }
+
+  .mw-print__bar {
+    margin-top: -22px;
+    background: rgba(20, 20, 19, 0.28);
+  }
+
+  .mw-print__code {
+    display: block;
+    flex: none;
+    padding: 8px;
+    border-radius: 10px;
+    background: #fff;
+    line-height: 0;
+  }
+
+  /* ---- What iOS draws once it reads the code ---- */
+
+  .mw-scan {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .mw-scan[data-open] {
+    opacity: 0;
+  }
+
+  /* Four yellow corners that close in on the code */
+  .mw-brackets {
+    position: absolute;
+    top: 268px;
+    left: 216px;
+    width: 140px;
+    height: 136px;
+    opacity: 0;
+    transform: scale(1.22);
+    transition: opacity 0.25s ease, transform 0.45s cubic-bezier(0.3, 0.75, 0.1, 1);
+  }
+
+  .mw-brackets[data-on] {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .mw-bracket {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border: 0 solid #ffd60a;
+  }
+
+  .mw-bracket[data-c='tl'] { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; border-top-left-radius: 8px; }
+  .mw-bracket[data-c='tr'] { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; border-top-right-radius: 8px; }
+  .mw-bracket[data-c='bl'] { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; border-bottom-left-radius: 8px; }
+  .mw-bracket[data-c='br'] { right: 0; bottom: 0; border-right-width: 3px; border-bottom-width: 3px; border-bottom-right-radius: 8px; }
+
+  /* The link pill, under the card as the Camera app puts it */
+  .mw-pill {
+    position: absolute;
+    will-change: transform;
+    top: 466px;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 36px;
+    padding: 0 16px 0 13px;
+    border-radius: 18px;
+    background: #ffd60a;
+    color: #000;
+    font-family: -apple-system, system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.92);
+    transition: opacity 0.3s ease, transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .mw-pill[data-show] {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  .mw-pill[data-pressed] {
+    transform: translate(-50%, 0) scale(0.95);
+    transition: transform 0.15s ease;
+  }
+
+  /* ---- The digital card ---- */
+
+  .mw-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .mw-expand {
+    --ss-expand-bg: var(--mw-sand);
+  }
+
+  .mw-page {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    color: var(--mw-ink);
+  }
+
+  .mw-hero {
+    position: relative;
+    display: grid;
+    justify-items: start;
+    padding: 96px 28px 28px;
+    box-sizing: border-box;
+    background: linear-gradient(170deg, #ecdfc8 0%, var(--mw-sand) 70%);
+  }
+
+  .mw-close {
+    position: absolute;
+    top: 62px;
+    right: 20px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(20, 20, 19, 0.08);
+    color: var(--mw-ink);
+    transition: transform 0.15s ease, background-color 0.15s ease;
+  }
+
+  .mw-close[data-pressed] {
+    transform: scale(0.9);
+    background: rgba(20, 20, 19, 0.14);
+  }
+
+  .mw-avatar {
+    font-size: 30px;
+  }
+
+  .mw-name {
+    margin-top: 18px;
+    font-family: var(--font-instrument-serif), Georgia, serif;
+    font-size: 40px;
+    line-height: 44px;
+    letter-spacing: -0.01em;
+  }
+
+  .mw-role {
+    margin-top: 4px;
+    font-size: 17px;
+    line-height: 22px;
+    color: #55554f;
+  }
+
+  .mw-made {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 22px;
+  }
+
+  .mw-made__bar {
+    background: rgba(20, 20, 19, 0.2);
+  }
+
+  .mw-body {
+    display: grid;
+    gap: 22px;
+    padding: 24px 24px 0;
+  }
+
+  /* The one action: Meetwell's green, giving under the finger */
+  .mw-save {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    place-items: center;
+    height: 56px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    transition: color 0.2s ease;
+  }
+
+  .mw-save::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 14px;
+    background-color: var(--mw-save-fill, var(--mw-green));
+    transition: background-color 0.2s ease, transform 0.15s ease;
+  }
+
+  .mw-save[data-pressed]::before {
+    transform: scale(0.97);
+  }
+
+  .mw-save[data-saved] {
+    --mw-save-fill: var(--mw-green-soft);
+    color: var(--mw-green);
+  }
+
+  .mw-save .ss-states {
+    width: 100%;
+  }
+
+  .mw-save__label {
+    display: flex;
+    justify-content: center;
+    width: 180px;
+    align-items: center;
+    gap: 8px;
+    line-height: 22px;
+  }
+
+  .mw-rows {
+    display: grid;
+  }
+
+  .mw-row {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    align-items: center;
+    gap: 14px;
+    height: 64px;
+    border-bottom: 0.5px solid rgba(20, 20, 19, 0.1);
+  }
+
+  .mw-row__icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--mw-green-soft);
+    color: var(--mw-green);
+  }
+
+  .mw-row__text {
+    display: grid;
+    gap: 7px;
+    justify-items: start;
+  }
+}

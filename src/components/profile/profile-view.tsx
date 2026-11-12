@@ -86,10 +86,13 @@ export function ProfileView({ profile, preview = false, offer = null, viewer = "
           {offer && !preview && (
             <Link
               href={eventSlug ? `/subscribe/${profile.slug}?event=${eventSlug}` : `/subscribe/${profile.slug}`}
-              className={buttonClass({ variant: "secondary", size: "lg", className: "mt-3 w-full" })}
+              // Long names or prices wrap onto a second line; the icon always keeps its size.
+              className={buttonClass({ variant: "secondary", size: "lg", className: "mt-3 h-auto! min-h-12 w-full whitespace-normal! px-4! py-2.5 text-[15px]! leading-snug" })}
             >
-              <MessageCircle className="size-5" aria-hidden />
-              Message {offer.firstName} · {offer.priceKobo === 0 ? "Free" : `${nairaFull(offer.priceKobo)}/month`}
+              <MessageCircle className="size-5 shrink-0" aria-hidden />
+              <span className="min-w-0 text-balance [overflow-wrap:anywhere]">
+                Message {offer.firstName} · <span className="whitespace-nowrap">{offer.priceKobo === 0 ? "Free" : `${nairaFull(offer.priceKobo)}/month`}</span>
+              </span>
             </Link>
           )}
         </div>
@@ -103,7 +106,7 @@ export function ProfileView({ profile, preview = false, offer = null, viewer = "
                   event={a.event}
                   href={a.href}
                   {...(a.kind === "website" || a.kind === "whatsapp" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  className="grid size-12 place-items-center rounded-full border border-border bg-surface text-ink transition-colors hover:border-border-strong hover:bg-surface-2"
+                  className="grid size-12 place-items-center rounded-full border border-border bg-surface text-ink transition-[background-color,border-color,scale] duration-100 ease-out hover:border-border-strong hover:bg-surface-2 active:scale-[0.94]"
                   aria-label={`${a.label}: ${a.detail}`}
                   title={`${a.label}: ${a.detail}`}
                 >

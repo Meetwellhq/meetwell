@@ -1,13 +1,14 @@
-import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ProfileStrength } from "@/components/dashboard/profile-strength";
 import { ProfileEditor } from "@/components/editor/profile-editor";
+import { myCompleteness } from "@/lib/matching/my-completeness";
+import { isSparkOn } from "@/lib/spark";
 import { getSiteUrl } from "@/lib/config";
 import { getOwnProfile } from "@/lib/profiles/queries";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Edit card" };
+export const metadata: Metadata = { title: "Profile" };
 
 export default async function EditProfilePage() {
   const user = await getCurrentUser();
@@ -15,7 +16,10 @@ export default async function EditProfilePage() {
   const profile = await getOwnProfile();
   if (!profile) redirect("/onboarding");
   // Spark details live on the profile row but outside the card fields.
-  const { data: spark } = await (await createClient())
+  const supabase = await createClient();
+  // The same score as the "complete your profile" email and the mentor check.
+  const completeness = await myCompleteness(supabase, user.id);
+  const { data: spark } = await supabase
     .from("profiles")
     .select("field, experience_years")
     .eq("id", profile.id)
@@ -23,12 +27,14 @@ export default async function EditProfilePage() {
 
   return (
     <>
-      {/* Phones hide the bottom bar here (the Save bar takes its place), so give a way back. */}
-      <Link href="/dashboard/me" className="mb-3 flex items-center gap-1 text-sm text-ink-2 hover:text-ink lg:hidden">
-        <ChevronLeft className="size-4" aria-hidden /> Profile
-      </Link>
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight">Edit your card</h1>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight">Profile</h1>
+      {completeness && (
+        <div className="mb-6">
+          <ProfileStrength percent={completeness.percent} items={completeness.items} />
+        </div>
+      )}
       <ProfileEditor
+        spark={await isSparkOn()}
         // Remount after a save so the form reflects the server-normalised values.
         key={profile.updatedAt}
         mode="edit"

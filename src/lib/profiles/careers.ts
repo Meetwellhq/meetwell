@@ -35,6 +35,20 @@ export const TITLE_GROUPS = [
       "Co-founder",
     ],
   },
+  {
+    // What kind of place it is, for cards like "Software Company · Meetwell".
+    label: "Organisations",
+    titles: [
+      "Software Company",
+      "Software Community",
+      "Tech Community",
+      "Startup",
+      "Agency",
+      "NGO",
+      "Non-profit",
+      "Government Agency",
+    ],
+  },
 ] as const;
 
 export const TITLE_OPTIONS: readonly string[] = TITLE_GROUPS.flatMap((g) => g.titles);

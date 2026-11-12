@@ -3,20 +3,20 @@ import Link from "next/link";
 import { PaymentHistory, type PaymentHistoryRow } from "@/components/dashboard/payment-history";
 import { DangerZone, PublishButton } from "@/components/dashboard/publish-controls";
 import { Card } from "@/components/ui/misc";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { InstallApp } from "@/components/pwa/install-app";
 import { getOwnProfile } from "@/lib/profiles/queries";
 import { MessageEmailsSwitch } from "@/components/messaging/message-emails-switch";
+import { SavebackEmailsSwitch } from "@/components/dashboard/saveback-emails-switch";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const [user, profile, emails, payments] = await Promise.all([
+  const [user, profile, emails, savebacks, payments] = await Promise.all([
     getCurrentUser(),
     getOwnProfile(),
     supabase.rpc("my_message_emails"),
+    supabase.rpc("my_saveback_emails"),
     supabase.rpc("my_payments"),
   ]);
   const isLive = profile?.status === "published";
@@ -36,26 +36,26 @@ export default async function SettingsPage() {
         </Link>
       </Card>
 
-      <Card className="flex items-start justify-between gap-4 p-5 sm:p-6">
-        <div>
-          <h2 className="font-semibold">Message emails</h2>
-          <p className="mt-1 text-sm text-ink-2">
-            Get an email when someone sends you their first message in a conversation. We don&apos;t email you about every message.
-          </p>
-        </div>
-        <MessageEmailsSwitch initial={emails.data !== false} />
-      </Card>
-
-      <Card className="flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
-        <div>
-          <h2 className="font-semibold">Appearance</h2>
-          <p className="mt-1 text-sm text-ink-2">Choose light or dark, or match your phone or computer.</p>
-        </div>
-        <ThemeToggle />
-      </Card>
-
       <Card className="p-5 sm:p-6">
-        <InstallApp variant="row" />
+        <h2 className="font-semibold">Email notifications</h2>
+        <div className="mt-4 divide-y divide-border">
+          <div className="flex items-start justify-between gap-4 pb-4">
+            <div>
+              <h3 className="text-sm font-medium text-ink">Messages</h3>
+              <p className="mt-0.5 text-sm text-ink-2">
+                When someone sends you their first message in a conversation. We don&apos;t email you about every message.
+              </p>
+            </div>
+            <MessageEmailsSwitch initial={emails.data !== false} />
+          </div>
+          <div className="flex items-start justify-between gap-4 pt-4">
+            <div>
+              <h3 className="text-sm font-medium text-ink">Saved your card back</h3>
+              <p className="mt-0.5 text-sm text-ink-2">When someone whose card you saved saves yours back. At most one a day.</p>
+            </div>
+            <SavebackEmailsSwitch initial={savebacks.data !== false} />
+          </div>
+        </div>
       </Card>
 
       <Card id="payments" className="scroll-mt-28 p-5 sm:p-6">

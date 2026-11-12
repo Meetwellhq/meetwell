@@ -51,6 +51,8 @@ beforeAll(async () => {
   for (const file of readdirSync(dir).sort()) {
     await db.exec(readFileSync(join(dir, file), "utf8"));
   }
+  // Spark is paused in production (20261129000000_spark_switch.sql); the Spark tests below run with it on.
+  await db.exec("update public.internal_settings set value = 'true' where key = 'spark_enabled'");
   await db.exec("insert into public.access_codes (code, max_uses) values ('SETUP-CODE', 2)");
   await db.query(
     `insert into auth.users (id, email, raw_user_meta_data)
@@ -1758,6 +1760,17 @@ describe("partner event pages", () => {
     expect(await as(ALICE, "select public.admin_add_event_speaker('thinkux-day', 'SPEAKER@partner.test') as n")).toEqual([{ n: "Test Person" }]);
     await expect(as(null, "select * from public.partner_events")).rejects.toThrow(/permission denied/);
     await expect(as(null, "select * from public.event_speakers")).rejects.toThrow(/permission denied/);
+
+    // Editing: admins only; the link name stays; ends before it starts is refused.
+    await expect(as(BOB, "select public.admin_update_event('thinkux-day', 'Hacked', '2026-12-05')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_update_event('thinkux-day', 'Hacked', '2026-12-05')")).rejects.toThrow(/permission denied/);
+    await expect(as(ALICE, "select public.admin_update_event('no-such-event', 'X', '2026-12-05')")).rejects.toThrow(/No such event/);
+    await expect(as(ALICE, "select public.admin_update_event('thinkux-day', 'X', '2026-12-05', '2026-12-01')")).rejects.toThrow(/check constraint/);
+    await as(ALICE, "select public.admin_update_event('thinkux-day', ' ThinkUX Day 2026 ', '2026-12-06', '2026-12-07', 'Lagos', '  ')");
+    expect(
+      (await db.query("select name, starts_on::text, ends_on::text, venue, about from public.partner_events where slug = 'thinkux-day'")).rows,
+    ).toEqual([{ name: "ThinkUX Day 2026", starts_on: "2026-12-06", ends_on: "2026-12-07", venue: "Lagos", about: null }]);
+    await as(ALICE, "select public.admin_update_event('thinkux-day', 'ThinkUX Day', '2026-12-05')");
   });
 
   it("shows the public page with each speaker's card and mentoring price", async () => {
@@ -1809,10 +1822,460 @@ describe("partner event pages", () => {
     expect(row.speakers).toEqual([{ slug: "partner-speaker", full_name: "Test Person", status: "published", mentor: true }]);
   });
 
+  it("pays the event's partner for 12 months after the event, then follows the sign-up rule", async () => {
+    const money = async (p: string) =>
+      (await as<{ earned_kobo: number }>(ALICE, "select earned_kobo from public.admin_partner_money($1)", [p]))[0].earned_kobo;
+    const [{ id: thinkux }] = (await db.query<{ id: string }>("select id from public.partners where slug = 'thinkux'")).rows;
+    // An old TechCabal event (ended over a year ago) where the ThinkUX speaker spoke.
+    await as(ALICE, "select public.admin_create_event('techcabal', 'tc-old', 'Old Summit', (current_date - interval '14 months')::date, (current_date - interval '13 months')::date)");
+    await as(ALICE, "select public.admin_add_event_speaker('tc-old', 'partner-speaker')");
+    // The mentor joined through ThinkUX recently (an earlier test moved it back 13 months).
+    const speaker = "(select user_id from public.profiles where slug = 'partner-speaker')";
+    const [{ joined }] = (await db.query<{ joined: string }>(`select created_at::text as joined from public.partner_signups where user_id = ${speaker}`)).rows;
+    await db.query(`update public.partner_signups set created_at = now() - interval '1 month' where user_id = ${speaker}`);
+    const tcBefore = await money(techcabal);
+    const tuxBefore = await money(thinkux);
+
+    const [p] = await as<{ reference: string }>(JUNIOR, "select * from public.start_subscription_purchase('partner-speaker', 'tc-old')");
+    await db.query("update public.payments set status = 'success', paid_at = now() where reference = $1", [p.reference]);
+    // Still tagged with the event, but TechCabal's 12 months are over: ThinkUX (the mentor's sign-up partner) earns.
+    expect((await db.query("select e.slug from public.payments y join public.partner_events e on e.id = y.event_id where y.reference = $1", [p.reference])).rows).toEqual([{ slug: "tc-old" }]);
+    expect(await money(techcabal)).toBe(tcBefore);
+    expect(await money(thinkux)).toBe(tuxBefore + 50000);
+    await as(ALICE, `select public.admin_mark_refunded('${p.reference}')`);
+    await db.query(`update public.partner_signups set created_at = $1 where user_id = ${speaker}`, [joined]);
+  });
+
+  it("tags a free mentor's conversation with the event it started from", async () => {
+    const owner = "(select user_id from public.profiles where slug = 'partner-speaker')";
+    const [{ price }] = (await db.query<{ price: number }>(`select price_kobo as price from public.mentor_settings where user_id = ${owner}`)).rows;
+    await db.query(`update public.mentor_settings set price_kobo = 0 where user_id = ${owner}`);
+
+    // From the TechCabal Summit page (the mentor speaks there): tagged, and counted for admins.
+    const [{ id }] = await as<{ id: number }>(JUNIOR, "select public.start_free_conversation('partner-speaker', 'tc-summit') as id");
+    const eventOf = async () =>
+      (await db.query<{ event: string | null }>(
+        "select e.slug as event from public.conversations c left join public.partner_events e on e.id = c.event_id where c.id = $1", [id],
+      )).rows[0].event;
+    expect(await eventOf()).toBe("tc-summit");
+    const [row] = await as<{ free_conversations: number }>(ALICE, "select free_conversations from public.admin_partner_events('techcabal')");
+    expect(row.free_conversations).toBe(1);
+    // Starting again from another page keeps the first event; the old one-argument call still works.
+    await as(JUNIOR, "select public.start_free_conversation('partner-speaker', 'thinkux-day')");
+    await as(JUNIOR, "select public.start_free_conversation('partner-speaker')");
+    expect(await eventOf()).toBe("tc-summit");
+
+    await db.query(`update public.mentor_settings set price_kobo = $1 where user_id = ${owner}`, [price]);
+  });
+
+  it("adds a speaker with the details for their email, and says if they were already on", async () => {
+    await as(ALICE, "select public.admin_create_event('techcabal', 'tc-mail', 'Mail Summit', '2026-11-30', null, 'Lagos')");
+    await expect(as(BOB, "select * from public.admin_add_event_speaker_details('tc-mail', 'partner-speaker')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_add_event_speaker_details('tc-mail', 'partner-speaker')")).rejects.toThrow(/permission denied/);
+    const [first] = await as<Record<string, unknown>>(ALICE, "select * from public.admin_add_event_speaker_details('tc-mail', 'partner-speaker')");
+    expect(first).toMatchObject({
+      full_name: "Test Person", email: "speaker@partner.test", profile_slug: "partner-speaker", added: true,
+      event_name: "Mail Summit", venue: "Lagos", partner_name: "TechCabal",
+    });
+    const [again] = await as<{ added: boolean }>(ALICE, "select added from public.admin_add_event_speaker_details('tc-mail', 'SPEAKER@partner.test')");
+    expect(again.added).toBe(false);
+    await as(ALICE, "select public.admin_delete_event('tc-mail')");
+  });
+
+  it("removes a speaker from an event (admins only)", async () => {
+    await as(ALICE, "select public.admin_create_event('techcabal', 'tc-remove', 'Remove Summit', '2026-11-30')");
+    await as(ALICE, "select * from public.admin_add_event_speaker_details('tc-remove', 'partner-speaker')");
+    const speakers = async () =>
+      (await as<{ speakers: { slug: string }[] }>(ALICE, "select speakers from public.admin_partner_events('techcabal') where slug = 'tc-remove'"))[0].speakers;
+    expect((await speakers()).map((s) => s.slug)).toEqual(["partner-speaker"]);
+    await expect(as(BOB, "select public.admin_remove_event_speaker('tc-remove', 'partner-speaker')")).rejects.toThrow(/Not allowed/);
+    await as(ALICE, "select public.admin_remove_event_speaker('tc-remove', 'partner-speaker')");
+    expect(await speakers()).toEqual([]);
+    await as(ALICE, "select public.admin_delete_event('tc-remove')");
+  });
+
+  it("deletes an event only while nothing has come from it", async () => {
+    await as(ALICE, "select public.admin_create_event('techcabal', 'tc-mistake', 'Typo Event', '2026-11-30')");
+    await as(ALICE, "select public.admin_add_event_speaker('tc-mistake', 'partner-speaker')");
+    await expect(as(BOB, "select public.admin_delete_event('tc-mistake')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_delete_event('tc-mistake')")).rejects.toThrow(/permission denied/);
+    await expect(as(ALICE, "select public.admin_delete_event('no-such-event')")).rejects.toThrow(/No such event/);
+    // Events with payments or conversations are kept (tc-summit had a payment, tc-old too).
+    await expect(as(ALICE, "select public.admin_delete_event('tc-summit')")).rejects.toThrow(/has history/);
+    await as(ALICE, "select public.admin_delete_event('tc-mistake')");
+    expect((await db.query("select 1 from public.partner_events where slug = 'tc-mistake'")).rows).toEqual([]);
+    expect(
+      (await db.query("select 1 from public.event_speakers s left join public.partner_events e on e.id = s.event_id where e.id is null")).rows,
+    ).toEqual([]);
+  });
+
   it("shows a partner's team its own events only", async () => {
-    const mine = await as<{ name: string }>(TEAM, "select name from public.my_partner_events()");
+    const mine = await as<{ name: string; conversations: number }>(TEAM, "select name, conversations from public.my_partner_events()");
     expect(mine.map((e) => e.name)).toEqual(["ThinkUX Day"]);
+    expect(mine[0].conversations).toBe(0); // the free conversation above came from TechCabal's event
     expect(await as(BOB, "select * from public.my_partner_events()")).toEqual([]);
     await expect(as(null, "select * from public.my_partner_events()")).rejects.toThrow(/permission denied/);
+  });
+
+  it("lets a partner's team create and edit its own events, live at once", async () => {
+    await expect(as(BOB, "select public.partner_create_event('thinkux', 'tux-meetup', 'Meetup', '2026-12-10')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.partner_create_event('thinkux', 'tux-meetup', 'Meetup', '2026-12-10')")).rejects.toThrow(/permission denied/);
+    await expect(as(TEAM, "select public.partner_create_event('techcabal', 'tux-meetup', 'Meetup', '2026-12-10')")).rejects.toThrow(/Not allowed/);
+    await as(TEAM, "select public.partner_create_event('ThinkUX', 'tux-meetup', ' ThinkUX Meetup ', '2026-12-10', null, 'Yaba', '')");
+    expect(await as(null, "select name, venue, partner_name from public.public_event('tux-meetup')")).toEqual([
+      { name: "ThinkUX Meetup", venue: "Yaba", partner_name: "ThinkUX" },
+    ]);
+
+    await as(TEAM, "select public.partner_update_event('tux-meetup', 'ThinkUX Meetup 2026', '2026-12-11')");
+    expect((await db.query("select name, starts_on::text as d, venue from public.partner_events where slug = 'tux-meetup'")).rows).toEqual([
+      { name: "ThinkUX Meetup 2026", d: "2026-12-11", venue: null },
+    ]);
+    // Not another partner's event, and not for strangers.
+    await expect(as(TEAM, "select public.partner_update_event('tc-summit', 'Hacked', '2026-11-20')")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select public.partner_update_event('tux-meetup', 'Hacked', '2026-12-11')")).rejects.toThrow(/Not allowed/);
+    // A paused partner can't add events.
+    await db.query("update public.partners set active = false where slug = 'thinkux'");
+    await expect(as(TEAM, "select public.partner_create_event('thinkux', 'tux-paused', 'X', '2026-12-10')")).rejects.toThrow(/Not allowed/);
+    await db.query("update public.partners set active = true where slug = 'thinkux'");
+  });
+
+  it("lets a partner's team add and remove speakers without seeing their email, and emails each speaker once", async () => {
+    const SECRET = "test-secret-that-is-long-enough-1234567890"; // stored by the reminders tests
+    await expect(as(TEAM, "select * from public.partner_add_event_speaker('tc-summit', 'partner-speaker')")).rejects.toThrow(/Not allowed/);
+    await expect(as(TEAM, "select * from public.partner_add_event_speaker('tux-meetup', 'nobody@x.test')")).rejects.toThrow(/No card found/);
+    const [first] = await as<Record<string, unknown>>(TEAM, "select * from public.partner_add_event_speaker('tux-meetup', 'SPEAKER@partner.test')");
+    expect(first).toEqual({ full_name: "Test Person", profile_slug: "partner-speaker", card_status: "published", added: true });
+    const [again] = await as<{ added: boolean }>(TEAM, "select added from public.partner_add_event_speaker('tux-meetup', 'partner-speaker')");
+    expect(again.added).toBe(false);
+
+    const [mine] = await as<{ speaker_list: unknown; partner_slug: string }>(TEAM, "select speaker_list, partner_slug from public.my_partner_events() where slug = 'tux-meetup'");
+    expect(mine).toEqual({ partner_slug: "thinkux", speaker_list: [{ slug: "partner-speaker", full_name: "Test Person", status: "published", mentor: true }] });
+
+    // The email address only comes from the server-only claim, once.
+    const claim = `select email, event_name from public.claim_event_speaker_email('${SECRET}', 'tux-meetup', 'partner-speaker')`;
+    await expect(as(TEAM, "select * from public.claim_event_speaker_email('wrong', 'tux-meetup', 'partner-speaker')")).rejects.toThrow();
+    expect(await as(null, claim)).toEqual([{ email: "speaker@partner.test", event_name: "ThinkUX Meetup 2026" }]);
+    expect(await as(null, claim)).toEqual([]);
+    // Removed and added again: still no second email.
+    await expect(as(TEAM, "select public.partner_remove_event_speaker('tc-summit', 'partner-speaker')")).rejects.toThrow(/Not allowed/);
+    await as(TEAM, "select public.partner_remove_event_speaker('tux-meetup', 'partner-speaker')");
+    expect(await as(null, "select * from public.public_event_speakers('tux-meetup')")).toEqual([]);
+    await as(TEAM, "select * from public.partner_add_event_speaker('tux-meetup', 'partner-speaker')");
+    expect(await as(null, claim)).toEqual([]);
+    // Nothing to claim for someone who isn't a speaker there.
+    expect(await as(null, `select * from public.claim_event_speaker_email('${SECRET}', 'tc-summit', 'nobody')`)).toEqual([]);
+
+    // A speaker an admin added (and emailed) isn't emailed again through the partner.
+    await as(ALICE, "select public.admin_create_event('thinkux', 'tux-admin', 'Admin Day', '2026-12-12')");
+    await as(ALICE, "select * from public.admin_add_event_speaker_details('tux-admin', 'partner-speaker')");
+    expect(await as(null, `select * from public.claim_event_speaker_email('${SECRET}', 'tux-admin', 'partner-speaker')`)).toEqual([]);
+
+    await as(ALICE, "select public.admin_delete_event('tux-admin')");
+    await as(ALICE, "select public.admin_delete_event('tux-meetup')");
+  });
+});
+
+describe("Spark switch", () => {
+  const ADMIN_S = "5a5a0000-0000-0000-0000-00000000000a";
+  const CARD_S = "5a5a0000-0000-0000-0000-00000000000b";
+  beforeAll(async () => {
+    await db.exec("insert into public.access_codes (code, max_uses) values ('SPARK-CODE', 2)");
+    for (const [id, email] of [[ADMIN_S, "sparkadmin@test"], [CARD_S, "sparkcard@test"]]) {
+      await db.query("insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values ($1, $2, now(), $3)", [id, email, { access_code: "SPARK-CODE" }]);
+    }
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ADMIN_S]);
+    // Title, organisation, bio, field, years = 5 card items; plus a city (Spark only).
+    await db.query(
+      "insert into public.profiles (user_id, slug, full_name, professional_title, organization, bio, field, experience_years, city) values ($1, 'spark-card', 'Sam', 'Designer', 'Studio', 'Hi', 'product_design', 5, 'Lagos')",
+      [CARD_S],
+    );
+  });
+
+  it("is readable by anyone, and only admins can flip it", async () => {
+    expect(await as(null, "select public.spark_enabled() as on")).toEqual([{ on: true }]);
+    await expect(as(BOB, "select public.admin_set_spark_enabled(false)")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_set_spark_enabled(false)")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.admin_spark_progress()")).rejects.toThrow(/Not allowed/);
+    await as(ADMIN_S, "select public.admin_set_spark_enabled(false)");
+    expect(await as(null, "select public.spark_enabled() as on")).toEqual([{ on: false }]);
+    const [p] = await as<{ enabled: boolean; users: number; mentors: number }>(ADMIN_S, "select * from public.admin_spark_progress()");
+    expect(p.enabled).toBe(false);
+    expect(p.users).toBeGreaterThan(0);
+    expect(p.mentors).toBeGreaterThan(0);
+  });
+
+  it("scores the 6 important items while off, and all 10 when on", async () => {
+    const score = async () =>
+      (await db.query<{ s: number }>("select public.profile_completeness(p) as s from public.profiles p where p.slug = 'spark-card'")).rows[0].s;
+    expect(await score()).toBe(50); // title, bio, years = 3 of 6 (organisation, field and city don't count)
+    await db.query(
+      "insert into public.social_links (profile_id, platform, url) select id, 'instagram', 'https://instagram.com/sam' from public.profiles where slug = 'spark-card'",
+    );
+    expect(await score()).toBe(67); // a social link counts: 4 of 6
+    await as(ADMIN_S, "select public.admin_set_spark_enabled(true)");
+    expect(await score()).toBe(70); // 7 of 10: organisation, the link, field and city count again
+  });
+});
+
+describe("Spark paused announcement", () => {
+  it("goes only to members who turned Spark on, once each", async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    await db.query("update public.profiles set matching_opt_in = false");
+    await db.query("update public.profiles set matching_opt_in = true where slug = 'spark-card'");
+    const recipients = await as<{ email: string }>(ALICE, "select email from public.admin_announcement_recipients('spark_paused', 100)");
+    expect(recipients.map((r) => r.email)).toEqual(["sparkcard@test"]);
+    await as(ALICE, "select public.admin_mark_announced('spark_paused', 'sparkcard@test')");
+    const [status] = await as<{ sent: number; remaining: number }>(ALICE, "select * from public.admin_announcement_status('spark_paused')");
+    expect(status).toEqual({ sent: 1, remaining: 0 });
+  });
+});
+
+describe("saved your card back emails", () => {
+  const AMA = "5b5b0000-0000-0000-0000-0000000000a1";
+  const KOFI = "5b5b0000-0000-0000-0000-0000000000a2";
+  const SECRET = "test-secret-that-is-long-enough-1234567890";
+  const claim = () => as<{ email: string; savers: { full_name: string; slug: string }[] }>(null, `select email, savers from public.claim_saveback_emails('${SECRET}', 40)`);
+
+  beforeAll(async () => {
+    await db.exec("insert into public.access_codes (code, max_uses) values ('SAVEBACK-CODE', 2)");
+    for (const [id, email] of [[AMA, "ama@saveback.test"], [KOFI, "kofi@saveback.test"]]) {
+      await db.query("insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values ($1, $2, now(), $3)", [id, email, { access_code: "SAVEBACK-CODE" }]);
+    }
+    await createProfile(AMA, "ama-card");
+    await createProfile(KOFI, "kofi-card");
+    await db.query("insert into public.internal_settings (key, value) values ('cron_secret', $1) on conflict (key) do update set value = excluded.value", [SECRET]);
+  });
+
+  it("tells the first saver once, when the other person saves them back", async () => {
+    await as(AMA, "select public.save_contact('kofi-card')");
+    expect(await claim()).toEqual([]); // one-way so far
+    await as(KOFI, "select public.save_contact('ama-card')");
+    await as(KOFI, "select public.save_contact('ama-card')"); // twice: still one notice
+    const rows = await claim();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].email).toBe("ama@saveback.test");
+    expect(rows[0].savers.map((s) => s.slug)).toEqual(["kofi-card"]);
+    expect(await claim()).toEqual([]); // sent once
+    await expect(as(null, "select * from public.claim_saveback_emails('wrong', 40)")).rejects.toThrow(/Not allowed/);
+    await expect(as(KOFI, "select * from public.saveback_notices")).rejects.toThrow(/permission denied/);
+  });
+
+  it("skips people who turned the emails off", async () => {
+    await as(KOFI, "select public.set_saveback_emails(false)");
+    expect(await as(KOFI, "select public.my_saveback_emails() as on")).toEqual([{ on: false }]);
+    await as(AMA, "select public.remove_contact('kofi-card')").catch(() => {});
+    await db.query("delete from public.saveback_notices");
+    await db.query("delete from public.saved_contacts where user_id in ($1, $2)", [AMA, KOFI]);
+    await as(KOFI, "select public.save_contact('ama-card')");
+    await as(AMA, "select public.save_contact('kofi-card')"); // Ama saved back: Kofi would be told, but he's off
+    expect(await claim()).toEqual([]);
+    const [{ token }] = (await db.query<{ token: string }>("select token from public.email_prefs where user_id = $1", [AMA])).rows;
+    expect(await as(null, "select public.unsubscribe_saveback_emails($1) as ok", [token])).toEqual([{ ok: true }]);
+    expect(await as(AMA, "select public.my_saveback_emails() as on")).toEqual([{ on: false }]);
+  });
+});
+
+describe("ideas", () => {
+  const MEMBER = "77777777-7777-7777-7777-777777777777"; // still has an account here
+  beforeAll(async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+  });
+
+  it("lets members send ideas, at most 10 an hour, and only admins read them", async () => {
+    await expect(as(null, "select public.submit_idea('idea', 'Hello there', '/dashboard')")).rejects.toThrow(/permission denied/);
+    await expect(as(MEMBER, "select public.submit_idea('wish', 'Hello there')")).rejects.toThrow(/check constraint/);
+    await expect(as(MEMBER, "select public.submit_idea('idea', ' a ')")).rejects.toThrow(/check constraint/);
+    const [{ id }] = await as<{ id: number }>(MEMBER, "select public.submit_idea('idea', '  Dark mode for cards  ', '/dashboard') as id");
+    for (let i = 0; i < 9; i++) await as(MEMBER, "select public.submit_idea('other', 'More of the same', null)");
+    await expect(as(MEMBER, "select public.submit_idea('idea', 'One too many')")).rejects.toThrow(/Too many ideas/);
+
+    await expect(as(MEMBER, "select * from public.admin_list_ideas()")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.ideas")).rejects.toThrow(/permission denied/);
+    await expect(as(MEMBER, "select * from public.ideas")).rejects.toThrow(/permission denied/);
+    const rows = await as<{ id: number; kind: string; message: string; page: string | null; done_at: string | null }>(
+      ALICE, "select id, kind, message, page, done_at from public.admin_list_ideas() where id = $1", [id],
+    );
+    expect(rows).toEqual([{ id, kind: "idea", message: "Dark mode for cards", page: "/dashboard", done_at: null }]);
+  });
+
+  it("lets admins mark an idea done and new again", async () => {
+    const [{ id }] = await as<{ id: number }>(ALICE, "select id from public.admin_list_ideas() where message = 'Dark mode for cards'");
+    await expect(as(MEMBER, `select public.admin_set_idea_done(${id}, true)`)).rejects.toThrow(/Not allowed/);
+    await as(ALICE, `select public.admin_set_idea_done(${id}, true)`);
+    const done = async () => (await as<{ done: boolean }>(ALICE, "select done_at is not null as done from public.admin_list_ideas() where id = $1", [id]))[0].done;
+    expect(await done()).toBe(true);
+    await as(ALICE, `select public.admin_set_idea_done(${id}, false)`);
+    expect(await done()).toBe(false);
+  });
+});
+
+describe("shared access codes", () => {
+  const newUser = (id: string, email: string, meta: Record<string, unknown>) =>
+    db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)", [id, email, meta]);
+  const tomorrow = "(current_date + 1)";
+
+  beforeAll(async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+  });
+
+  it("lets only admins make a shared code, with a limit and an end date", async () => {
+    await expect(as(BOB, `select public.admin_create_shared_code('DEVFEST-ABK', 'DevFest', 2, ${tomorrow})`)).rejects.toThrow(/Not allowed/);
+    await expect(as(null, `select public.admin_create_shared_code('DEVFEST-ABK', 'DevFest', 2, ${tomorrow})`)).rejects.toThrow(/permission denied/);
+    await expect(as(ALICE, `select public.admin_create_shared_code('ab', 'Too short', 2, ${tomorrow})`)).rejects.toThrow(/6 to 32/);
+    await expect(as(ALICE, `select public.admin_create_shared_code('PASTEVENT', 'Old', 2, current_date - 1)`)).rejects.toThrow(/not passed/);
+    await expect(as(ALICE, `select public.admin_create_shared_code('NOLIMIT1', 'X', 0, ${tomorrow})`)).rejects.toThrow(/how many/);
+    expect(await as(ALICE, `select public.admin_create_shared_code(' devfest-abk ', ' DevFest Abeokuta ', 2, ${tomorrow}) as code`)).toEqual([
+      { code: "DEVFEST-ABK" },
+    ]);
+    await expect(as(null, "select * from public.code_signups")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.admin_shared_codes()")).rejects.toThrow(/Not allowed/);
+  });
+
+  it("lets anyone sign up with it until it's used up, and remembers who did", async () => {
+    // Any experience level: no 4-year rule, unlike partner links.
+    await newUser("6d6d6d6d-0000-4000-8000-000000000001", "dev1@devfest.test", { access_code: " devfest-abk ", experience_years: "0" });
+    await newUser("6d6d6d6d-0000-4000-8000-000000000002", "dev2@devfest.test", { access_code: "DEVFEST-ABK" });
+    await expect(newUser("6d6d6d6d-0000-4000-8000-000000000003", "dev3@devfest.test", { access_code: "DEVFEST-ABK" })).rejects.toThrow(
+      /valid access code/,
+    );
+    const [row] = await as<Record<string, unknown>>(
+      ALICE, "select note, max_uses, uses, active, joined, published from public.admin_shared_codes() where code = 'DEVFEST-ABK'",
+    );
+    expect(row).toEqual({ note: "DevFest Abeokuta", max_uses: 2, uses: 2, active: false, joined: 2, published: 0 });
+    // Ordinary single-use codes aren't listed or recorded.
+    await db.query("insert into public.access_codes (code) values ('ONEINVITE1')");
+    await newUser("6d6d6d6d-0000-4000-8000-000000000004", "one@devfest.test", { access_code: "ONEINVITE1" });
+    expect((await db.query("select 1 from public.code_signups where code = 'ONEINVITE1'")).rows).toEqual([]);
+    expect(await as(ALICE, "select code from public.admin_shared_codes() where code = 'ONEINVITE1'")).toEqual([]);
+  });
+
+  it("stops a code at once when an admin turns it off", async () => {
+    await as(ALICE, `select public.admin_create_shared_code('DEVFEST-STOP', 'Stop test', 50, ${tomorrow})`);
+    await expect(as(BOB, "select public.admin_stop_shared_code('DEVFEST-STOP')")).rejects.toThrow(/Not allowed/);
+    await as(ALICE, "select public.admin_stop_shared_code('devfest-stop')");
+    await expect(newUser("6d6d6d6d-0000-4000-8000-000000000005", "late@devfest.test", { access_code: "DEVFEST-STOP" })).rejects.toThrow(
+      /valid access code/,
+    );
+    expect(await as(ALICE, "select active from public.admin_shared_codes() where code = 'DEVFEST-STOP'")).toEqual([{ active: false }]);
+  });
+});
+
+describe("partner radar", () => {
+  const SECRET = "test-secret-that-is-long-enough-1234567890"; // stored by the reminders tests
+
+  it("is for admins only", async () => {
+    await expect(as(BOB, "select * from public.admin_list_radar()")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.admin_get_radar_pitch()")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select public.admin_set_radar_pitch('a', 'b', 'c')")).rejects.toThrow(/Not allowed/);
+    await expect(
+      as(BOB, "select public.admin_add_radar_event('X', '2026-12-01', null, null, null, null, null, null, null, null)"),
+    ).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.admin_list_radar()")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.radar_events")).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.radar_pitch")).rejects.toThrow(/permission denied/);
+  });
+
+  it("adds an event by hand, moves it along and starts the follow-up clock once", async () => {
+    await db.query("insert into public.admins (user_id) values ($1) on conflict do nothing", [ALICE]);
+    const [{ id }] = await as<{ id: string }>(
+      ALICE,
+      "select public.admin_add_radar_event(' DevFest Lagos 2026 ', '2026-12-05', null, 'Tech & startup', 'in person', 'Landmark Centre', 'GDG Lagos', 'https://devfest.ng', 'hi@gdg.ng', 'Developers swap details') as id",
+    );
+    expect(id).toBe("2026-12-05-devfest-lagos-2026");
+    await expect(
+      as(ALICE, "select public.admin_add_radar_event('DevFest Lagos 2026', '2026-12-05', null, null, null, null, null, null, null, null)"),
+    ).rejects.toThrow(/already on the radar/);
+    await expect(
+      as(ALICE, "select public.admin_add_radar_event('Bad link', '2026-12-05', null, null, null, null, null, 'javascript:alert(1)', null, null)"),
+    ).rejects.toThrow(/check/);
+
+    const [row] = await as<{ name: string; end_date: string; status: string; source: string }>(
+      ALICE,
+      "select name, end_date::text, status, source from public.admin_list_radar() where id = $1",
+      [id],
+    );
+    expect(row).toMatchObject({ name: "DevFest Lagos 2026", end_date: "2026-12-05", status: "new", source: "manual" });
+
+    await as(ALICE, "select public.admin_set_radar_status($1, 'contacted')", [id]);
+    const [{ contacted_on: first }] = await as<{ contacted_on: string }>(ALICE, "select contacted_on::text from public.admin_list_radar() where id = $1", [id]);
+    expect(first).not.toBeNull();
+    await db.query("update public.radar_events set contacted_on = '2026-11-01' where id = $1", [id]);
+    await as(ALICE, "select public.admin_set_radar_status($1, 'talking')", [id]);
+    await as(ALICE, "select public.admin_set_radar_status($1, 'contacted')", [id]);
+    expect(await as(ALICE, "select contacted_on::text from public.admin_list_radar() where id = $1", [id])).toEqual([{ contacted_on: "2026-11-01" }]);
+    await expect(as(ALICE, "select public.admin_set_radar_status($1, 'spammed')", [id])).rejects.toThrow(/check/);
+
+    await as(ALICE, "select public.admin_mark_radar_followed_up($1)", [id]);
+    await as(ALICE, "select public.admin_set_radar_details($1, ' Spoke to Ada ', ' ada@gdg.ng ')", [id]);
+    const [done] = await as<{ followed_up_on: string | null; notes: string; contact: string }>(
+      ALICE,
+      "select followed_up_on::text, notes, contact from public.admin_list_radar() where id = $1",
+      [id],
+    );
+    expect(done).toMatchObject({ notes: "Spoke to Ada", contact: "ada@gdg.ng" });
+    expect(done.followed_up_on).not.toBeNull();
+
+    await as(ALICE, "select public.admin_delete_radar_event($1)", [id]);
+    expect(await as(ALICE, "select id from public.admin_list_radar() where id = $1", [id])).toEqual([]);
+  });
+
+  it("keeps one pitch", async () => {
+    expect(await as(ALICE, "select * from public.admin_get_radar_pitch()")).toEqual([{ pitch: "", offer: "", sender: "" }]);
+    await as(ALICE, "select public.admin_set_radar_pitch(' Meetwell is a card ', 'Free', 'Rasheed')");
+    await as(ALICE, "select public.admin_set_radar_pitch('Meetwell is a QR card', 'Free', 'Rasheed')");
+    expect(await as(ALICE, "select * from public.admin_get_radar_pitch()")).toEqual([
+      { pitch: "Meetwell is a QR card", offer: "Free", sender: "Rasheed" },
+    ]);
+  });
+
+  it("takes the weekly search's finds with the cron secret, never overwriting what's there", async () => {
+    const finds = JSON.stringify([
+      { name: "Lagos AI Summit 2026", start: "2026-12-10", venue: "Eko Hotel", hook: "Big AI crowd", subject: "Meetwell x Lagos AI" },
+      { id: "2026-12-12-online-meetup", name: "Online meetup", start: "2026-12-12", format: "online" },
+    ]);
+    await expect(as(null, "select * from public.radar_import_events('wrong', $1::jsonb)", [finds])).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.radar_import_events($1, $2::jsonb)", [SECRET, finds])).rejects.toThrow(/permission denied/);
+    expect(await as(null, "select count(*)::int as n from public.radar_import_events($1, $2::jsonb)", [SECRET, finds])).toEqual([{ n: 2 }]);
+
+    await as(ALICE, "select public.admin_set_radar_status('2026-12-10-lagos-ai-summit-2026', 'talking')");
+    expect(await as(null, "select count(*)::int as n from public.radar_import_events($1, $2::jsonb)", [SECRET, finds])).toEqual([{ n: 0 }]);
+    expect(
+      await as(ALICE, "select status, source, format, subject from public.admin_list_radar() where id like '2026-12-1%' order by id"),
+    ).toEqual([
+      { status: "talking", source: "weekly-search", format: "in person", subject: "Meetwell x Lagos AI" },
+      { status: "new", source: "weekly-search", format: "online", subject: null },
+    ]);
+  });
+
+  it("reminds the founder once when a follow-up is due", async () => {
+    const today = (await db.query<{ d: string }>("select ((now() at time zone 'Africa/Lagos')::date)::text as d")).rows[0].d;
+    const finds = JSON.stringify([
+      { id: "2099-01-01-due", name: "Due one", start: "2099-01-01" },
+      { id: "2099-01-02-fresh", name: "Fresh one", start: "2099-01-02" },
+      { id: "2099-01-03-done", name: "Followed up", start: "2099-01-03" },
+    ]);
+    await as(null, "select * from public.radar_import_events($1, $2::jsonb)", [SECRET, finds]);
+    await db.query(
+      "update public.radar_events set status = 'contacted', contacted_on = $1::date - 4 where id in ('2099-01-01-due', '2099-01-03-done')",
+      [today],
+    );
+    await db.query("update public.radar_events set status = 'contacted', contacted_on = $1::date - 1 where id = '2099-01-02-fresh'", [today]);
+    await db.query("update public.radar_events set followed_up_on = $1::date where id = '2099-01-03-done'", [today]);
+
+    await expect(as(null, "select * from public.claim_radar_reminders('wrong')")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.claim_radar_reminders($1)", [SECRET])).rejects.toThrow(/permission denied/);
+    await expect(as(null, "select public.radar_check_token($1)", [SECRET])).rejects.toThrow(/permission denied/);
+    expect(await as(null, "select id from public.claim_radar_reminders($1) where id like '2099-%'", [SECRET])).toEqual([{ id: "2099-01-01-due" }]);
+    expect(await as(null, "select id from public.claim_radar_reminders($1) where id like '2099-%'", [SECRET])).toEqual([]);
+    expect(await as(null, "select sender from public.radar_pitch_for_job($1)", [SECRET])).toEqual([{ sender: "Rasheed" }]);
+    await expect(as(BOB, "select * from public.radar_pitch_for_job($1)", [SECRET])).rejects.toThrow(/permission denied/);
+  });
+
+  it("tells the weekly search what's already there, names and dates only", async () => {
+    await expect(as(null, "select * from public.radar_known_events('wrong')")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.radar_known_events($1)", [SECRET])).rejects.toThrow(/permission denied/);
+    const rows = await as<Record<string, unknown>>(null, "select * from public.radar_known_events($1) where id like '2099-%'", [SECRET]);
+    expect(rows.map((r) => r.id)).toEqual(["2099-01-01-due", "2099-01-02-fresh", "2099-01-03-done"]);
+    expect(Object.keys(rows[0]).sort()).toEqual(["end_date", "id", "name", "start_date"]);
   });
 });

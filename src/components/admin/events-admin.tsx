@@ -1,13 +1,37 @@
 "use client";
 
-import { Download, ExternalLink, X } from "lucide-react";
-import { useActionState, useEffect, useRef, useTransition } from "react";
+import { Download, ExternalLink, Eye, EyeOff, Pencil, Trash2, X } from "lucide-react";
+import { useActionState, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/field";
+import { Dialog } from "@/components/ui/dialog";
+import { Field, Input, Textarea } from "@/components/ui/field";
 import { Badge } from "@/components/ui/misc";
 import { useToast } from "@/components/ui/toast";
-import { adminAddEventSpeaker, adminCreateEvent, adminRemoveEventSpeaker, adminSetEventActive } from "@/lib/admin/actions";
+import {
+  adminAddEventSpeaker,
+  adminCreateEvent,
+  adminDeleteEvent,
+  adminRemoveEventSpeaker,
+  adminSetEventActive,
+  adminUpdateEvent,
+} from "@/lib/admin/actions";
 import { cn } from "@/lib/cn";
+import {
+  partnerAddEventSpeaker,
+  partnerCreateEvent,
+  partnerRemoveEventSpeaker,
+  partnerUpdateEvent,
+} from "@/lib/partners/actions";
+
+/**
+ * The same event tools for admins and for a partner's own team (Partner tab).
+ * Partners can't hide or delete events; their actions check team membership.
+ */
+const ACTIONS = {
+  admin: { create: adminCreateEvent, update: adminUpdateEvent, add: adminAddEventSpeaker, remove: adminRemoveEventSpeaker },
+  team: { create: partnerCreateEvent, update: partnerUpdateEvent, add: partnerAddEventSpeaker, remove: partnerRemoveEventSpeaker },
+};
+type Who = keyof typeof ACTIONS;
 
 export type AdminEvent = {
   slug: string;
@@ -20,15 +44,69 @@ export type AdminEvent = {
   speakers: { slug: string; full_name: string; status: string; mentor: boolean }[];
   payments: number;
   revenue_kobo: number;
+  /** Conversations with free mentors started from this page. */
+  free_conversations?: number;
 };
 
-/** New event page for this partner: name, dates, venue, a short description. */
-export function AddEvent({ partnerSlug }: { partnerSlug: string }) {
-  const [state, action, pending] = useActionState(adminCreateEvent.bind(null, partnerSlug), {});
+/**
+ * Date, About and Venue, after the name and link fields. One date per event;
+ * About is a big box that fills the right column next to Date and Venue.
+ */
+function EventDetails({ event }: { event?: AdminEvent }) {
+  return (
+    <>
+      <Field label="Date">
+        {({ id }) => <Input id={id} name="startsOn" type="date" required defaultValue={event?.starts_on} />}
+      </Field>
+      <Field label="About" hint="Optional. A few lines about the event." className="sm:row-span-2">
+        {({ id, describedBy }) => (
+          <Textarea
+            id={id}
+            aria-describedby={describedBy}
+            name="about"
+            maxLength={600}
+            defaultValue={event?.about ?? ""}
+            placeholder={event ? undefined : "A day of talks on product design in Africa."}
+            className="min-h-28 flex-1 resize-none"
+          />
+        )}
+      </Field>
+      <Field label="Venue" hint="Optional.">
+        {({ id, describedBy }) => (
+          <Input
+            id={id}
+            aria-describedby={describedBy}
+            name="venue"
+            maxLength={120}
+            defaultValue={event?.venue ?? ""}
+            placeholder={event ? undefined : "Landmark Centre, Lagos"}
+          />
+        )}
+      </Field>
+    </>
+  );
+}
+
+/** New event page for this partner: name, date, venue, a short description. */
+export function AddEvent({
+  partnerSlug,
+  who = "admin",
+  onCancel,
+  onAdded,
+}: {
+  partnerSlug: string;
+  who?: Who;
+  onCancel?: () => void;
+  /** Called with the success message; the panel closes and shows it as a toast. */
+  onAdded?: (message: string) => void;
+}) {
+  const [state, action, pending] = useActionState(ACTIONS[who].create.bind(null, partnerSlug), {});
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    if (state.ok) form.current?.reset();
-  }, [state]);
+    if (!state.ok) return;
+    form.current?.reset();
+    onAdded?.(state.ok);
+  }, [state, onAdded]);
 
   return (
     <form ref={form} action={action} className="flex flex-col gap-3">
@@ -39,22 +117,16 @@ export function AddEvent({ partnerSlug }: { partnerSlug: string }) {
         <Field label="Link name" hint="Optional. Made from the name if you leave it empty.">
           {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="slug" maxLength={40} placeholder="e.g. design-summit-2026" />}
         </Field>
-        <Field label="Starts">
-          {({ id }) => <Input id={id} name="startsOn" type="date" required />}
-        </Field>
-        <Field label="Ends" hint="Optional, for events over more than one day.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="endsOn" type="date" />}
-        </Field>
-        <Field label="Venue" hint="Optional.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="venue" maxLength={120} placeholder="Landmark Centre, Lagos" />}
-        </Field>
-        <Field label="About" hint="Optional. One or two sentences.">
-          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} name="about" maxLength={600} placeholder="A day of talks on product design in Africa." />}
-        </Field>
+        <EventDetails />
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" loading={pending}>Add event</Button>
-        {(state.error || state.ok) && (
+        {onCancel && (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+        {(state.error || (state.ok && !onAdded)) && (
           <p className={cn("text-sm", state.error ? "text-danger" : "text-success")}>{state.error ?? state.ok}</p>
         )}
       </div>
@@ -62,8 +134,69 @@ export function AddEvent({ partnerSlug }: { partnerSlug: string }) {
   );
 }
 
-function AddSpeaker({ eventSlug }: { eventSlug: string }) {
-  const [state, action, pending] = useActionState(adminAddEventSpeaker.bind(null, eventSlug), {});
+/** "Add an event" that opens into the form; Cancel closes it, and so does adding one (Partner tab). */
+export function AddEventPanel({ partnerSlug, who = "team" }: { partnerSlug: string; who?: Who }) {
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const added = useCallback(
+    (message: string) => {
+      toast(message);
+      setOpen(false);
+    },
+    [toast],
+  );
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex items-center justify-between rounded-xl border border-border px-4 py-3 text-left font-medium text-ink transition-colors hover:bg-surface-2"
+      >
+        Add an event
+        <span className="text-sm font-normal text-ink-3">Name, date, venue</span>
+      </button>
+    );
+  }
+  return (
+    <div className="rounded-xl border border-border">
+      <p className="border-b border-border px-4 py-3 font-medium text-ink">Add an event</p>
+      <div className="p-4">
+        <AddEvent partnerSlug={partnerSlug} who={who} onCancel={close} onAdded={added} />
+      </div>
+    </div>
+  );
+}
+
+/** Edit an event in place. The link name can't change: QR codes may already be printed. */
+function EditEvent({ event, who, onDone }: { event: AdminEvent; who: Who; onDone: () => void }) {
+  const [state, action, pending] = useActionState(ACTIONS[who].update.bind(null, event.slug), {});
+  useEffect(() => {
+    if (state.ok) onDone();
+  }, [state, onDone]);
+
+  return (
+    <form action={action} className="flex flex-col gap-3 rounded-lg bg-surface-2 p-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Event name">
+          {({ id }) => <Input id={id} name="name" required maxLength={120} defaultValue={event.name} />}
+        </Field>
+        <Field label="Link name" hint="Stays the same, so printed QR codes keep working.">
+          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} value={event.slug} disabled readOnly />}
+        </Field>
+        <EventDetails event={event} />
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="submit" size="sm" loading={pending}>Save changes</Button>
+        <Button type="button" size="sm" variant="ghost" onClick={onDone}>Cancel</Button>
+        {state.error && <p className="text-sm text-danger">{state.error}</p>}
+      </div>
+    </form>
+  );
+}
+
+function AddSpeaker({ eventSlug, who }: { eventSlug: string; who: Who }) {
+  const [state, action, pending] = useActionState(ACTIONS[who].add.bind(null, eventSlug), {});
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state.ok) form.current?.reset();
@@ -81,24 +214,87 @@ function AddSpeaker({ eventSlug }: { eventSlug: string }) {
   );
 }
 
-function RemoveSpeaker({ eventSlug, profileSlug, name }: { eventSlug: string; profileSlug: string; name: string }) {
+/**
+ * One speaker on an event. Remove hides the row at once (the save takes a moment)
+ * and says so; if it fails, the row comes back with the error.
+ */
+function SpeakerRow({ eventSlug, who, speaker: s }: { eventSlug: string; who: Who; speaker: AdminEvent["speakers"][number] }) {
   const toast = useToast();
-  const [pending, start] = useTransition();
+  const [removed, setRemoved] = useState(false);
+  const [, start] = useTransition();
+  if (removed) return null;
   return (
-    <button
-      type="button"
-      disabled={pending}
-      aria-label={`Remove ${name}`}
-      onClick={() =>
-        start(async () => {
-          const { error } = await adminRemoveEventSpeaker(eventSlug, profileSlug);
-          if (error) toast(error, "error");
-        })
-      }
-      className="rounded p-1 text-ink-3 hover:bg-surface-2 hover:text-ink disabled:opacity-50"
-    >
-      <X className="size-4" aria-hidden />
-    </button>
+    <li className="flex items-center gap-2 px-3 py-2">
+      <span className="min-w-0 flex-1 truncate text-sm text-ink">{s.full_name}</span>
+      {s.mentor && <Badge tone="accent">Mentor</Badge>}
+      {s.status !== "published" && <Badge tone="warning">Card not published</Badge>}
+      <a href={`/e/${eventSlug}/qr?speaker=${encodeURIComponent(s.slug)}`} className="text-xs text-ink-3 hover:text-ink">Badge QR</a>
+      <button
+        type="button"
+        aria-label={`Remove ${s.full_name}`}
+        onClick={() => {
+          setRemoved(true);
+          start(async () => {
+            const { error } = await ACTIONS[who].remove(eventSlug, s.slug);
+            if (error) {
+              setRemoved(false);
+              toast(error, "error");
+            } else toast(`Removed ${s.full_name}.`);
+          });
+        }}
+        className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-ink-3 hover:bg-danger-soft hover:text-danger"
+      >
+        <X className="size-3.5" aria-hidden />
+        Remove
+      </button>
+    </li>
+  );
+}
+
+/** Delete, with a confirm step. Only events nothing has come from yet; the database refuses the rest. */
+function DeleteEvent({ event }: { event: AdminEvent }) {
+  const toast = useToast();
+  const [confirming, setConfirming] = useState(false);
+  const [pending, start] = useTransition();
+  const hasHistory = event.payments > 0 || (event.free_conversations ?? 0) > 0;
+  return (
+    <>
+      <Button size="sm" variant="ghost" icon={<Trash2 className="size-4" />} onClick={() => setConfirming(true)} className="text-danger! hover:text-danger!" title="Delete">
+        <span className="max-sm:sr-only">Delete</span>
+      </Button>
+      <Dialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        title={`Delete ${event.name}?`}
+        description={
+          hasHistory
+            ? "This event already has payments or conversations, so it can't be deleted: its numbers and the partner's earnings depend on it. Hide the page instead."
+            : "Its page and QR codes stop working, and its speaker list is removed. This can't be undone."
+        }
+      >
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setConfirming(false)}>
+            {hasHistory ? "Close" : "Cancel"}
+          </Button>
+          {!hasHistory && (
+            <Button
+              variant="danger"
+              loading={pending}
+              onClick={() =>
+                start(async () => {
+                  const { error } = await adminDeleteEvent(event.slug);
+                  setConfirming(false);
+                  if (error) toast(error, "error");
+                  else toast(`Deleted ${event.name}.`);
+                })
+              }
+            >
+              Delete event
+            </Button>
+          )}
+        </div>
+      </Dialog>
+    </>
   );
 }
 
@@ -110,6 +306,8 @@ function ActiveToggle({ event }: { event: AdminEvent }) {
       size="sm"
       variant="ghost"
       loading={pending}
+      icon={event.active ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+      title={event.active ? "Hide page" : "Show page again"}
       onClick={() =>
         start(async () => {
           const { error } = await adminSetEventActive(event.slug, !event.active);
@@ -117,13 +315,32 @@ function ActiveToggle({ event }: { event: AdminEvent }) {
         })
       }
     >
-      {event.active ? "Hide page" : "Show page again"}
+      <span className="max-sm:sr-only">{event.active ? "Hide page" : "Show page again"}</span>
     </Button>
   );
 }
 
-/** One event: its page and QR, speakers (add or remove), and the paid messages it brought in. */
-export function EventCard({ event, site, dates, revenue }: { event: AdminEvent; site: string; dates: string; revenue: string }) {
+/**
+ * One event: its page and QR, speakers (add or remove), and what it brought in.
+ * Admins pass the revenue line; a partner's team (who="team") passes its own note.
+ */
+export function EventCard({
+  event,
+  site,
+  dates,
+  revenue,
+  note,
+  who = "admin",
+}: {
+  event: AdminEvent;
+  site: string;
+  dates: string;
+  revenue?: string;
+  note?: string;
+  who?: Who;
+}) {
+  const [editing, setEditing] = useState(false);
+  const stopEditing = useCallback(() => setEditing(false), []);
   return (
     <li className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -139,34 +356,44 @@ export function EventCard({ event, site, dates, revenue }: { event: AdminEvent; 
           </a>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <a href={`/e/${event.slug}/qr`} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink">
+          <a href={`/e/${event.slug}/qr`} title="Download event QR" className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink">
             <Download className="size-4" aria-hidden />
-            Event QR
+            <span className="max-sm:sr-only">Event QR</span>
           </a>
-          <ActiveToggle event={event} />
+          {!editing && (
+            <Button size="sm" variant="ghost" icon={<Pencil className="size-4" />} onClick={() => setEditing(true)} title="Edit">
+              <span className="max-sm:sr-only">Edit</span>
+            </Button>
+          )}
+          {who === "admin" && (
+            <>
+              <ActiveToggle event={event} />
+              <DeleteEvent event={event} />
+            </>
+          )}
         </div>
       </div>
 
-      <p className="text-sm text-ink-2">
-        Paid messages started from this page: <span className="font-medium text-ink">{event.payments}</span> · {revenue}
-      </p>
+      {editing && <EditEvent event={event} who={who} onDone={stopEditing} />}
+
+      {revenue !== undefined && (
+        <p className="text-sm text-ink-2">
+          Paid messages started from this page: <span className="font-medium text-ink">{event.payments}</span> · {revenue} · Free
+          conversations: <span className="font-medium text-ink">{event.free_conversations ?? 0}</span>
+        </p>
+      )}
+      {note && <p className="text-sm text-ink-2">{note}</p>}
 
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium text-ink">Speakers ({event.speakers.length})</p>
         {event.speakers.length > 0 && (
           <ul className="divide-y divide-border rounded-lg border border-border">
             {event.speakers.map((s) => (
-              <li key={s.slug} className="flex items-center gap-2 px-3 py-2">
-                <span className="min-w-0 flex-1 truncate text-sm text-ink">{s.full_name}</span>
-                {s.mentor && <Badge tone="accent">Mentor</Badge>}
-                {s.status !== "published" && <Badge tone="warning">Card not published</Badge>}
-                <a href={`/e/${event.slug}/qr?speaker=${encodeURIComponent(s.slug)}`} className="text-xs text-ink-3 hover:text-ink">Badge QR</a>
-                <RemoveSpeaker eventSlug={event.slug} profileSlug={s.slug} name={s.full_name} />
-              </li>
+              <SpeakerRow key={s.slug} eventSlug={event.slug} who={who} speaker={s} />
             ))}
           </ul>
         )}
-        <AddSpeaker eventSlug={event.slug} />
+        <AddSpeaker eventSlug={event.slug} who={who} />
       </div>
     </li>
   );

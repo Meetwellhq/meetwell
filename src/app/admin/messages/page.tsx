@@ -3,6 +3,7 @@ import { date, NotReady, PageTitle, Stats } from "@/components/admin/admin-ui";
 import { OpenConversationForm, PausedToggle, ReportActions } from "@/components/admin/messaging-admin";
 import { Badge, EmptyState } from "@/components/ui/misc";
 import { createClient } from "@/lib/supabase/server";
+import { PaginatedList } from "@/components/ui/paginated-list";
 
 export const metadata: Metadata = { title: "Messages · Admin" };
 
@@ -77,7 +78,7 @@ export default async function AdminMessagesPage() {
             <EmptyState title="No reports" description="Reported messages will show up here, with a few messages around them." />
           </div>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <PaginatedList className="flex flex-col gap-3">
             {reps.map((r) => (
               <li key={r.id} className="rounded-xl border border-border bg-surface p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -109,7 +110,7 @@ export default async function AdminMessagesPage() {
                 </div>
               </li>
             ))}
-          </ul>
+          </PaginatedList>
         )}
       </section>
 
@@ -122,7 +123,7 @@ export default async function AdminMessagesPage() {
             <EmptyState title="No conversations yet" description="Open a test conversation above to try messaging." />
           </div>
         ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
+          <PaginatedList className="divide-y divide-border rounded-xl border border-border bg-surface">
             {convs.map((c) => {
               const live = new Date(c.access_until) > new Date();
               return (
@@ -140,7 +141,7 @@ export default async function AdminMessagesPage() {
                 </li>
               );
             })}
-          </ul>
+          </PaginatedList>
         )}
       </section>
     </div>

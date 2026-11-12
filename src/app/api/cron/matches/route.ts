@@ -2,6 +2,7 @@ import { publicProfileUrl } from "@/lib/config";
 import { sendMatchEmail } from "@/lib/email";
 import { chooseMatch, type Candidate, type Seeker } from "@/lib/matching/engine";
 import { getPublicProfile } from "@/lib/profiles/queries";
+import { isSparkOn } from "@/lib/spark";
 import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 60;
@@ -48,6 +49,8 @@ export async function GET(request: Request) {
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
+  // Spark is paused until launch (admin Overview): no matches, no emails.
+  if (!(await isSparkOn())) return Response.json({ skipped: "spark paused" });
 
   const started = Date.now();
   const supabase = await createClient();

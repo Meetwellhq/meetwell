@@ -1,10 +1,15 @@
 import "server-only";
-import { APP_NAME, getSiteUrl, SUPPORT_EMAIL, WHATSAPP_COMMUNITY_URL, WHATSAPP_FEEDBACK_URL } from "./config";
+import { ADMIN_EMAIL, APP_NAME, getSiteUrl, SUPPORT_EMAIL, WHATSAPP_COMMUNITY_URL, WHATSAPP_FEEDBACK_URL } from "./config";
+import { dateText, followUpEmail, hasEmail, shortDate, type RadarEvent, type RadarPitch } from "./radar";
+import { isSparkOn } from "./spark";
 import { fieldLabel } from "./matching/constants";
 import type { TemplateId } from "./admin/campaigns";
 import {
   addPhotoEmail,
   draftReminderEmail,
+  eventSpeakerEmail,
+  feedbackEmail,
+  type FeedbackKind,
   finishProfileEmail,
   incompleteProfileEmail,
   FOUNDER_NAME,
@@ -19,8 +24,15 @@ import {
   noScansEmail,
   partnerAccessEmail,
   publishCardEmail,
+  radarFindsEmail,
+  radarNoEmailEmail,
+  radarRemindersEmail,
+  type RadarEmailEvent,
   renewalReminderEmail,
   sparkBetaEmail,
+  sparkPausedEmail,
+  savebackEmail,
+  type Saver,
   waitlistEmail,
   withdrawalSentEmail,
 } from "./founder-emails";
@@ -101,15 +113,16 @@ export function sendMatchEmail(to: string, fullName: string | null, match: Match
   return send(to, matchEmail({ ...common(fullName), match, reason }));
 }
 
-/** Profile under 80%: finish it (and add a photo) to get matches. Sent once. */
-export function sendIncompleteProfileEmail(
+/** Profile under 80%: finish it (and add a photo). Sent once. Mentions Spark only while it's switched on. */
+export async function sendIncompleteProfileEmail(
   to: string,
   fullName: string | null,
   details: { completeness: number; hasPhoto: boolean; experienceYears: number | null; field: string | null },
 ) {
+  const spark = await isSparkOn();
   return send(
     to,
-    incompleteProfileEmail({ ...common(fullName), ...details, fieldName: fieldLabel(details.field) }),
+    incompleteProfileEmail({ ...common(fullName), ...details, fieldName: fieldLabel(details.field), spark }),
   );
 }
 
@@ -123,6 +136,11 @@ export function sendPartnerAccessEmail(to: string, fullName: string | null, part
   return send(to, partnerAccessEmail({ ...common(fullName), partnerName }));
 }
 
+/** Added as a speaker at a partner's event. */
+export function sendEventSpeakerEmail(to: string, fullName: string | null, details: Omit<Parameters<typeof eventSpeakerEmail>[0], keyof ReturnType<typeof common>>) {
+  return send(to, eventSpeakerEmail({ ...common(fullName), ...details }));
+}
+
 /** The ready-made emails on the admin New email page. */
 const CAMPAIGN_EMAILS = {
   publish_card: publishCardEmail,
@@ -133,18 +151,28 @@ const CAMPAIGN_EMAILS = {
 } satisfies Record<TemplateId, unknown>;
 
 /** Returns whether it went out, and Resend's id for its delivery and click events. */
-export function sendCampaignEmail(template: TemplateId, to: string, fullName: string | null) {
-  return deliver(to, CAMPAIGN_EMAILS[template](common(fullName)));
+export async function sendCampaignEmail(template: TemplateId, to: string, fullName: string | null) {
+  return deliver(to, CAMPAIGN_EMAILS[template]({ ...common(fullName), spark: await isSparkOn() }));
 }
 
 /** The email as it will look, for the preview on the New email page. */
-export function previewCampaignEmail(template: TemplateId, fullName: string | null) {
-  return CAMPAIGN_EMAILS[template](common(fullName));
+export async function previewCampaignEmail(template: TemplateId, fullName: string | null) {
+  return CAMPAIGN_EMAILS[template]({ ...common(fullName), spark: await isSparkOn() });
 }
 
 /** One-off announcement to draft cards only: publish your card. */
 export function sendPublishCardEmail(to: string, fullName: string | null) {
   return send(to, publishCardEmail(common(fullName)));
+}
+
+/** Daily: people whose card this member saved have saved theirs back. */
+export function sendSavebackEmail(to: string, fullName: string | null, savers: Saver[], token: string) {
+  return send(to, savebackEmail({ ...common(fullName), savers, token }));
+}
+
+/** One-off announcement to members who turned Spark on: Spark is paused until 5,000 members. */
+export function sendSparkPausedEmail(to: string, fullName: string | null) {
+  return send(to, sparkPausedEmail(common(fullName)));
 }
 
 /** One-off announcement: mentoring is open; add your years, and earn as a mentor with 4+. */
@@ -210,6 +238,57 @@ export function sendReplyReminderEmail(
   const senderName = details.senderName.replace(/\s+/g, " ").trim().slice(0, 80) || "A Meetwell member";
   return send(to, newMessageEmail({ ...common(fullName), ...details, senderName, reminder: true }), {
     from: messageFromLine(senderName, APP_NAME),
+    replyTo: null,
+  });
+}
+
+/** A member's feedback from the dashboard, to the support inbox. Replying answers the member. */
+export function sendFeedbackEmail(kind: FeedbackKind, message: string, from: { name: string; email: string }, page: string) {
+  return send(SUPPORT_EMAIL, feedbackEmail({ kind, message, page, appName: APP_NAME, ...from }), {
+    from: `${APP_NAME} feedback <noreply@meetwell.me>`,
+    replyTo: from.email,
+  });
+}
+
+/** Partner radar: a radar event as the founder's emails show it. */
+function radarItem(e: RadarEvent): RadarEmailEvent {
+  return {
+    name: e.name,
+    when: dateText(e),
+    where: e.format === "online" ? ["Online", e.venue].filter(Boolean).join(", ") : e.venue,
+    to: hasEmail(e) ? e.contact : null,
+    angle: e.angle,
+    link: e.link,
+    organizer: e.organizer,
+  };
+}
+
+const RADAR_FROM = `${APP_NAME} partner radar <noreply@meetwell.me>`;
+
+/**
+ * The weekly search added events: tell the founder, at the admin inbox. Two
+ * emails: the events with an organiser email (ready to write to), and a
+ * separate one for those without, with where to look. Each is skipped when empty.
+ */
+export async function sendRadarFindsEmail(events: RadarEvent[]) {
+  const site = getSiteUrl();
+  const ready = events.filter(hasEmail).map(radarItem);
+  const missing = events.filter((e) => !hasEmail(e)).map(radarItem);
+  const sent = { ready: false, missing: false };
+  if (ready.length) sent.ready = await send(ADMIN_EMAIL, radarFindsEmail({ appName: APP_NAME, siteUrl: site, events: ready }), { from: RADAR_FROM, replyTo: null });
+  if (missing.length) sent.missing = await send(ADMIN_EMAIL, radarNoEmailEmail({ appName: APP_NAME, siteUrl: site, events: missing }), { from: RADAR_FROM, replyTo: null });
+  return sent;
+}
+
+/** Follow-ups that just became due, each with its follow-up text ready to copy. */
+export function sendRadarRemindersEmail(events: RadarEvent[], pitch: RadarPitch) {
+  if (events.length === 0) return Promise.resolve(false);
+  const items = events.map((e) => {
+    const { subject, body } = followUpEmail(e, pitch);
+    return { ...radarItem(e), followUp: { subject, body, sentOn: e.contacted_on ? shortDate(e.contacted_on) : "recently" } };
+  });
+  return send(ADMIN_EMAIL, radarRemindersEmail({ appName: APP_NAME, siteUrl: getSiteUrl(), events: items }), {
+    from: RADAR_FROM,
     replyTo: null,
   });
 }

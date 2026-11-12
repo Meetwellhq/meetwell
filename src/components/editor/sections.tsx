@@ -77,7 +77,7 @@ export function BasicsSection({
             />
           )}
         </Field>
-        <Field label="Company, organization or school" optional error={errors.organization}>
+        <Field label="Company or School" optional error={errors.organization}>
           {({ id, describedBy, invalid }) => (
             <PickOrType
               id={id}

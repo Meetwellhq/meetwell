@@ -1,8 +1,7 @@
-import { LogOut, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { AdminNav, type Counts } from "@/components/admin/admin-nav";
 import { Logo } from "@/components/marketing/logo";
-import { signOut } from "@/lib/auth/actions";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 /**
@@ -18,11 +17,12 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const { data: isAdmin } = await supabase.rpc("is_admin");
   if (isAdmin !== true) notFound();
 
-  const [waitlist, reports, mentors, withdrawals] = await Promise.all([
+  const [waitlist, reports, mentors, withdrawals, ideas] = await Promise.all([
     supabase.rpc("admin_list_waitlist"),
     supabase.rpc("admin_list_reports"),
     supabase.rpc("admin_list_mentors"),
     supabase.rpc("admin_list_withdrawals"),
+    supabase.rpc("admin_list_ideas"),
   ]);
   const count = <T,>(data: unknown, keep: (row: T) => boolean) => ((data ?? []) as T[]).filter(keep).length;
   const counts: Counts = {
@@ -31,18 +31,22 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     mentors:
       count<{ status: string }>(mentors.data, (r) => r.status === "applied") +
       count<{ status: string }>(withdrawals.data, (r) => r.status === "requested"),
+    ideas: count<{ done_at: string | null }>(ideas.data, (r) => !r.done_at),
   };
 
   return (
-    <div className="flex-1 bg-surface-2/60">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 py-4 sm:px-5 sm:py-6">
-        <header className="flex items-center justify-between gap-4 rounded-2xl bg-surface px-4 py-3 sm:px-5">
+    <div className="flex flex-1 flex-col bg-surface">
+      {/* Full width, edge to edge, and stays at the top; the phone menu drops down under it. */}
+      <header className="sticky top-0 z-30 border-b border-border bg-surface">
+        {/* h-15 (60px): the sidebar sticks just under it (see the navs). */}
+        <div className="relative flex h-15 items-center justify-between gap-4 px-4 sm:px-5">
           <div className="flex items-center gap-3">
-            <Logo />
+            <Logo large beta={false} />
             <span className="rounded-full bg-ink px-2 py-0.5 text-xs font-medium text-bg">Admin</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-3">
+            {/* Phones show only the menu button here. */}
+            <div className="hidden items-center gap-3 sm:flex">
               <span className="grid size-8 place-items-center rounded-full bg-accent text-white">
                 <ShieldCheck className="size-4" aria-hidden />
               </span>
@@ -51,19 +55,15 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
                 <span className="max-w-[14rem] truncate text-xs text-ink-3">{user.email}</span>
               </span>
             </div>
-            {/* The sidebar has Log out on large screens; small screens get it here. */}
-            <form action={signOut} className="lg:hidden">
-              <button type="submit" aria-label="Log out" className="grid size-10 place-items-center rounded-full text-ink-2 hover:bg-surface-2">
-                <LogOut className="size-5" aria-hidden />
-              </button>
-            </form>
+            <AdminNav counts={counts} placement="menu" />
           </div>
-        </header>
-
-        <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
-          <AdminNav counts={counts} />
-          <main className="min-w-0 rounded-2xl bg-surface p-4 sm:p-6">{children}</main>
         </div>
+      </header>
+
+      {/* The sidebar runs down the left edge; the page fills the rest. */}
+      <div className="flex flex-1">
+        <AdminNav counts={counts} placement="sidebar" />
+        <main className="min-w-0 flex-1 bg-surface p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

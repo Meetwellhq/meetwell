@@ -9,6 +9,16 @@ import { getSiteUrl } from "./config";
 /** Event links use the same shape the database checks: lowercase letters, numbers and single dashes. */
 export const EVENT_SLUG = /^[a-z0-9][a-z0-9-]{1,58}[a-z0-9]$/;
 
+/** Turn a name into a link name: "Think UX!" → "think-ux" (partners and events). */
+export function linkName(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40)
+    .replace(/-+$/, "");
+}
+
 export const isEventSlug = (value: unknown): value is string =>
   typeof value === "string" && EVENT_SLUG.test(value) && !value.includes("--");
 
