@@ -23,17 +23,26 @@ type Props = {
   hidden?: Record<string, string>;
   /** Hide the form once a success message is shown (e.g. "check your email"). */
   hideOnMessage?: boolean;
+  /** Shown under the success message when the form is hidden (e.g. next steps). */
+  afterMessage?: ReactNode;
   footer?: ReactNode;
   /** Sign-up: a required "I'm at least 18" tick box (also checked on the server). */
   confirmAge?: boolean;
 };
 
-export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, footer, confirmAge }: Props) {
+export function AuthForm({ action, fields, submitLabel, hidden, hideOnMessage, afterMessage, footer, confirmAge }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   const [adultTicked, setAdultTicked] = useState(false);
 
   if (hideOnMessage && state.message) {
-    return <Alert tone="success">{state.message}</Alert>;
+    return afterMessage ? (
+      <div className="flex flex-col gap-5">
+        <Alert tone="success">{state.message}</Alert>
+        {afterMessage}
+      </div>
+    ) : (
+      <Alert tone="success">{state.message}</Alert>
+    );
   }
 
   return (

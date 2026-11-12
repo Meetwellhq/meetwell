@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth/auth-form";
 import { AuthIntro, AuthSection } from "@/components/auth/auth-section";
+import { WhatsAppLinks } from "@/components/auth/whatsapp-links";
 import { joinWaitlist } from "@/lib/auth/actions";
 
 export const metadata: Metadata = { title: "Join early access" };
@@ -17,6 +18,7 @@ export default function EarlyAccessPage() {
           action={joinWaitlist}
           submitLabel="Join early access"
           hideOnMessage
+          afterMessage={<WhatsAppLinks />}
           fields={[
             { name: "fullName", label: "Full name", type: "text", autoComplete: "name" },
             { name: "email", label: "Email", type: "email", autoComplete: "email" },
