@@ -1,13 +1,13 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useRef, useTransition } from "react";
 import { CopyPartnerLink } from "@/components/dashboard/copy-partner-link";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { Badge, Card } from "@/components/ui/misc";
 import { useToast } from "@/components/ui/toast";
-import { adminCreateSharedCode, adminStopSharedCode } from "@/lib/admin/actions";
+import { adminCreateSharedCode, adminDeleteSharedCode, adminStopSharedCode } from "@/lib/admin/actions";
 import { cn } from "@/lib/cn";
 
 export type SharedCode = {
@@ -83,6 +83,32 @@ function StopCode({ code }: { code: string }) {
   );
 }
 
+function DeleteCode({ code, joined }: { code: string; joined: number }) {
+  const toast = useToast();
+  const [pending, start] = useTransition();
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      loading={pending}
+      icon={<Trash2 className="size-4" />}
+      className="text-danger! hover:text-danger!"
+      onClick={() => {
+        const who = joined
+          ? ` The ${joined} ${joined === 1 ? "person who joined" : "people who joined"} with it keep their accounts, but this list of who joined with it is deleted too.`
+          : "";
+        if (!confirm(`Delete ${code} for good? It stops working and leaves this page.${who}`)) return;
+        start(async () => {
+          const { error } = await adminDeleteSharedCode(code);
+          toast(error ?? `${code} is deleted.`, error ? "error" : undefined);
+        });
+      }}
+    >
+      <span className="max-sm:sr-only">Delete</span>
+    </Button>
+  );
+}
+
 /** Each shared code: its link and QR, how many joined, and how many published a card. */
 export function SharedCodeList({ codes, site }: { codes: SharedCode[]; site: string }) {
   if (codes.length === 0) {
@@ -116,6 +142,7 @@ export function SharedCodeList({ codes, site }: { codes: SharedCode[]; site: str
                     QR code
                   </a>
                   {c.active && <StopCode code={c.code} />}
+                  <DeleteCode code={c.code} joined={c.joined} />
                 </div>
               </div>
               <CopyPartnerLink link={`${site}/access-code?code=${encodeURIComponent(c.code)}`} />

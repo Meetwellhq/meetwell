@@ -2158,6 +2158,23 @@ describe("shared access codes", () => {
     );
     expect(await as(ALICE, "select active from public.admin_shared_codes() where code = 'DEVFEST-STOP'")).toEqual([{ active: false }]);
   });
+
+  it("deletes a shared code for good, keeping the accounts made with it", async () => {
+    await as(ALICE, `select public.admin_create_shared_code('DEVFEST-GONE', 'Delete test', 50, ${tomorrow})`);
+    await newUser("6d6d6d6d-0000-4000-8000-000000000006", "kept@devfest.test", { access_code: "devfest-gone" });
+    await expect(as(BOB, "select public.admin_delete_shared_code('DEVFEST-GONE')")).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_delete_shared_code('DEVFEST-GONE')")).rejects.toThrow(/permission denied/);
+    await as(ALICE, "select public.admin_delete_shared_code('devfest-gone')");
+    expect(await as(ALICE, "select code from public.admin_shared_codes() where code = 'DEVFEST-GONE'")).toEqual([]);
+    expect((await db.query("select 1 from auth.users where email = 'kept@devfest.test'")).rows).toHaveLength(1);
+    await expect(newUser("6d6d6d6d-0000-4000-8000-000000000007", "late2@devfest.test", { access_code: "DEVFEST-GONE" })).rejects.toThrow(
+      /valid access code/,
+    );
+    // Personal (not shared) codes can't be deleted this way.
+    await db.query("insert into public.access_codes (code, max_uses) values ('PERSONAL-KEEP', 1)");
+    await as(ALICE, "select public.admin_delete_shared_code('PERSONAL-KEEP')");
+    expect((await db.query("select 1 from public.access_codes where code = 'PERSONAL-KEEP'")).rows).toHaveLength(1);
+  });
 });
 
 describe("partner radar", () => {

@@ -96,6 +96,8 @@ every migration.
   Abeokuta). Rasheed sets a name, the code, how many people and the last day (Lagos time); anyone can join with it (no
   experience rule, unlike partner links). Each sign-up is kept in `code_signups` (who joined with it), and the page shows
   joined and published counts, the link `/access-code?code=…` and a QR download (`/admin/codes/qr`). "Turn off" ends it at once.
+  "Delete" removes a shared code for good, with its who-joined list; accounts made with it stay
+  (`admin_delete_shared_code`, `20261221000000_delete_shared_code.sql`).
 - **Log in page**: `/sign-in` shows the private beta chooser; `?method=email` shows the form.
 - **Cards**: public card `/p/[slug]` (`src/components/profile/profile-view.tsx`) with a
   floating green "Try it for free" bar. Editor in `/dashboard/profile`.

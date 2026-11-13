@@ -585,6 +585,15 @@ export async function adminCreateSharedCode(_: AdminFormState, formData: FormDat
   return { ok: `Made ${code}. Share its link or QR code.` };
 }
 
+/** Delete a shared code for good. People who joined with it keep their accounts. */
+export async function adminDeleteSharedCode(code: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_delete_shared_code", { p_code: code });
+  if (error) return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't delete it." };
+  revalidatePath("/admin", "layout");
+  return {};
+}
+
 /** Turn a shared code off now. People who already joined keep their accounts. */
 export async function adminStopSharedCode(code: string): Promise<{ error?: string }> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };
