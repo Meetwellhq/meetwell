@@ -13,7 +13,7 @@ const mail = (
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy notice" updated="October 26, 2026">
+    <LegalPage title="Privacy notice" updated="November 13, 2026">
       <section>
         <p>
           This notice explains what personal data {APP_NAME} collects, why, and the rights you have. We follow the
@@ -69,6 +69,14 @@ export default function PrivacyPage() {
           <strong>If you join through a partner&apos;s link</strong> (for example an event you spoke at): we record
           which partner invited you. That partner&apos;s team can see that you joined, when, whether you&apos;re a mentor,
           and your public card once it&apos;s published. They never see your private details, messages or earnings.
+        </p>
+        <p className="mt-3">
+          <strong>If you speak at a partner&apos;s event</strong>, the organiser may add a speaker card for you from their
+          own speaker list: your name, title, organisation, photo, email, social media links and, only where they mark it,
+          your phone or WhatsApp number. The organiser confirms you agreed to this, and we keep a record of who confirmed it
+          and when. The card is public on the event page and at its own link. If we have your email, we tell you, with links
+          to see your card, take it over with your own account, or remove it in one click. You can also ask us to remove it at
+          any time.
         </p>
         <p className="mt-3">
           <strong>If you are a mentor:</strong> your application and its review, your price, what members paid you,

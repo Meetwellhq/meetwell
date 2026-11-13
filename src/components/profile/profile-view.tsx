@@ -32,6 +32,11 @@ type Props = {
   /** Who is looking: members keep the card in Contacts, visitors on their phone. */
   viewer?: Viewer;
   source?: "qr" | "link";
+  /**
+   * A speaker card a partner made (/s/<slug>): no account behind it, so no
+   * counting, keeping or messaging; its own vCard; says who added it.
+   */
+  speakerCard?: { eventSlug: string; eventName: string; partnerName: string } | null;
 };
 
 
@@ -39,8 +44,8 @@ type Props = {
  * The visitor-facing card. Receives only the public projection of a profile,
  * so private fields cannot leak into the rendered HTML.
  */
-export function ProfileView({ profile, preview = false, offer = null, viewer = "visitor", source = "link", eventSlug = null }: Props) {
-  const slug = preview ? null : profile.slug;
+export function ProfileView({ profile, preview = false, offer = null, viewer = "visitor", source = "link", eventSlug = null, speakerCard = null }: Props) {
+  const slug = preview || speakerCard ? null : profile.slug;
   const allActions = contactActions(profile);
   // Icon-only quick actions under Save contact: email, WhatsApp, call, website.
   const ORDER: ContactAction["kind"][] = ["email", "whatsapp", "phone", "website"];
@@ -81,7 +86,10 @@ export function ProfileView({ profile, preview = false, offer = null, viewer = "
               Save contact
             </span>
           ) : (
-            <SaveContactButton profile={profile} />
+            <SaveContactButton
+              profile={profile}
+              {...(speakerCard ? { href: `/s/${profile.slug}/vcard`, trackSlug: null } : {})}
+            />
           )}
           {offer && !preview && (
             <Link
@@ -161,7 +169,27 @@ export function ProfileView({ profile, preview = false, offer = null, viewer = "
         slug={slug}
       />
 
-      {preview ? (
+      {speakerCard && (
+        <p className="px-2 text-center text-xs leading-relaxed text-ink-3">
+          Speaker at{" "}
+          <Link href={`/e/${speakerCard.eventSlug}`} className="underline hover:text-ink">
+            {speakerCard.eventName}
+          </Link>
+          . This card was added by {speakerCard.partnerName}. Is this you?{" "}
+          <Link href="/support" className="underline hover:text-ink">
+            Ask us to change or remove it
+          </Link>
+          .
+        </p>
+      )}
+
+      {speakerCard ? (
+        <div className="sticky bottom-4 pb-2">
+          <Link href={CREATE_HREF} className={CREATE_BAR}>
+            <CreateBarContent />
+          </Link>
+        </div>
+      ) : preview ? (
         <>
           <div className={CREATE_BAR} aria-hidden>
             <CreateBarContent />

@@ -30,6 +30,7 @@ import {
   fundingFindsEmail,
   type FundingEmailItem,
   radarFindsEmail,
+  speakerCardEmail,
   speakerInviteEmail,
   radarNoEmailEmail,
   radarRemindersEmail,
@@ -145,6 +146,49 @@ export function sendPartnerAccessEmail(to: string, fullName: string | null, part
 /** Added as a speaker at a partner's event. */
 export function sendEventSpeakerEmail(to: string, fullName: string | null, details: Omit<Parameters<typeof eventSpeakerEmail>[0], keyof ReturnType<typeof common>>) {
   return send(to, eventSpeakerEmail({ ...common(fullName), ...details }));
+}
+
+/** A speaker card email as claim_speaker_card_emails hands it out. */
+export type SpeakerCardRow = {
+  email: string;
+  full_name: string;
+  slug: string;
+  code: string | null;
+  remove_token: string;
+  show_phone: boolean;
+  event_name: string;
+  event_slug: string;
+  starts_on: string;
+  ends_on: string | null;
+  venue: string | null;
+  partner_name: string;
+};
+
+/** "Your speaker card is on Meetwell", paced for Resend. */
+export async function sendSpeakerCardEmails(rows: SpeakerCardRow[]) {
+  let sent = 0;
+  let failed = 0;
+  for (const r of rows) {
+    const ok = await send(
+      r.email,
+      speakerCardEmail({
+        ...common(r.full_name),
+        eventName: r.event_name,
+        eventSlug: r.event_slug,
+        cardSlug: r.slug,
+        dates: eventDates(r.starts_on, r.ends_on),
+        venue: r.venue,
+        partnerName: r.partner_name,
+        code: r.code,
+        removeToken: r.remove_token,
+        showPhone: r.show_phone,
+      }),
+    );
+    if (ok) sent++;
+    else failed++;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  return { sent, failed };
 }
 
 /** An invite as claim_speaker_invite_emails / claim_speaker_invite_reminders hand it out. */

@@ -221,6 +221,14 @@ every migration.
   access-code check and supplies the code when it was left out); making the card adds them to the event
   (`profiles_join_speaker_invites`). Teams see their list's status (waiting, invited, no card yet, joined) and can cancel
   an invite (its code stops working).
+- **Speaker cards (no account)** (`20261218000000_speaker_cards.sql`, `src/lib/speaker-cards.ts`, `SpeakerCardsUpload` in
+  `events-admin.tsx`, pages `/s/<slug>`, `/s/<slug>/vcard`, `/s/remove?t=`): a partner's team (or admin) uploads a CSV of
+  speakers (template on the card; Excel/Sheets "Save as CSV"); each becomes a public card shown on the event page after
+  member speakers, with Save contact and a badge QR (`/e/<slug>/qr?card=`). The uploader must tick that every speaker
+  agreed (`consent_by`, `consent_at` kept). Phone/WhatsApp show only when "Show phone" is Yes. Anyone already a member
+  is added with their own card instead. Each card with an email gets `speakerCardEmail` (see card, claim with a single-use
+  code, remove in one click). Claiming = signing up with that code (it is a speaker invite marked as already emailed):
+  the card's details fill the new profile's empty fields and the speaker card is deleted. Listed in the Privacy notice.
 - **Funding radar**: `/admin/funding` (`20261216000000_funding_radar.sql`, `src/lib/funding.ts`,
   `src/components/admin/funding-board.tsx`). Grants, accelerators, competitions, fellowships, investors and loans that
   suit Meetwell: amount, equity-free or not, deadline (empty = rolling), Nigeria/Africa/Global, who can apply, why it fits,

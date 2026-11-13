@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { sendEventSpeakerEmail, sendSpeakerInviteEmails, type SpeakerInviteRow } from "../email";
+import { sendEventSpeakerEmail, sendSpeakerCardEmails, sendSpeakerInviteEmails, type SpeakerCardRow, type SpeakerInviteRow } from "../email";
 import { eventDates, linkName } from "../events";
+import { MAX_SPEAKER_CARDS, type SpeakerCardInput } from "../speaker-cards";
 import { inviteSummary, MAX_SPEAKER_INVITES, parseSpeakerList, type InviteOutcome } from "../speaker-invites";
 import { createClient, getCurrentUser } from "../supabase/server";
 
@@ -222,6 +223,93 @@ export async function partnerRemoveEventSpeaker(eventSlug: string, profileSlug: 
   if (!(await getCurrentUser())) return { error: "Please log in again." };
   const { error } = await (await createClient()).rpc("partner_remove_event_speaker", { p_event_slug: eventSlug, p_profile_slug: profileSlug });
   if (error) return { error: "Couldn't remove them." };
+  refresh(eventSlug);
+  return {};
+}
+
+type CardRow = { full_name: string | null; email: string | null; slug: string | null; outcome: "created" | "member_added" | "duplicate" | "bad" };
+
+/** Speaker card emails for the event, for up to ~40 seconds. */
+async function sendWaitingCards(supabase: Awaited<ReturnType<typeof createClient>>, eventSlug: string) {
+  const secret = process.env.CRON_SECRET;
+  const total = { sent: 0, failed: 0 };
+  if (!secret) return { ...total, left: 0 };
+  const until = Date.now() + 40_000;
+  while (Date.now() < until) {
+    const { data, error } = await supabase.rpc("claim_speaker_card_emails", { p_token: secret, p_event_slug: eventSlug, p_limit: 10 });
+    if (error) {
+      console.error("claim_speaker_card_emails failed", error.code, error.message);
+      break;
+    }
+    const rows = (data ?? []) as SpeakerCardRow[];
+    if (rows.length === 0) break;
+    const r = await sendSpeakerCardEmails(rows);
+    total.sent += r.sent;
+    total.failed += r.failed;
+  }
+  const { data: left } = await supabase.rpc("speaker_card_emails_waiting", { p_event_slug: eventSlug });
+  return { ...total, left: typeof left === "number" ? left : 0 };
+}
+
+/**
+ * Speaker cards from the partner's spreadsheet, already read in the browser
+ * (parseSpeakerSheet) and sent as JSON. The team must confirm the speakers
+ * agreed; the database checks that, and that they manage this event.
+ */
+export async function addSpeakerCards(eventSlug: string, _: PartnerFormState, formData: FormData): Promise<PartnerFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  if (formData.get("consent") !== "yes") return { error: "Tick the box to confirm your speakers agreed to their details being shown." };
+  let cards: SpeakerCardInput[];
+  try {
+    cards = JSON.parse(String(formData.get("cards") ?? "[]"));
+  } catch {
+    return { error: "Couldn't read the spreadsheet. Try uploading it again." };
+  }
+  if (!Array.isArray(cards) || cards.length === 0) return { error: "Upload a spreadsheet with at least one speaker." };
+  if (cards.length > MAX_SPEAKER_CARDS) return { error: `Up to ${MAX_SPEAKER_CARDS} speakers at a time.` };
+
+  const supabase = await createClient();
+  const rows: CardRow[] = [];
+  for (let i = 0; i < cards.length; i += 300) {
+    const { data, error } = await supabase.rpc("add_speaker_cards", { p_event_slug: eventSlug, p_cards: cards.slice(i, i + 300), p_consent: true });
+    if (error) {
+      console.error("add_speaker_cards failed", error.code, error.message);
+      if (error.code === "42501") return { error: "You can't add speakers to this event." };
+      if (error.message.includes("1,000")) return { error: "An event can have up to 1,000 speaker cards." };
+      return { error: rows.length ? `Added the first ${rows.length}, then something went wrong. Upload the rest again.` : "Couldn't add the speakers." };
+    }
+    rows.push(...((data ?? []) as CardRow[]));
+  }
+  const n = (o: CardRow["outcome"]) => rows.filter((r) => r.outcome === o).length;
+  for (const r of rows) if (r.outcome === "member_added" && r.slug) await emailAddedSpeaker(supabase, eventSlug, r.slug);
+
+  const sending = await sendWaitingCards(supabase, eventSlug);
+  refresh(eventSlug);
+  const people = (x: number) => `${x} ${x === 1 ? "speaker" : "speakers"}`;
+  const summary = [
+    n("created") && `Added ${people(n("created"))} to the event page`,
+    n("member_added") && `${people(n("member_added"))} already had a Meetwell card and ${n("member_added") === 1 ? "was" : "were"} added with it`,
+    n("duplicate") && `${people(n("duplicate"))} already had a card on this event`,
+    n("bad") && `${people(n("bad"))} couldn't be added (check their links)`,
+  ].filter(Boolean).join(" · ");
+  return { ok: [summary, sendNote(sending)].filter(Boolean).join(". ") + "." };
+}
+
+export async function sendWaitingSpeakerCards(eventSlug: string): Promise<PartnerFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const supabase = await createClient();
+  const { data: waiting, error } = await supabase.rpc("speaker_card_emails_waiting", { p_event_slug: eventSlug });
+  if (error) return { error: "You can't send emails for this event." };
+  if (!waiting) return { ok: "Every speaker has been emailed." };
+  const r = await sendWaitingCards(supabase, eventSlug);
+  refresh(eventSlug);
+  return { ok: sendNote(r) + "." };
+}
+
+export async function removeSpeakerCard(eventSlug: string, cardSlug: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("remove_speaker_card", { p_event_slug: eventSlug, p_slug: cardSlug });
+  if (error) return { error: "Couldn't remove that card." };
   refresh(eventSlug);
   return {};
 }

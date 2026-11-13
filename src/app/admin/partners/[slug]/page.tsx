@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { date, naira, NotReady, PageTitle, Stats } from "@/components/admin/admin-ui";
-import { AddEvent, EventCard, type AdminEvent } from "@/components/admin/events-admin";
+import { AddEvent, EventCard, type AdminEvent, type SpeakerCardSummary } from "@/components/admin/events-admin";
 import type { SpeakerInvite } from "@/lib/speaker-invites";
 import { PartnerSummary, RecordPayout, type PartnerMoney, type PartnerRow } from "@/components/admin/partners-admin";
 import { Avatar } from "@/components/ui/avatar";
@@ -46,8 +46,15 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
   ]);
   const events = await Promise.all(
     ((eventRows ?? []) as AdminEvent[]).map(async (e) => {
-      const { data: invites, error: inviteError } = await supabase.rpc("event_speaker_invites_list", { p_event_slug: e.slug });
-      return { ...e, invites: inviteError ? undefined : ((invites ?? []) as SpeakerInvite[]) };
+      const [{ data: invites, error: inviteError }, { data: cards, error: cardsError }] = await Promise.all([
+        supabase.rpc("event_speaker_invites_list", { p_event_slug: e.slug }),
+        supabase.rpc("event_speaker_cards_list", { p_event_slug: e.slug }),
+      ]);
+      return {
+        ...e,
+        invites: inviteError ? undefined : ((invites ?? []) as SpeakerInvite[]),
+        cards: cardsError ? undefined : ((cards ?? []) as SpeakerCardSummary[]),
+      };
     }),
   );
   const people = (rows ?? []) as Person[];

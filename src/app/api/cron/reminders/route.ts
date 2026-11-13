@@ -8,7 +8,9 @@ import {
   sendRadarRemindersEmail,
   sendRenewalReminderEmail,
   sendSavebackEmail,
+  sendSpeakerCardEmails,
   sendSpeakerInviteEmails,
+  type SpeakerCardRow,
   type SpeakerInviteRow,
 } from "@/lib/email";
 import type { Saver } from "@/lib/founder-emails";
@@ -137,6 +139,11 @@ export async function GET(request: Request) {
     if (inviteError) console.error(`${rpc} failed`, inviteError.code, inviteError.message);
     if (due?.length) results[key] = await sendSpeakerInviteEmails(due as SpeakerInviteRow[], reminder);
   }
+
+  // Speaker cards whose email a big upload didn't finish sending.
+  const { data: cardsDue, error: cardsError } = await supabase.rpc("claim_speaker_card_emails", { p_token: secret, p_event_slug: null, p_limit: 40 });
+  if (cardsError) console.error("claim_speaker_card_emails failed", cardsError.code, cardsError.message);
+  if (cardsDue?.length) results.speaker_cards = await sendSpeakerCardEmails(cardsDue as SpeakerCardRow[]);
 
   console.log("Reminders run", JSON.stringify(results));
   return Response.json({ ok: true, results });

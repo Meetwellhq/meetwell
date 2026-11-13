@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fundingDeadlinesEmail, fundingFindsEmail, inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, radarFindsEmail, radarNoEmailEmail, radarRemindersEmail, sparkBetaEmail, sparkPausedEmail, savebackEmail, speakerInviteEmail, waitlistEmail } from "@/lib/founder-emails";
+import { fundingDeadlinesEmail, fundingFindsEmail, inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, radarFindsEmail, radarNoEmailEmail, radarRemindersEmail, sparkBetaEmail, sparkPausedEmail, savebackEmail, speakerCardEmail, speakerInviteEmail, waitlistEmail } from "@/lib/founder-emails";
 
 const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "support@meetwell.me" };
 
@@ -415,5 +415,17 @@ describe("speaker invite email", () => {
   });
   it("has a shorter reminder", () => {
     expect(speakerInviteEmail({ ...args, fullName: null, reminder: true }).subject).toBe("Reminder: set up your speaker card for Epe Tech Summit");
+  });
+});
+
+describe("speaker card email", () => {
+  const args = { ...base, fullName: "Femi Adebayo", eventName: "Epe Tech Summit", eventSlug: "epe-tech-summit", cardSlug: "femi-adebayo", dates: "5 December 2026", venue: "Epe", partnerName: "Tech Hub", code: "SPK-ABC123", removeToken: "11111111-2222-3333-4444-555555555555", showPhone: false };
+  it("links to the card, the claim and the one-click removal, and says what's shown", () => {
+    const { subject, text, html } = speakerCardEmail(args);
+    expect(subject).toBe("Your speaker card for Epe Tech Summit is on Meetwell");
+    expect(html).toContain('href="https://meetwell.me/s/femi-adebayo"');
+    expect(text).toContain("https://meetwell.me/access-code?code=SPK-ABC123");
+    expect(text).toContain("https://meetwell.me/s/remove?t=11111111-2222-3333-4444-555555555555");
+    expect(text).toContain("Your phone number isn't shown.");
   });
 });

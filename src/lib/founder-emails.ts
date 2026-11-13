@@ -964,6 +964,48 @@ export function speakerInviteEmail(
   });
 }
 
+/**
+ * A partner put a speaker's card on Meetwell from their spreadsheet. Says what is
+ * shown, and links to the card, to claim it (sign up with their own code) and
+ * to remove it in one click.
+ */
+export function speakerCardEmail(
+  args: Common & {
+    eventName: string;
+    eventSlug: string;
+    cardSlug: string;
+    dates: string;
+    venue: string | null;
+    partnerName: string;
+    code: string | null;
+    removeToken: string;
+    showPhone: boolean;
+  },
+) {
+  const where = [args.dates, args.venue].filter(Boolean).join(", ");
+  const card = `${args.siteUrl}/s/${encodeURIComponent(args.cardSlug)}`;
+  const remove = `${args.siteUrl}/s/remove?t=${encodeURIComponent(args.removeToken)}`;
+  const claim = args.code ? `${args.siteUrl}/access-code?code=${encodeURIComponent(args.code)}` : null;
+  return note({
+    ...args,
+    subject: `Your speaker card for ${args.eventName} is on ${args.appName}`,
+    before: [
+      `${args.partnerName} has put your speaker card on ${args.appName} for ${args.eventName} (${where}), using the details they have for you.`,
+      `People at the event can open your card from the event page or by scanning the QR code on your badge, save your contact in one tap and find you on social media afterwards.`,
+      args.showPhone
+        ? "Your card shows your name, title, email, phone or WhatsApp number and social media links."
+        : "Your card shows your name, title, email and social media links. Your phone number isn't shown.",
+    ],
+    cta: { href: card, label: "See your card" },
+    after: [
+      ...(claim
+        ? [`Want to change anything? Make the card yours: create your free account here and your details carry over, ready to edit: ${claim}`]
+        : []),
+      `Don't want a card on ${args.appName}? Remove it in one click: ${remove}`,
+    ],
+  });
+}
+
 /* ---- Partner radar: notes to the founder's own inbox ---- */
 
 /** A web search for the organiser's contact email. */

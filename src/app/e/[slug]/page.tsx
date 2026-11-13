@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/marketing/site-header";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonClass } from "@/components/ui/button";
 import { APP_NAME, isSupabaseConfigured } from "@/lib/config";
-import { eventCardPath, eventDates, eventQrTarget } from "@/lib/events";
+import { eventDates, eventQrTarget, speakerCardPath, speakerQrPath } from "@/lib/events";
 import { getPublicEvent } from "@/lib/events-queries";
 import { nairaFull } from "@/lib/format";
 import { qrSvg } from "@/lib/qr";
@@ -79,7 +79,7 @@ export default async function EventPage({ params }: PageProps<"/e/[slug]">) {
           ) : (
             <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {speakers.map((s) => (
-                <li key={s.slug} className="flex flex-col rounded-2xl border border-border bg-surface p-5">
+                <li key={`${s.kind}-${s.slug}`} className="flex flex-col rounded-2xl border border-border bg-surface p-5">
                   <div className="flex items-center gap-4">
                     <Avatar name={s.fullName} src={s.avatarUrl} className="size-16 shrink-0 text-xl" />
                     <div className="min-w-0">
@@ -96,12 +96,12 @@ export default async function EventPage({ params }: PageProps<"/e/[slug]">) {
                     </p>
                   )}
                   <div className="mt-auto flex items-center justify-between gap-3 pt-5">
-                    <Link href={eventCardPath(s.slug, event.slug)} className={buttonClass({ size: "sm" })}>
+                    <Link href={speakerCardPath(s, event.slug)} className={buttonClass({ size: "sm" })}>
                       View card
                       <ArrowUpRight className="size-4" aria-hidden />
                     </Link>
                     <a
-                      href={`/e/${event.slug}/qr?speaker=${encodeURIComponent(s.slug)}`}
+                      href={speakerQrPath(s, event.slug)}
                       className="inline-flex items-center gap-1.5 text-xs text-ink-3 hover:text-ink"
                     >
                       <Download className="size-3.5" aria-hidden />

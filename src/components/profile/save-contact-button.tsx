@@ -13,17 +13,26 @@ import { track } from "./tracking";
  *   Contacts app from a web page), so the .vcf downloads and we explain how
  *   to finish: open it from the download notification.
  */
-export function SaveContactButton({ profile }: { profile: Pick<PublicProfile, "slug" | "fullName"> }) {
+export function SaveContactButton({
+  profile,
+  href,
+  trackSlug = profile.slug,
+}: {
+  profile: Pick<PublicProfile, "slug" | "fullName">;
+  /** Speaker cards download from /s/<slug>/vcard and aren't counted. */
+  href?: string;
+  trackSlug?: string | null;
+}) {
   const [androidHint, setAndroidHint] = useState(false);
   const firstName = profile.fullName.split(/\s+/)[0];
 
   return (
     <>
       <a
-        href={`/p/${profile.slug}/vcard`}
+        href={href ?? `/p/${profile.slug}/vcard`}
         className={buttonClass({ size: "lg", className: "w-full" })}
         onClick={() => {
-          track(profile.slug, "save_contact");
+          track(trackSlug, "save_contact");
           if (/android/i.test(navigator.userAgent)) setAndroidHint(true);
         }}
       >

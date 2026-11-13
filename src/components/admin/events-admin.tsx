@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, ExternalLink, Eye, EyeOff, Pencil, Send, Trash2, Upload, X } from "lucide-react";
+import { Download, ExternalLink, Eye, EyeOff, FileSpreadsheet, Pencil, Send, Trash2, Upload, X } from "lucide-react";
 import { useActionState, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -17,7 +17,10 @@ import {
 } from "@/lib/admin/actions";
 import { cn } from "@/lib/cn";
 import {
+  addSpeakerCards,
   cancelSpeakerInvite,
+  removeSpeakerCard,
+  sendWaitingSpeakerCards,
   inviteEventSpeakers,
   partnerAddEventSpeaker,
   partnerCreateEvent,
@@ -25,6 +28,7 @@ import {
   partnerUpdateEvent,
   sendWaitingSpeakerInvites,
 } from "@/lib/partners/actions";
+import { MAX_SPEAKER_CARDS, parseSpeakerSheet, SPEAKER_SHEET_TEMPLATE, type SpeakerCardInput } from "@/lib/speaker-cards";
 import { INVITE_STATUS, MAX_SPEAKER_INVITES, parseSpeakerList, type SpeakerInvite } from "@/lib/speaker-invites";
 
 /**
@@ -52,6 +56,18 @@ export type AdminEvent = {
   free_conversations?: number;
   /** Everyone invited by email (bulk invites); undefined hides the section. */
   invites?: SpeakerInvite[];
+  /** Speaker cards added from a spreadsheet (no account); undefined hides the section. */
+  cards?: SpeakerCardSummary[];
+};
+
+export type SpeakerCardSummary = {
+  slug: string;
+  full_name: string;
+  title: string | null;
+  organization: string | null;
+  email: string | null;
+  show_phone: boolean;
+  emailed_at: string | null;
 };
 
 /**
@@ -476,6 +492,199 @@ function InviteRow({ eventSlug, invite: i }: { eventSlug: string; invite: Speake
 }
 
 /**
+ * Speaker cards from a spreadsheet: each speaker gets a public card with their
+ * contacts and social links, without an account. The sheet is read here in the
+ * browser; the team confirms the speakers agreed before anything goes live.
+ */
+function SpeakerCardsUpload({ eventSlug, cards }: { eventSlug: string; cards: SpeakerCardSummary[] }) {
+  const [state, action, pending] = useActionState(addSpeakerCards.bind(null, eventSlug), {});
+  const [sheet, setSheet] = useState<{ file: string; cards: SpeakerCardInput[]; problems: string[] } | null>(null);
+  const [sheetError, setSheetError] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [sending, startSending] = useTransition();
+  const [sendNote, setSendNote] = useState<{ ok?: string; error?: string }>({});
+  const toast = useToast();
+  const waiting = cards.filter((c) => c.email && !c.emailed_at).length;
+
+  // Clear the upload once it has gone in (adjusting state while rendering, not in an effect).
+  const [handled, setHandled] = useState(state);
+  if (state !== handled) {
+    setHandled(state);
+    if (state.ok) {
+      setSheet(null);
+      setConsent(false);
+    }
+  }
+
+  const template = `data:text/csv;charset=utf-8,${encodeURIComponent(SPEAKER_SHEET_TEMPLATE)}`;
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
+      <div>
+        <p className="text-sm font-medium text-ink">Add speakers from a spreadsheet</p>
+        <p className="mt-0.5 text-xs text-ink-2">
+          Upload your speakers&apos; details and each one gets a card on the event page straight away: Save contact, their social
+          media links and a QR code for their badge. No account needed. Fill in the template in Excel or Google Sheets and save it
+          as CSV. Phone and WhatsApp numbers only show for speakers marked &quot;Yes&quot; under Show phone.
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <a
+          href={template}
+          download="meetwell-speakers-template.csv"
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-accent hover:bg-surface-2"
+        >
+          <FileSpreadsheet className="size-4" aria-hidden />
+          Download the template
+        </a>
+        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border-strong px-3 py-1.5 text-sm text-ink hover:bg-surface-2">
+          <Upload className="size-4" aria-hidden />
+          {sheet ? "Choose another file" : "Upload CSV"}
+          <input
+            type="file"
+            accept=".csv,.txt,text/csv,text/plain"
+            className="sr-only"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              setSheetError("");
+              if (/\.xlsx?$/i.test(file.name)) return setSheetError("That's an Excel file. In Excel, choose File › Save As › CSV, then upload the CSV.");
+              if (file.size > 2_000_000) return setSheetError("That file is too big. Keep it under 2 MB.");
+              const read = parseSpeakerSheet(await file.text());
+              if (read.missingName) return setSheetError("The first row needs a \"Name\" column. Use the template's column names.");
+              if (read.cards.length === 0) return setSheetError("No speakers found in that file.");
+              setSheet({ file: file.name, cards: read.cards, problems: read.problems });
+            }}
+          />
+        </label>
+      </div>
+      {sheetError && <p className="text-xs text-danger">{sheetError}</p>}
+
+      {sheet && (
+        <form action={action} className="flex flex-col gap-3">
+          <input type="hidden" name="cards" value={JSON.stringify(sheet.cards)} />
+          <p className="text-sm text-ink">
+            <span className="font-medium">{sheet.file}</span>: {sheet.cards.length} {sheet.cards.length === 1 ? "speaker" : "speakers"}
+            {", "}
+            {sheet.cards.filter((c) => c.show_phone && (c.phone || c.whatsapp)).length} with phone numbers shown
+          </p>
+          <ul className="max-h-56 divide-y divide-border overflow-y-auto rounded-lg border border-border">
+            {sheet.cards.map((c) => (
+              <li key={`${c.email ?? ""}-${c.name}`} className="flex flex-col px-3 py-2">
+                <span className="truncate text-sm text-ink">{c.name}</span>
+                <span className="truncate text-xs text-ink-3">
+                  {[[c.title, c.organization].filter(Boolean).join(", "), c.email, c.show_phone && (c.phone || c.whatsapp) ? "phone shown" : null,
+                    [c.linkedin && "LinkedIn", c.x && "X", c.instagram && "Instagram", c.facebook && "Facebook", c.tiktok && "TikTok"].filter(Boolean).join(", ")]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {sheet.problems.length > 0 && (
+            <details className="text-xs text-warning">
+              <summary className="cursor-pointer">{sheet.problems.length} {sheet.problems.length === 1 ? "thing" : "things"} to check</summary>
+              <ul className="mt-1 list-disc pl-5">
+                {sheet.problems.slice(0, 50).map((p) => (
+                  <li key={p}>{p}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+          {sheet.cards.length > MAX_SPEAKER_CARDS && <p className="text-xs text-danger">Up to {MAX_SPEAKER_CARDS} speakers at a time.</p>}
+          <label className="flex items-start gap-2 text-sm text-ink">
+            <input type="checkbox" name="consent" value="yes" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1" />
+            <span>
+              Every speaker on this list has agreed to their details being shown publicly on Meetwell. Each one with an email will
+              be told, and can remove their card at any time.
+            </span>
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="submit" size="sm" icon={<Send className="size-4" />} loading={pending} disabled={!consent || sheet.cards.length > MAX_SPEAKER_CARDS}>
+              Add {sheet.cards.length} {sheet.cards.length === 1 ? "speaker" : "speakers"}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setSheet(null)}>
+              Cancel
+            </Button>
+          </div>
+          {pending && <p className="text-xs text-ink-2">Adding speakers and emailing them. A long list can take up to a minute.</p>}
+        </form>
+      )}
+      {(state.error || state.ok) && <p className={cn("text-xs", state.error ? "text-danger" : "text-success")}>{state.error ?? state.ok}</p>}
+
+      {cards.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs text-ink-2">
+              {cards.length} speaker {cards.length === 1 ? "card" : "cards"} on the event page
+            </p>
+            {waiting > 0 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                loading={sending}
+                onClick={() => startSending(async () => setSendNote(await sendWaitingSpeakerCards(eventSlug)))}
+              >
+                Email the rest ({waiting})
+              </Button>
+            )}
+          </div>
+          {(sendNote.error || sendNote.ok) && (
+            <p className={cn("text-xs", sendNote.error ? "text-danger" : "text-success")}>{sendNote.error ?? sendNote.ok}</p>
+          )}
+          <ul className="max-h-72 divide-y divide-border overflow-y-auto rounded-lg border border-border">
+            {cards.map((c) => (
+              <SpeakerCardRow key={c.slug} eventSlug={eventSlug} card={c} onRemoved={(name) => toast(`Removed ${name}'s card.`)} />
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SpeakerCardRow({ eventSlug, card: c, onRemoved }: { eventSlug: string; card: SpeakerCardSummary; onRemoved: (name: string) => void }) {
+  const toast = useToast();
+  const [gone, setGone] = useState(false);
+  const [, start] = useTransition();
+  if (gone) return null;
+  return (
+    <li className="flex items-center gap-2 px-3 py-2">
+      <span className="flex min-w-0 flex-1 flex-col">
+        <a href={`/s/${c.slug}`} target="_blank" rel="noopener" className="truncate text-sm text-ink hover:underline">
+          {c.full_name}
+        </a>
+        <span className="truncate text-xs text-ink-3">{[c.title, c.organization].filter(Boolean).join(", ") || c.email || "No email"}</span>
+      </span>
+      {!c.email && <Badge tone="warning" className="shrink-0">Not emailed</Badge>}
+      <a href={`/e/${eventSlug}/qr?card=${encodeURIComponent(c.slug)}`} className="shrink-0 text-xs text-ink-3 hover:text-ink">
+        Badge QR
+      </a>
+      <button
+        type="button"
+        aria-label={`Remove ${c.full_name}'s card`}
+        onClick={() => {
+          if (!confirm(`Remove ${c.full_name}'s card from Meetwell?`)) return;
+          setGone(true);
+          start(async () => {
+            const { error } = await removeSpeakerCard(eventSlug, c.slug);
+            if (error) {
+              setGone(false);
+              toast(error, "error");
+            } else onRemoved(c.full_name);
+          });
+        }}
+        className="inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs text-ink-3 hover:bg-danger-soft hover:text-danger"
+      >
+        <X className="size-3.5" aria-hidden />
+        <span className="max-sm:sr-only">Remove</span>
+      </button>
+    </li>
+  );
+}
+
+/**
  * One event: its page and QR, speakers (add or remove), and what it brought in.
  * Admins pass the revenue line; a partner's team (who="team") passes its own note.
  */
@@ -549,6 +758,7 @@ export function EventCard({
           </ul>
         )}
         <AddSpeaker eventSlug={event.slug} who={who} />
+        {event.cards && <SpeakerCardsUpload eventSlug={event.slug} cards={event.cards} />}
         {event.invites && <SpeakerInvites eventSlug={event.slug} invites={event.invites} />}
       </div>
     </li>

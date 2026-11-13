@@ -27,6 +27,17 @@ export const eventPath = (slug: string) => `/e/${slug}`;
 /** A speaker's card, opened from the event (keeps the event for payments). */
 export const eventCardPath = (cardSlug: string, eventSlug: string) => `/p/${cardSlug}?event=${encodeURIComponent(eventSlug)}`;
 
+/** Where a speaker's card opens from the event page: a member's card, or a speaker card. */
+export const speakerCardPath = (s: { slug: string; kind: "member" | "card" }, eventSlug: string) =>
+  s.kind === "card" ? `/s/${s.slug}` : eventCardPath(s.slug, eventSlug);
+
+/** A speaker's badge QR download. */
+export const speakerQrPath = (s: { slug: string; kind: "member" | "card" }, eventSlug: string) =>
+  `/e/${eventSlug}/qr?${s.kind === "card" ? "card" : "speaker"}=${encodeURIComponent(s.slug)}`;
+
+/** What a speaker card's badge QR opens. */
+export const speakerCardQrTarget = (cardSlug: string) => `${getSiteUrl()}/s/${cardSlug}?src=qr`;
+
 /** What QR codes encode: the event page (for slides), or a speaker's card (for badges). `src=qr` counts scans. */
 export function eventQrTarget(eventSlug: string, speakerSlug?: string) {
   const site = getSiteUrl();

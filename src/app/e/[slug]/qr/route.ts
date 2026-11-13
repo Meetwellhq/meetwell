@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { eventQrTarget } from "@/lib/events";
+import { eventQrTarget, speakerCardQrTarget } from "@/lib/events";
 import { getPublicEvent } from "@/lib/events-queries";
 import { qrPng, qrSvg } from "@/lib/qr";
 
@@ -12,14 +12,20 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/e/[sl
   const found = await getPublicEvent(slug);
   if (!found) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
+  // ?speaker=<member card> or ?card=<speaker card> for a badge; neither for the event itself.
   const speaker = request.nextUrl.searchParams.get("speaker");
-  if (speaker && !found.speakers.some((s) => s.slug === speaker)) {
+  const card = request.nextUrl.searchParams.get("card");
+  if (speaker && !found.speakers.some((s) => s.kind === "member" && s.slug === speaker)) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+  if (card && !found.speakers.some((s) => s.kind === "card" && s.slug === card)) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
   const format = request.nextUrl.searchParams.get("format") === "svg" ? "svg" : "png";
-  const target = eventQrTarget(found.event.slug, speaker ?? undefined);
+  const target = card ? speakerCardQrTarget(card) : eventQrTarget(found.event.slug, speaker ?? undefined);
+  const who = speaker ?? card;
   const headers = {
-    "Content-Disposition": `attachment; filename="${speaker ? `${found.event.slug}-${speaker}` : found.event.slug}-qr.${format}"`,
+    "Content-Disposition": `attachment; filename="${who ? `${found.event.slug}-${who}` : found.event.slug}-qr.${format}"`,
     "Cache-Control": "public, max-age=300",
   };
   if (format === "svg") {

@@ -20,6 +20,8 @@ export type EventSpeaker = {
   avatarUrl: string | null;
   /** Mentoring price in kobo when they take messages (0 = free), otherwise null. */
   priceKobo: number | null;
+  /** A member's card (/p/<slug>), or a speaker card the partner added (/s/<slug>, no account). */
+  kind: "member" | "card";
 };
 
 /** An active event of an active partner, with its speakers' public card details. */
@@ -29,6 +31,7 @@ export const getPublicEvent = cache(async (slug: string) => {
     supabase.rpc("public_event", { p_slug: slug }),
     supabase.rpc("public_event_speakers", { p_slug: slug }),
   ]);
+  const { data: cardRows } = await supabase.rpc("public_event_speaker_cards", { p_slug: slug });
   const row = (rows as { slug: string; name: string; starts_on: string; ends_on: string | null; venue: string | null; about: string | null; partner_name: string }[] | null)?.[0];
   if (!row) return null;
   const event: PublicEvent = {
@@ -49,6 +52,10 @@ export const getPublicEvent = cache(async (slug: string) => {
     organization: s.organization,
     avatarUrl: s.avatar_url,
     priceKobo: s.price_kobo,
+    kind: "member" as const,
   }));
+  for (const c of (cardRows ?? []) as { slug: string; full_name: string; title: string | null; organization: string | null; photo_url: string | null }[]) {
+    speakers.push({ slug: c.slug, fullName: c.full_name, title: c.title, organization: c.organization, avatarUrl: c.photo_url, priceKobo: null, kind: "card" });
+  }
   return { event, speakers };
 });

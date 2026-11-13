@@ -2475,3 +2475,108 @@ describe("speaker invites", () => {
     ).rejects.toThrow(/access code/);
   });
 });
+
+describe("speaker cards", () => {
+  const TEAM = "5c5c5c5c-5c5c-5c5c-5c5c-5c5c5c5c5c5c"; // on ThinkUX's team (from "partners")
+  const SECRET = "test-secret-that-is-long-enough-1234567890";
+  const CLAIMER = "8f8f8f8f-8f8f-8f8f-8f8f-8f8f8f8f8f8f";
+  const cards = JSON.stringify([
+    {
+      name: "Femi Adebayo", email: "Femi@Cards.test", title: "CTO", organization: "Acme", phone: "+234 801 234 5678",
+      whatsapp: "+2348012345678", show_phone: true, linkedin: "https://linkedin.com/in/femi", x: "https://x.com/femi", photo: "https://img.test/femi.jpg",
+    },
+    { name: "Zainab Musa", email: "zainab@cards.test", phone: "08099999999", show_phone: false, instagram: "https://instagram.com/zainab" },
+    { name: "No Email Speaker" },
+    { name: "Member Speaker", email: "speaker@partner.test" },
+    { name: "Bad Link", email: "bad@cards.test", linkedin: "javascript:alert(1)" },
+    { email: "noname@cards.test" },
+  ]);
+
+  beforeAll(async () => {
+    await as(TEAM, "select public.partner_create_event('thinkux', 'card-summit', 'Card Summit', '2099-12-06')");
+  });
+
+  it("needs the team, and their confirmation that speakers agreed", async () => {
+    await expect(as(BOB, "select * from public.add_speaker_cards('card-summit', $1::jsonb, true)", [cards])).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.add_speaker_cards('card-summit', $1::jsonb, true)", [cards])).rejects.toThrow(/permission denied/);
+    await expect(as(TEAM, "select * from public.add_speaker_cards('card-summit', $1::jsonb, false)", [cards])).rejects.toThrow(/Confirm/);
+    await expect(as(BOB, "select * from public.speaker_cards")).rejects.toThrow(/permission denied/);
+  });
+
+  it("makes cards, adds existing members as speakers and rejects bad rows", async () => {
+    const rows = await as<{ full_name: string | null; slug: string | null; outcome: string }>(
+      TEAM, "select full_name, slug, outcome from public.add_speaker_cards('card-summit', $1::jsonb, true)", [cards],
+    );
+    expect(rows).toEqual([
+      { full_name: "Femi Adebayo", slug: "femi-adebayo", outcome: "created" },
+      { full_name: "Zainab Musa", slug: "zainab-musa", outcome: "created" },
+      { full_name: "No Email Speaker", slug: "no-email-speaker", outcome: "created" },
+      { full_name: "Member Speaker", slug: "partner-speaker", outcome: "member_added" },
+      { full_name: "Bad Link", slug: null, outcome: "bad" },
+      { full_name: null, slug: null, outcome: "bad" },
+    ]);
+    // The same people again: no copies; a second Femi elsewhere gets his own link.
+    const again = await as<{ outcome: string }>(TEAM, "select outcome from public.add_speaker_cards('card-summit', $1::jsonb, true)", [cards]);
+    expect(again.map((r) => r.outcome)).toEqual(["duplicate", "duplicate", "created", "member_added", "bad", "bad"]);
+    expect(await as(TEAM, "select slug from public.event_speaker_cards_list('card-summit') where full_name = 'No Email Speaker' order by slug")).toEqual([
+      { slug: "no-email-speaker" }, { slug: "no-email-speaker-2" },
+    ]);
+    const consent = (await db.query<{ n: number }>("select count(*)::int as n from public.speaker_cards where consent_by = $1", [TEAM])).rows[0].n;
+    expect(consent).toBe(4);
+  });
+
+  it("shows cards publicly, with phone numbers only when marked", async () => {
+    const [femi] = await as<Record<string, unknown>>(null, "select * from public.public_speaker_card('femi-adebayo')");
+    expect(femi).toMatchObject({ full_name: "Femi Adebayo", email: "femi@cards.test", phone: "+234 801 234 5678", event_name: "Card Summit", partner_name: "ThinkUX" });
+    const [zainab] = await as<Record<string, unknown>>(null, "select * from public.public_speaker_card('zainab-musa')");
+    expect(zainab).toMatchObject({ phone: null, whatsapp: null, instagram: "https://instagram.com/zainab" });
+    const list = await as<{ slug: string }>(null, "select slug from public.public_event_speaker_cards('card-summit')");
+    expect(list.map((r) => r.slug)).toEqual(["femi-adebayo", "zainab-musa", "no-email-speaker", "no-email-speaker-2"]);
+  });
+
+  it("emails each speaker with an email once, and lets them remove their card", async () => {
+    await expect(as(null, "select * from public.claim_speaker_card_emails('wrong', 'card-summit', 10)")).rejects.toThrow(/Not allowed/);
+    const sent = await as<{ email: string; code: string }>(null, "select email, code from public.claim_speaker_card_emails($1, 'card-summit', 10)", [SECRET]);
+    expect(sent.map((r) => r.email).sort()).toEqual(["femi@cards.test", "zainab@cards.test"]);
+    expect(await as(null, "select * from public.claim_speaker_card_emails($1, 'card-summit', 10)", [SECRET])).toEqual([]);
+    // No separate invite email or reminder for these.
+    expect(await as(null, "select email from public.claim_speaker_invite_emails($1, 'card-summit', 10)", [SECRET])).toEqual([]);
+
+    const [{ token, code }] = (await db.query<{ token: string; code: string }>(
+      "select remove_token::text as token, code from public.speaker_cards where slug = 'zainab-musa'",
+    )).rows;
+    expect(await as(null, "select public.remove_speaker_card_by_token(gen_random_uuid()) as n")).toEqual([{ n: null }]);
+    expect(await as(null, "select public.remove_speaker_card_by_token($1) as n", [token])).toEqual([{ n: "Zainab Musa" }]);
+    expect(await as(null, "select * from public.public_speaker_card('zainab-musa')")).toEqual([]);
+    await expect(
+      db.query("insert into auth.users (id, email, raw_user_meta_data) values (gen_random_uuid(), 'z2@test', $1)", [JSON.stringify({ access_code: code })]),
+    ).rejects.toThrow(/access code/);
+
+    await expect(as(BOB, "select public.remove_speaker_card('card-summit', 'no-email-speaker-2')")).rejects.toThrow(/Not allowed/);
+    await as(TEAM, "select public.remove_speaker_card('card-summit', 'no-email-speaker-2')");
+    expect(await as(null, "select * from public.public_speaker_card('no-email-speaker-2')")).toEqual([]);
+  });
+
+  it("carries the card's details into a claimed account and replaces it", async () => {
+    const [{ code }] = (await db.query<{ code: string }>("select code from public.speaker_cards where slug = 'femi-adebayo'")).rows;
+    await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'femi.new@test', $2)", [CLAIMER, JSON.stringify({ access_code: code })]);
+    await as(CLAIMER, "insert into public.profiles (user_id, slug, full_name) values ($1, 'femi-a', 'Femi Adebayo')", [CLAIMER]);
+    const [p] = (await db.query<{ professional_title: string; organization: string; avatar_url: string }>(
+      "select professional_title, organization, avatar_url from public.profiles where slug = 'femi-a'",
+    )).rows;
+    expect(p).toEqual({ professional_title: "CTO", organization: "Acme", avatar_url: "https://img.test/femi.jpg" });
+    const contacts = (await db.query<{ type: string; is_public: boolean }>(
+      "select m.type::text, m.is_public from public.contact_methods m join public.profiles p on p.id = m.profile_id where p.slug = 'femi-a' order by m.sort_order",
+    )).rows;
+    expect(contacts).toEqual([{ type: "email", is_public: true }, { type: "phone", is_public: true }, { type: "whatsapp", is_public: true }]);
+    const socials = (await db.query<{ platform: string }>(
+      "select l.platform from public.social_links l join public.profiles p on p.id = l.profile_id where p.slug = 'femi-a' order by l.sort_order",
+    )).rows.map((r) => r.platform);
+    expect(socials).toEqual(["linkedin", "x"]);
+    expect(await as(null, "select * from public.public_speaker_card('femi-adebayo')")).toEqual([]);
+    const speakers = (await db.query<{ slug: string }>(
+      "select p.slug from public.event_speakers s join public.profiles p on p.id = s.profile_id join public.partner_events e on e.id = s.event_id where e.slug = 'card-summit' order by p.slug",
+    )).rows.map((r) => r.slug);
+    expect(speakers).toEqual(["femi-a", "partner-speaker"]);
+  });
+});

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AddEventPanel, EventCard, type AdminEvent } from "@/components/admin/events-admin";
+import { AddEventPanel, EventCard, type AdminEvent, type SpeakerCardSummary } from "@/components/admin/events-admin";
 import type { SpeakerInvite } from "@/lib/speaker-invites";
 import { CopyPartnerLink } from "@/components/dashboard/copy-partner-link";
 import { Avatar } from "@/components/ui/avatar";
@@ -44,6 +44,7 @@ type PartnerEvent = {
   about?: string | null;
   speaker_list?: AdminEvent["speakers"];
   invites?: SpeakerInvite[];
+  cards?: SpeakerCardSummary[];
 };
 
 /** The shape the shared event card takes. Partners don't see payment amounts. */
@@ -57,6 +58,7 @@ const asCard = (e: PartnerEvent): AdminEvent => ({
   active: e.active,
   speakers: e.speaker_list ?? [],
   invites: e.invites,
+  cards: e.cards,
   payments: 0,
   revenue_kobo: 0,
 });
@@ -85,8 +87,15 @@ export default async function PartnerPage() {
   ]);
   const allEvents = await Promise.all(
     ((eventRows ?? []) as PartnerEvent[]).map(async (e) => {
-      const { data: invites, error: inviteError } = await supabase.rpc("event_speaker_invites_list", { p_event_slug: e.slug });
-      return { ...e, invites: inviteError ? undefined : ((invites ?? []) as SpeakerInvite[]) };
+      const [{ data: invites, error: inviteError }, { data: cards, error: cardsError }] = await Promise.all([
+        supabase.rpc("event_speaker_invites_list", { p_event_slug: e.slug }),
+        supabase.rpc("event_speaker_cards_list", { p_event_slug: e.slug }),
+      ]);
+      return {
+        ...e,
+        invites: inviteError ? undefined : ((invites ?? []) as SpeakerInvite[]),
+        cards: cardsError ? undefined : ((cards ?? []) as SpeakerCardSummary[]),
+      };
     }),
   );
 
