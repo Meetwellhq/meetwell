@@ -413,6 +413,8 @@ describe("speaker invite email", () => {
     const { subject, text, html } = speakerInviteEmail(args);
     expect(subject).toBe("Set up your speaker card for Epe Tech Summit");
     expect(text).toContain("The Tech Hub team");
+    // The event's name is the heading.
+    expect(speakerInviteEmail(args).html).toMatch(/font-weight:600;color:#141413">Epe Tech Summit<\/p>/);
     expect(text.startsWith("Hi Ada,")).toBe(true);
     expect(text).toContain("5 December 2026, Epe, Lagos");
     expect(html).toContain('href="https://meetwell.me/access-code?code=SPK-ABC123"');

@@ -903,14 +903,16 @@ export function organiserFromLine(partnerName: string, appName: string) {
 }
 
 /**
- * An email in an event organiser's voice ("Tech Hub via Meetwell"): their name
- * at the top, signed by their team, replies going to them, and one small line
+ * An email in an event organiser's voice ("Tech Hub via Meetwell"): the event's
+ * name at the top, signed by their team, replies going to them, and one small line
  * saying Meetwell sent it for them. No founder photo or sign-off.
  */
 function organiserNote({
-  fullName, appName, siteUrl, partnerName, subject, before, cta, after = [], links = [],
+  fullName, appName, siteUrl, partnerName, eventName, subject, before, cta, after = [], links = [],
 }: Pick<Common, "fullName" | "appName" | "siteUrl"> & {
   partnerName: string;
+  /** The heading at the top of the email. */
+  eventName: string;
   subject: string;
   before: string[];
   cta: { href: string; label: string };
@@ -931,7 +933,7 @@ function organiserNote({
     sentBy,
   ].join("\n\n");
   const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1c1c1a;font-size:16px;line-height:1.65">
-  <p style="margin:0;font-size:20px;font-weight:600;color:#141413">${escapeHtml(partnerName)}</p>
+  <p style="margin:0;font-size:20px;font-weight:600;color:#141413">${escapeHtml(eventName)}</p>
   <p style="margin-top:24px">Hi ${escapeHtml(firstName)},</p>
   ${before.map(p).join("\n  ")}
   ${button(cta.href, cta.label)}
