@@ -896,6 +896,54 @@ export function feedbackEmail(args: { kind: FeedbackKind; message: string; name:
   return { subject, text, html };
 }
 
+/** "Tech Hub via Meetwell" <events-noreply@meetwell.me>: an organiser's email, sent by Meetwell. */
+export function organiserFromLine(partnerName: string, appName: string) {
+  const name = partnerName.replace(/\s+/g, " ").replace(/["<>\\]/g, "").trim().slice(0, 80) || "Event organiser";
+  return `"${name} via ${appName}" <events-noreply@meetwell.me>`;
+}
+
+/**
+ * An email in an event organiser's voice ("Tech Hub via Meetwell"): their name
+ * at the top, signed by their team, replies going to them, and one small line
+ * saying Meetwell sent it for them. No founder photo or sign-off.
+ */
+function organiserNote({
+  fullName, appName, siteUrl, partnerName, subject, before, cta, after = [], links = [],
+}: Pick<Common, "fullName" | "appName" | "siteUrl"> & {
+  partnerName: string;
+  subject: string;
+  before: string[];
+  cta: { href: string; label: string };
+  after?: string[];
+  links?: { text: string; href: string }[];
+}) {
+  const firstName = firstNameOf(fullName);
+  const team = `The ${partnerName} team`;
+  const sentBy = `Sent by ${appName} on behalf of ${partnerName}. ${appName} hosts the event's speaker page.`;
+  const text = [
+    `Hi ${firstName},`,
+    ...before,
+    `${cta.label}: ${cta.href}`,
+    ...after,
+    ...links.map((l) => `${l.text}: ${l.href}`),
+    "Questions? Just reply to this email.",
+    team,
+    sentBy,
+  ].join("\n\n");
+  const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#1c1c1a;font-size:16px;line-height:1.65">
+  <p style="margin:0;font-size:20px;font-weight:600;color:#141413">${escapeHtml(partnerName)}</p>
+  <p style="margin-top:24px">Hi ${escapeHtml(firstName)},</p>
+  ${before.map(p).join("\n  ")}
+  ${button(cta.href, cta.label)}
+  ${after.map(p).join("\n  ")}
+  ${links.length ? `<p>${links.map((l) => `<a href="${escapeHtml(l.href)}" style="color:#1f4d3f">${escapeHtml(l.text)}</a>`).join("<br>")}</p>` : ""}
+  <p>Questions? Just reply to this email.</p>
+  <p style="margin-top:24px">${escapeHtml(team)}</p>
+  <p style="margin-top:28px;padding-top:16px;border-top:1px solid #e7e6e1;color:#5c5c57;font-size:13px;line-height:1.5">${escapeHtml(sentBy)} <a href="${siteUrl}" style="color:#5c5c57">${escapeHtml(siteUrl.replace(/^https?:\/\//, ""))}</a></p>
+</div>`;
+  return { subject, text, html };
+}
+
 /** Added as a speaker at a partner's event: their event page, their badge QR, and what it does. */
 export function eventSpeakerEmail(
   args: Common & {
@@ -911,16 +959,16 @@ export function eventSpeakerEmail(
   const where = [args.dates, args.venue].filter(Boolean).join(", ");
   const event = `${args.siteUrl}/e/${encodeURIComponent(args.eventSlug)}`;
   const badge = `${event}/qr?speaker=${encodeURIComponent(args.profileSlug)}`;
-  return note({
+  return organiserNote({
     ...args,
-    subject: `You're a speaker at ${args.eventName} on ${args.appName}`,
+    subject: `You're on the speaker page for ${args.eventName}`,
     before: [
-      `${args.partnerName} has added you as a speaker at ${args.eventName} (${where}). Your card is now on the event's page, with everyone else speaking.`,
-      `You also get your own QR code for your badge or your last slide. People who scan it open your card, save your contact in one tap and can follow up after the event. If you mentor on ${args.appName}, they can message you from there too.`,
-      ...(args.published ? [] : [`Your card isn't published yet, so people can't see it. Publish it from your dashboard before the event.`]),
+      `We've added you to the speakers for ${args.eventName} (${where}). Your ${args.appName} card is now on the event page, with everyone else speaking.`,
+      "You also have your own QR code for your badge or your last slide. People who scan it open your card, save your contact in one tap and can follow up after the event.",
+      ...(args.published ? [] : [`Your card isn't published yet, so people can't see it. Publish it from your ${args.appName} dashboard before the event.`]),
     ],
     cta: { href: event, label: "See the event page" },
-    after: [`Download your badge QR code: ${badge}`],
+    links: [{ text: "Download your badge QR code", href: badge }],
   });
 }
 
@@ -941,26 +989,21 @@ export function speakerInviteEmail(
 ) {
   const where = [args.dates, args.venue].filter(Boolean).join(", ");
   const link = `${args.siteUrl}/access-code?code=${encodeURIComponent(args.code)}`;
-  return note({
+  return organiserNote({
     ...args,
-    subject: args.reminder
-      ? `Reminder: set up your speaker card for ${args.eventName}`
-      : `${args.partnerName} invited you to speak at ${args.eventName} on ${args.appName}`,
+    subject: args.reminder ? `Reminder: your speaker card for ${args.eventName}` : `Set up your speaker card for ${args.eventName}`,
     before: args.reminder
       ? [
-          `A quick reminder: ${args.partnerName} has invited you to join the speakers at ${args.eventName} (${where}) on ${args.appName}, and your card isn't set up yet.`,
-          "It takes about two minutes. Once it's done, your card shows on the event page and you get a QR code for your badge.",
+          `A quick reminder: your speaker card for ${args.eventName} (${where}) isn't set up yet.`,
+          "It takes about two minutes. Once it's done, you're on the event page and you get a QR code for your badge.",
         ]
       : [
-          `${args.partnerName} has invited you to join the speakers at ${args.eventName} (${where}) on ${args.appName}.`,
-          `${args.appName} gives you a digital card with your own QR code. Put it on your badge or your last slide: people scan it with their phone camera, save your contact in one tap and can follow up after your talk. Your card also appears on the event page, with everyone else speaking.`,
+          `We're putting every speaker for ${args.eventName} (${where}) on one event page, and we'd love you to be on it.`,
+          `We're using ${args.appName}, a digital card with your own QR code. Put it on your badge or your last slide: people scan it with their phone camera, save your contact in one tap and can follow up after your talk.`,
           "Setting up your card takes about two minutes, and it's free.",
         ],
     cta: { href: link, label: "Set up your speaker card" },
-    after: [
-      `Your personal access code is ${args.code}. It works once, for you.`,
-      `Already on ${args.appName} with a different email address? Reply to this email and we'll add your card to the event.`,
-    ],
+    after: [`Your personal access code is ${args.code}. It works once, for you.`],
   });
 }
 
@@ -986,22 +1029,20 @@ export function speakerCardEmail(
   const card = `${args.siteUrl}/s/${encodeURIComponent(args.cardSlug)}`;
   const remove = `${args.siteUrl}/s/remove?t=${encodeURIComponent(args.removeToken)}`;
   const claim = args.code ? `${args.siteUrl}/access-code?code=${encodeURIComponent(args.code)}` : null;
-  return note({
+  return organiserNote({
     ...args,
-    subject: `Your speaker card for ${args.eventName} is on ${args.appName}`,
+    subject: `Your speaker card for ${args.eventName}`,
     before: [
-      `${args.partnerName} has put your speaker card on ${args.appName} for ${args.eventName} (${where}), using the details they have for you.`,
-      `People at the event can open your card from the event page or by scanning the QR code on your badge, save your contact in one tap and find you on social media afterwards.`,
+      `Thank you for speaking at ${args.eventName} (${where}). We've made you a speaker card on ${args.appName}, using the details you shared with us, and it's on the event page with everyone else speaking.`,
+      "People at the event can open your card from the event page or by scanning the QR code on your badge, save your contact in one tap and find you on social media afterwards.",
       args.showPhone
         ? "Your card shows your name, title, email, phone or WhatsApp number and social media links."
         : "Your card shows your name, title, email and social media links. Your phone number isn't shown.",
     ],
     cta: { href: card, label: "See your card" },
-    after: [
-      ...(claim
-        ? [`Want to change anything? Make the card yours: create your free account here and your details carry over, ready to edit: ${claim}`]
-        : []),
-      `Don't want a card on ${args.appName}? Remove it in one click: ${remove}`,
+    links: [
+      ...(claim ? [{ text: "Make it yours to edit (free account, your details carry over)", href: claim }] : []),
+      { text: "Don't want a card? Remove it", href: remove },
     ],
   });
 }

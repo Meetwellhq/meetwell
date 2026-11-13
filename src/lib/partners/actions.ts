@@ -118,6 +118,7 @@ async function emailAddedSpeaker(supabase: Awaited<ReturnType<typeof createClien
     : { data: null };
   const mail = ((due ?? []) as SpeakerEmail[])[0];
   if (!mail) return null;
+  const me = await getCurrentUser();
   return sendEventSpeakerEmail(mail.email, mail.full_name, {
     eventName: mail.event_name,
     eventSlug,
@@ -126,7 +127,7 @@ async function emailAddedSpeaker(supabase: Awaited<ReturnType<typeof createClien
     venue: mail.venue,
     partnerName: mail.partner_name,
     published: mail.card_status === "published",
-  });
+  }, me?.email ?? null);
 }
 
 type InviteRow = { email: string; full_name: string | null; outcome: InviteOutcome; profile_slug: string | null };

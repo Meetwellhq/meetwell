@@ -333,7 +333,11 @@ describe("event speaker email", () => {
       ...base, fullName: "Ada Obi", eventName: "ThinkUX Day", eventSlug: "thinkux-day", profileSlug: "ada",
       dates: "5 Dec 2026", venue: "Lagos", partnerName: "ThinkUX", published: false,
     });
-    expect(e.subject).toBe("You're a speaker at ThinkUX Day on Meetwell");
+    expect(e.subject).toBe("You're on the speaker page for ThinkUX Day");
+    // In the organiser's voice, signed by their team, with no founder sign-off.
+    expect(e.text).toContain("The ThinkUX team");
+    expect(e.text).toContain("Sent by Meetwell on behalf of ThinkUX.");
+    expect(e.text).not.toContain("Founder, Meetwell");
     expect(e.html).toContain('href="https://meetwell.me/e/thinkux-day"');
     expect(e.text).toContain("https://meetwell.me/e/thinkux-day/qr?speaker=ada");
     expect(e.text).toContain("ThinkUX Day (5 Dec 2026, Lagos)");
@@ -407,14 +411,15 @@ describe("speaker invite email", () => {
   const args = { ...base, fullName: "Ada Obi", eventName: "Epe Tech Summit", dates: "5 December 2026", venue: "Epe, Lagos", partnerName: "Tech Hub", code: "SPK-ABC123" };
   it("names the partner and event and links to sign-up with the code", () => {
     const { subject, text, html } = speakerInviteEmail(args);
-    expect(subject).toBe("Tech Hub invited you to speak at Epe Tech Summit on Meetwell");
+    expect(subject).toBe("Set up your speaker card for Epe Tech Summit");
+    expect(text).toContain("The Tech Hub team");
     expect(text.startsWith("Hi Ada,")).toBe(true);
     expect(text).toContain("5 December 2026, Epe, Lagos");
     expect(html).toContain('href="https://meetwell.me/access-code?code=SPK-ABC123"');
     expect(text).toContain("Your personal access code is SPK-ABC123.");
   });
   it("has a shorter reminder", () => {
-    expect(speakerInviteEmail({ ...args, fullName: null, reminder: true }).subject).toBe("Reminder: set up your speaker card for Epe Tech Summit");
+    expect(speakerInviteEmail({ ...args, fullName: null, reminder: true }).subject).toBe("Reminder: your speaker card for Epe Tech Summit");
   });
 });
 
@@ -422,10 +427,18 @@ describe("speaker card email", () => {
   const args = { ...base, fullName: "Femi Adebayo", eventName: "Epe Tech Summit", eventSlug: "epe-tech-summit", cardSlug: "femi-adebayo", dates: "5 December 2026", venue: "Epe", partnerName: "Tech Hub", code: "SPK-ABC123", removeToken: "11111111-2222-3333-4444-555555555555", showPhone: false };
   it("links to the card, the claim and the one-click removal, and says what's shown", () => {
     const { subject, text, html } = speakerCardEmail(args);
-    expect(subject).toBe("Your speaker card for Epe Tech Summit is on Meetwell");
+    expect(subject).toBe("Your speaker card for Epe Tech Summit");
     expect(html).toContain('href="https://meetwell.me/s/femi-adebayo"');
     expect(text).toContain("https://meetwell.me/access-code?code=SPK-ABC123");
     expect(text).toContain("https://meetwell.me/s/remove?t=11111111-2222-3333-4444-555555555555");
     expect(text).toContain("Your phone number isn't shown.");
+  });
+});
+
+describe("organiserFromLine", () => {
+  it("sends as the organiser via Meetwell, from a Meetwell address", async () => {
+    const { organiserFromLine } = await import("@/lib/founder-emails");
+    expect(organiserFromLine("Tech Hub", "Meetwell")).toBe('"Tech Hub via Meetwell" <events-noreply@meetwell.me>');
+    expect(organiserFromLine('Evil" <x@y.z>', "Meetwell")).toBe('"Evil x@y.z via Meetwell" <events-noreply@meetwell.me>');
   });
 });

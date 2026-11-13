@@ -2536,8 +2536,13 @@ describe("speaker cards", () => {
 
   it("emails each speaker with an email once, and lets them remove their card", async () => {
     await expect(as(null, "select * from public.claim_speaker_card_emails('wrong', 'card-summit', 10)")).rejects.toThrow(/Not allowed/);
-    const sent = await as<{ email: string; code: string }>(null, "select email, code from public.claim_speaker_card_emails($1, 'card-summit', 10)", [SECRET]);
+    const sent = await as<{ email: string; code: string; reply_to: string }>(
+      null, "select email, code, reply_to from public.claim_speaker_card_emails($1, 'card-summit', 10)", [SECRET],
+    );
     expect(sent.map((r) => r.email).sort()).toEqual(["femi@cards.test", "zainab@cards.test"]);
+    // Replies go to the team member who added them.
+    const [{ team_email }] = (await db.query<{ team_email: string }>("select email as team_email from auth.users where id = $1", [TEAM])).rows;
+    expect(sent.map((r) => r.reply_to)).toEqual([team_email, team_email]);
     expect(await as(null, "select * from public.claim_speaker_card_emails($1, 'card-summit', 10)", [SECRET])).toEqual([]);
     // No separate invite email or reminder for these.
     expect(await as(null, "select email from public.claim_speaker_invite_emails($1, 'card-summit', 10)", [SECRET])).toEqual([]);

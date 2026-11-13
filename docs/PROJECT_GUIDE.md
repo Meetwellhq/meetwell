@@ -212,6 +212,11 @@ every migration.
   `src/lib/partners/actions.ts`, the shared `EventCard` with `who="team"`); deleting and hiding stay admin-only. Speakers
   are added straight away (Rasheed's choice, 27 Oct 2026). Partners never see a speaker's email: the server gets it from
   `claim_event_speaker_email` (cron secret), once per speaker per event (`event_speaker_emails`, kept after removal).
+- **Speaker emails come from the organiser** (`20261220000000_speaker_email_reply_to.sql`): the invite, speaker card and
+  "you're on the speaker page" emails are written in the partner's voice, signed "The <partner> team", sent as
+  `"<Partner> via Meetwell" <events-noreply@meetwell.me>` (`organiserFromLine`; we can't send from their own domain:
+  SPF/DMARC), with Reply-To the team member who added the speakers (claim functions return `reply_to`; support@ if unknown)
+  and a small "Sent by Meetwell on behalf of …" line (`organiserNote` in `founder-emails.ts`).
 - **Speaker invites (bulk)** (`20261217000000_event_speaker_invites.sql`, `src/lib/speaker-invites.ts`, `SpeakerInvites` in
   `src/components/admin/events-admin.tsx`, actions in `src/lib/partners/actions.ts`): on each event card (Partner tab and
   admin), paste names and emails or upload a CSV, up to 1,000 per event. People with a card are added at once and get the

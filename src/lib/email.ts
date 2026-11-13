@@ -19,6 +19,7 @@ import {
   inviteReminderEmail,
   matchEmail,
   messageFromLine,
+  organiserFromLine,
   mentorApprovedEmail,
   mentoringEmail,
   newMessageEmail,
@@ -144,8 +145,17 @@ export function sendPartnerAccessEmail(to: string, fullName: string | null, part
 }
 
 /** Added as a speaker at a partner's event. */
-export function sendEventSpeakerEmail(to: string, fullName: string | null, details: Omit<Parameters<typeof eventSpeakerEmail>[0], keyof ReturnType<typeof common>>) {
-  return send(to, eventSpeakerEmail({ ...common(fullName), ...details }));
+/** From the organiser ("Tech Hub via Meetwell"); replies go to whoever added the speaker. */
+export function sendEventSpeakerEmail(
+  to: string,
+  fullName: string | null,
+  details: Omit<Parameters<typeof eventSpeakerEmail>[0], keyof ReturnType<typeof common>>,
+  replyTo: string | null,
+) {
+  return send(to, eventSpeakerEmail({ ...common(fullName), ...details }), {
+    from: organiserFromLine(details.partnerName, APP_NAME),
+    replyTo: replyTo ?? SUPPORT_EMAIL,
+  });
 }
 
 /** A speaker card email as claim_speaker_card_emails hands it out. */
@@ -162,9 +172,10 @@ export type SpeakerCardRow = {
   ends_on: string | null;
   venue: string | null;
   partner_name: string;
+  reply_to: string | null;
 };
 
-/** "Your speaker card is on Meetwell", paced for Resend. */
+/** The speaker card email, from the organiser, paced for Resend. */
 export async function sendSpeakerCardEmails(rows: SpeakerCardRow[]) {
   let sent = 0;
   let failed = 0;
@@ -183,6 +194,7 @@ export async function sendSpeakerCardEmails(rows: SpeakerCardRow[]) {
         removeToken: r.remove_token,
         showPhone: r.show_phone,
       }),
+      { from: organiserFromLine(r.partner_name, APP_NAME), replyTo: r.reply_to ?? SUPPORT_EMAIL },
     );
     if (ok) sent++;
     else failed++;
@@ -202,6 +214,8 @@ export type SpeakerInviteRow = {
   ends_on: string | null;
   venue: string | null;
   partner_name: string;
+  /** The organiser's team member who invited them; replies go there. */
+  reply_to: string | null;
 };
 
 /** Partner speaker invites (or the one reminder each), paced for Resend. */
@@ -220,6 +234,7 @@ export async function sendSpeakerInviteEmails(rows: SpeakerInviteRow[], reminder
         code: r.code,
         reminder,
       }),
+      { from: organiserFromLine(r.partner_name, APP_NAME), replyTo: r.reply_to ?? SUPPORT_EMAIL },
     );
     if (ok) sent++;
     else failed++;

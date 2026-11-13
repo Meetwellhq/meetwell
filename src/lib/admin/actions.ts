@@ -506,7 +506,7 @@ export async function adminAddEventSpeaker(eventSlug: string, _: AdminFormState,
     venue: s.venue,
     partnerName: s.partner_name,
     published: s.card_status === "published",
-  });
+  }, (await getCurrentUser())?.email ?? null);
   return { ok: emailed ? `Added ${s.full_name}. We emailed them.` : `Added ${s.full_name}. The email didn't send, so let them know.` };
 }
 
