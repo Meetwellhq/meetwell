@@ -4,6 +4,12 @@ What's new in Meetwell, newest first. Live at [meetwell.me](https://meetwell.me)
 
 ---
 
+## 13 November 2026: Bring your whole speaker list
+
+- Event partners can upload a spreadsheet of their speakers, and each one gets a card on the event page straight away.
+- Speakers get a QR code for their badge, and can claim their card or remove it anytime.
+- Or invite speakers by email, and they join the event page when they set up their card.
+
 ## 24 October 2026: Event pages
 
 - Partners like ThinkUX now get a page for each event, with every speaker's card in one place.
