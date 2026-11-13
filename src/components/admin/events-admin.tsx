@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, ExternalLink, Eye, EyeOff, Pencil, Trash2, X } from "lucide-react";
+import { Download, ExternalLink, Eye, EyeOff, Pencil, Send, Trash2, Upload, X } from "lucide-react";
 import { useActionState, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -17,11 +17,15 @@ import {
 } from "@/lib/admin/actions";
 import { cn } from "@/lib/cn";
 import {
+  cancelSpeakerInvite,
+  inviteEventSpeakers,
   partnerAddEventSpeaker,
   partnerCreateEvent,
   partnerRemoveEventSpeaker,
   partnerUpdateEvent,
+  sendWaitingSpeakerInvites,
 } from "@/lib/partners/actions";
+import { INVITE_STATUS, MAX_SPEAKER_INVITES, parseSpeakerList, type SpeakerInvite } from "@/lib/speaker-invites";
 
 /**
  * The same event tools for admins and for a partner's own team (Partner tab).
@@ -46,6 +50,8 @@ export type AdminEvent = {
   revenue_kobo: number;
   /** Conversations with free mentors started from this page. */
   free_conversations?: number;
+  /** Everyone invited by email (bulk invites); undefined hides the section. */
+  invites?: SpeakerInvite[];
 };
 
 /**
@@ -321,6 +327,155 @@ function ActiveToggle({ event }: { event: AdminEvent }) {
 }
 
 /**
+ * Invite many speakers at once: paste names and emails, or upload a CSV from
+ * Excel or Google Sheets. People with a card join straight away; everyone else
+ * gets an invite email and joins the event when they make their card.
+ */
+function SpeakerInvites({ eventSlug, invites }: { eventSlug: string; invites: SpeakerInvite[] }) {
+  const [state, action, pending] = useActionState(inviteEventSpeakers.bind(null, eventSlug), {});
+  const [list, setList] = useState("");
+  const [sending, startSending] = useTransition();
+  const [sendNote, setSendNote] = useState<{ ok?: string; error?: string }>({});
+  const toast = useToast();
+  const parsed = parseSpeakerList(list);
+  const waiting = invites.filter((i) => i.status === "waiting").length;
+  const joined = invites.filter((i) => i.status === "joined").length;
+
+  // Clear the box once a list has gone out (adjusting state while rendering, not in an effect).
+  const [handled, setHandled] = useState(state);
+  if (state !== handled) {
+    setHandled(state);
+    if (state.ok) setList("");
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
+      <div>
+        <p className="text-sm font-medium text-ink">Invite speakers by email</p>
+        <p className="mt-0.5 text-xs text-ink-2">
+          One person per line: their name and email. Or upload a CSV from Excel or Google Sheets. We email each one their own
+          invite, and they appear on the event page once they set up their card. Anyone already on Meetwell is added straight away.
+        </p>
+      </div>
+      <form action={action} className="flex flex-col gap-2">
+        <Textarea
+          name="list"
+          rows={5}
+          value={list}
+          onChange={(e) => setList(e.target.value)}
+          placeholder={"Ada Obi, ada@example.com\nTunde Bello, tunde@example.com"}
+          aria-label="Speakers to invite: one name and email per line"
+          className="font-mono text-sm"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border-strong px-3 py-1.5 text-sm text-ink hover:bg-surface-2">
+            <Upload className="size-4" aria-hidden />
+            Upload CSV
+            <input
+              type="file"
+              accept=".csv,.txt,text/csv,text/plain"
+              className="sr-only"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (!file) return;
+                if (file.size > 500_000) return toast("That file is too big. Keep it under 500 KB.", "error");
+                const text = await file.text();
+                setList((v) => (v.trim() ? `${v.trim()}\n${text}` : text));
+              }}
+            />
+          </label>
+          <Button type="submit" size="sm" icon={<Send className="size-4" />} loading={pending} disabled={parsed.people.length === 0}>
+            {parsed.people.length > 0 ? `Invite ${parsed.people.length} ${parsed.people.length === 1 ? "speaker" : "speakers"}` : "Invite speakers"}
+          </Button>
+          {parsed.people.length > MAX_SPEAKER_INVITES && (
+            <span className="text-xs text-danger">Up to {MAX_SPEAKER_INVITES} at a time.</span>
+          )}
+          {parsed.bad.length > 0 && (
+            <span className="text-xs text-danger">
+              {parsed.bad.length} {parsed.bad.length === 1 ? "line has" : "lines have"} no email and will be skipped.
+            </span>
+          )}
+        </div>
+        {pending && <p className="text-xs text-ink-2">Sending invites. A long list can take up to a minute.</p>}
+        {(state.error || state.ok) && (
+          <p className={cn("text-xs", state.error ? "text-danger" : "text-success")}>{state.error ?? state.ok}</p>
+        )}
+      </form>
+
+      {invites.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs text-ink-2">
+              Invited {invites.length} · Joined {joined}
+            </p>
+            {waiting > 0 && (
+              <Button
+                size="sm"
+                variant="secondary"
+                loading={sending}
+                onClick={() =>
+                  startSending(async () => {
+                    setSendNote(await sendWaitingSpeakerInvites(eventSlug));
+                  })
+                }
+              >
+                Send the rest ({waiting})
+              </Button>
+            )}
+          </div>
+          {(sendNote.error || sendNote.ok) && (
+            <p className={cn("text-xs", sendNote.error ? "text-danger" : "text-success")}>{sendNote.error ?? sendNote.ok}</p>
+          )}
+          <ul className="max-h-72 divide-y divide-border overflow-y-auto rounded-lg border border-border">
+            {invites.map((i) => (
+              <InviteRow key={i.email} eventSlug={eventSlug} invite={i} />
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InviteRow({ eventSlug, invite: i }: { eventSlug: string; invite: SpeakerInvite }) {
+  const toast = useToast();
+  const [gone, setGone] = useState(false);
+  const [, start] = useTransition();
+  if (gone) return null;
+  const status = INVITE_STATUS[i.status];
+  return (
+    <li className="flex items-center gap-2 px-3 py-2">
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-sm text-ink">{i.full_name ?? i.email}</span>
+        {i.full_name && <span className="truncate text-xs text-ink-3">{i.email}</span>}
+      </span>
+      <Badge tone={status.tone} className="shrink-0">{status.label}</Badge>
+      {i.status !== "joined" && (
+        <button
+          type="button"
+          aria-label={`Cancel the invite to ${i.email}`}
+          onClick={() => {
+            setGone(true);
+            start(async () => {
+              const { error } = await cancelSpeakerInvite(eventSlug, i.email);
+              if (error) {
+                setGone(false);
+                toast(error, "error");
+              } else toast(`Cancelled the invite to ${i.email}.`);
+            });
+          }}
+          className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-ink-3 hover:bg-danger-soft hover:text-danger"
+        >
+          <X className="size-3.5" aria-hidden />
+          <span className="max-sm:sr-only">Cancel</span>
+        </button>
+      )}
+    </li>
+  );
+}
+
+/**
  * One event: its page and QR, speakers (add or remove), and what it brought in.
  * Admins pass the revenue line; a partner's team (who="team") passes its own note.
  */
@@ -394,6 +549,7 @@ export function EventCard({
           </ul>
         )}
         <AddSpeaker eventSlug={event.slug} who={who} />
+        {event.invites && <SpeakerInvites eventSlug={event.slug} invites={event.invites} />}
       </div>
     </li>
   );

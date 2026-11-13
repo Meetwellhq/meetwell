@@ -1,5 +1,6 @@
 import "server-only";
 import { ADMIN_EMAIL, APP_NAME, getSiteUrl, SUPPORT_EMAIL, WHATSAPP_COMMUNITY_URL, WHATSAPP_FEEDBACK_URL } from "./config";
+import { eventDates } from "./events";
 import { deadlineText, kindLabel, type Funding } from "./funding";
 import { dateText, followUpEmail, hasEmail, lagosToday, shortDate, type RadarEvent, type RadarPitch } from "./radar";
 import { isSparkOn } from "./spark";
@@ -29,6 +30,7 @@ import {
   fundingFindsEmail,
   type FundingEmailItem,
   radarFindsEmail,
+  speakerInviteEmail,
   radarNoEmailEmail,
   radarRemindersEmail,
   type RadarEmailEvent,
@@ -143,6 +145,43 @@ export function sendPartnerAccessEmail(to: string, fullName: string | null, part
 /** Added as a speaker at a partner's event. */
 export function sendEventSpeakerEmail(to: string, fullName: string | null, details: Omit<Parameters<typeof eventSpeakerEmail>[0], keyof ReturnType<typeof common>>) {
   return send(to, eventSpeakerEmail({ ...common(fullName), ...details }));
+}
+
+/** An invite as claim_speaker_invite_emails / claim_speaker_invite_reminders hand it out. */
+export type SpeakerInviteRow = {
+  email: string;
+  full_name: string | null;
+  code: string;
+  event_name: string;
+  event_slug: string;
+  starts_on: string;
+  ends_on: string | null;
+  venue: string | null;
+  partner_name: string;
+};
+
+/** Partner speaker invites (or the one reminder each), paced for Resend. */
+export async function sendSpeakerInviteEmails(rows: SpeakerInviteRow[], reminder = false) {
+  let sent = 0;
+  let failed = 0;
+  for (const r of rows) {
+    const ok = await send(
+      r.email,
+      speakerInviteEmail({
+        ...common(r.full_name),
+        eventName: r.event_name,
+        dates: eventDates(r.starts_on, r.ends_on),
+        venue: r.venue,
+        partnerName: r.partner_name,
+        code: r.code,
+        reminder,
+      }),
+    );
+    if (ok) sent++;
+    else failed++;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  return { sent, failed };
 }
 
 /** The ready-made emails on the admin New email page. */

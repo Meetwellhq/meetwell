@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fundingDeadlinesEmail, fundingFindsEmail, inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, radarFindsEmail, radarNoEmailEmail, radarRemindersEmail, sparkBetaEmail, sparkPausedEmail, savebackEmail, waitlistEmail } from "@/lib/founder-emails";
+import { fundingDeadlinesEmail, fundingFindsEmail, inviteEmail, mentoringEmail, newMessageEmail, partnerAccessEmail, radarFindsEmail, radarNoEmailEmail, radarRemindersEmail, sparkBetaEmail, sparkPausedEmail, savebackEmail, speakerInviteEmail, waitlistEmail } from "@/lib/founder-emails";
 
 const base = { appName: "Meetwell", siteUrl: "https://meetwell.me", photoUrl: "https://meetwell.me/founder/rasheed.jpg", replyEmail: "support@meetwell.me" };
 
@@ -400,5 +400,20 @@ describe("funding radar emails", () => {
 
   it("counts deadlines in the subject", () => {
     expect(fundingDeadlinesEmail({ appName: "Meetwell", siteUrl: "https://meetwell.me", items: [item, item] }).subject).toBe("2 funding deadlines this week");
+  });
+});
+
+describe("speaker invite email", () => {
+  const args = { ...base, fullName: "Ada Obi", eventName: "Epe Tech Summit", dates: "5 December 2026", venue: "Epe, Lagos", partnerName: "Tech Hub", code: "SPK-ABC123" };
+  it("names the partner and event and links to sign-up with the code", () => {
+    const { subject, text, html } = speakerInviteEmail(args);
+    expect(subject).toBe("Tech Hub invited you to speak at Epe Tech Summit on Meetwell");
+    expect(text.startsWith("Hi Ada,")).toBe(true);
+    expect(text).toContain("5 December 2026, Epe, Lagos");
+    expect(html).toContain('href="https://meetwell.me/access-code?code=SPK-ABC123"');
+    expect(text).toContain("Your personal access code is SPK-ABC123.");
+  });
+  it("has a shorter reminder", () => {
+    expect(speakerInviteEmail({ ...args, fullName: null, reminder: true }).subject).toBe("Reminder: set up your speaker card for Epe Tech Summit");
   });
 });

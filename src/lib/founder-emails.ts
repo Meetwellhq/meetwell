@@ -924,6 +924,46 @@ export function eventSpeakerEmail(
   });
 }
 
+/**
+ * A partner invited someone to speak at their event. The button opens sign-up
+ * with their own access code filled in; once their card exists they're on the
+ * event page. `reminder` is the one nudge 3 days later.
+ */
+export function speakerInviteEmail(
+  args: Common & {
+    eventName: string;
+    dates: string;
+    venue: string | null;
+    partnerName: string;
+    code: string;
+    reminder?: boolean;
+  },
+) {
+  const where = [args.dates, args.venue].filter(Boolean).join(", ");
+  const link = `${args.siteUrl}/access-code?code=${encodeURIComponent(args.code)}`;
+  return note({
+    ...args,
+    subject: args.reminder
+      ? `Reminder: set up your speaker card for ${args.eventName}`
+      : `${args.partnerName} invited you to speak at ${args.eventName} on ${args.appName}`,
+    before: args.reminder
+      ? [
+          `A quick reminder: ${args.partnerName} has invited you to join the speakers at ${args.eventName} (${where}) on ${args.appName}, and your card isn't set up yet.`,
+          "It takes about two minutes. Once it's done, your card shows on the event page and you get a QR code for your badge.",
+        ]
+      : [
+          `${args.partnerName} has invited you to join the speakers at ${args.eventName} (${where}) on ${args.appName}.`,
+          `${args.appName} gives you a digital card with your own QR code. Put it on your badge or your last slide: people scan it with their phone camera, save your contact in one tap and can follow up after your talk. Your card also appears on the event page, with everyone else speaking.`,
+          "Setting up your card takes about two minutes, and it's free.",
+        ],
+    cta: { href: link, label: "Set up your speaker card" },
+    after: [
+      `Your personal access code is ${args.code}. It works once, for you.`,
+      `Already on ${args.appName} with a different email address? Reply to this email and we'll add your card to the event.`,
+    ],
+  });
+}
+
 /* ---- Partner radar: notes to the founder's own inbox ---- */
 
 /** A web search for the organiser's contact email. */

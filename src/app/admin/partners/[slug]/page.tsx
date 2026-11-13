@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { date, naira, NotReady, PageTitle, Stats } from "@/components/admin/admin-ui";
 import { AddEvent, EventCard, type AdminEvent } from "@/components/admin/events-admin";
+import type { SpeakerInvite } from "@/lib/speaker-invites";
 import { PartnerSummary, RecordPayout, type PartnerMoney, type PartnerRow } from "@/components/admin/partners-admin";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/misc";
@@ -43,7 +44,12 @@ export default async function AdminPartnerPage({ params }: PageProps<"/admin/par
     supabase.rpc("admin_partner_ledger", { p_partner: partner.id }),
     supabase.rpc("admin_partner_events", { p_partner_slug: partner.slug }),
   ]);
-  const events = (eventRows ?? []) as AdminEvent[];
+  const events = await Promise.all(
+    ((eventRows ?? []) as AdminEvent[]).map(async (e) => {
+      const { data: invites, error: inviteError } = await supabase.rpc("event_speaker_invites_list", { p_event_slug: e.slug });
+      return { ...e, invites: inviteError ? undefined : ((invites ?? []) as SpeakerInvite[]) };
+    }),
+  );
   const people = (rows ?? []) as Person[];
   const money = ((moneyRows ?? []) as PartnerMoney[])[0] ?? { earned_kobo: 0, paid_kobo: 0, available_kobo: 0, pending_kobo: 0 };
   const ledger = (ledgerRows ?? []) as LedgerRow[];

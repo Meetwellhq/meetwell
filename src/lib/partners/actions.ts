@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { sendEventSpeakerEmail } from "../email";
+import { sendEventSpeakerEmail, sendSpeakerInviteEmails, type SpeakerInviteRow } from "../email";
 import { eventDates, linkName } from "../events";
+import { inviteSummary, MAX_SPEAKER_INVITES, parseSpeakerList, type InviteOutcome } from "../speaker-invites";
 import { createClient, getCurrentUser } from "../supabase/server";
 
 /**
@@ -99,24 +100,122 @@ export async function partnerAddEventSpeaker(eventSlug: string, _: PartnerFormSt
   const s = ((data ?? []) as SpeakerAdded[])[0];
   if (!s) return { ok: "Added." };
   if (!s.added) return { ok: `${s.full_name} is already a speaker.` };
+  const emailed = await emailAddedSpeaker(supabase, eventSlug, s.profile_slug);
+  if (emailed === null) return { ok: `Added ${s.full_name}.` };
+  return { ok: emailed ? `Added ${s.full_name}. We emailed them.` : `Added ${s.full_name}. The email didn't send, so let them know.` };
+}
 
-  // Their email address only ever reaches the server, and only the first time.
+/**
+ * The "you're a speaker" email to someone just added. Their email address only
+ * ever reaches the server, and only the first time: null when it was already sent.
+ */
+async function emailAddedSpeaker(supabase: Awaited<ReturnType<typeof createClient>>, eventSlug: string, profileSlug: string) {
   const secret = process.env.CRON_SECRET;
   const { data: due } = secret
-    ? await supabase.rpc("claim_event_speaker_email", { p_token: secret, p_event_slug: eventSlug, p_profile_slug: s.profile_slug })
+    ? await supabase.rpc("claim_event_speaker_email", { p_token: secret, p_event_slug: eventSlug, p_profile_slug: profileSlug })
     : { data: null };
   const mail = ((due ?? []) as SpeakerEmail[])[0];
-  if (!mail) return { ok: `Added ${s.full_name}.` };
-  const emailed = await sendEventSpeakerEmail(mail.email, mail.full_name, {
+  if (!mail) return null;
+  return sendEventSpeakerEmail(mail.email, mail.full_name, {
     eventName: mail.event_name,
     eventSlug,
-    profileSlug: s.profile_slug,
+    profileSlug,
     dates: eventDates(mail.starts_on, mail.ends_on),
     venue: mail.venue,
     partnerName: mail.partner_name,
     published: mail.card_status === "published",
   });
-  return { ok: emailed ? `Added ${s.full_name}. We emailed them.` : `Added ${s.full_name}. The email didn't send, so let them know.` };
+}
+
+type InviteRow = { email: string; full_name: string | null; outcome: InviteOutcome; profile_slug: string | null };
+/**
+ * Sends the event's waiting invite emails for up to ~40 seconds (Vercel stops a
+ * request at 60). What's left goes with the next click or the daily job.
+ */
+async function sendWaiting(supabase: Awaited<ReturnType<typeof createClient>>, eventSlug: string) {
+  const secret = process.env.CRON_SECRET;
+  const total = { sent: 0, failed: 0 };
+  if (!secret) return { ...total, left: 0 };
+  const until = Date.now() + 40_000;
+  while (Date.now() < until) {
+    const { data, error } = await supabase.rpc("claim_speaker_invite_emails", { p_token: secret, p_event_slug: eventSlug, p_limit: 10 });
+    if (error) {
+      console.error("claim_speaker_invite_emails failed", error.code, error.message);
+      break;
+    }
+    const rows = (data ?? []) as SpeakerInviteRow[];
+    if (rows.length === 0) break;
+    const r = await sendSpeakerInviteEmails(rows);
+    total.sent += r.sent;
+    total.failed += r.failed;
+  }
+  const { data: left } = await supabase.rpc("event_speaker_invites_waiting", { p_event_slug: eventSlug });
+  return { ...total, left: typeof left === "number" ? left : 0 };
+}
+
+const sendNote = (r: { sent: number; failed: number; left: number }) =>
+  [
+    r.sent > 0 && `${r.sent} ${r.sent === 1 ? "email" : "emails"} sent`,
+    r.failed > 0 && `${r.failed} didn't send (check those addresses)`,
+    r.left > 0 && `${r.left} still to send: press "Send the rest"`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+/**
+ * Invite a list of speakers (pasted, or a CSV) to an event. People who already
+ * have a card are added straight away and get the "you're a speaker" email;
+ * everyone else gets an invite with their own access code. For a partner's team
+ * or an admin: the database checks.
+ */
+export async function inviteEventSpeakers(eventSlug: string, _: PartnerFormState, formData: FormData): Promise<PartnerFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { people, bad } = parseSpeakerList(String(formData.get("list") ?? "").slice(0, 200_000));
+  if (people.length === 0) return { error: "Add at least one email address, one person per line." };
+  if (people.length > MAX_SPEAKER_INVITES) return { error: `That's ${people.length} people. Send up to ${MAX_SPEAKER_INVITES} at a time.` };
+
+  const supabase = await createClient();
+  const rows: InviteRow[] = [];
+  for (let i = 0; i < people.length; i += 300) {
+    const { data, error } = await supabase.rpc("invite_event_speakers", { p_event_slug: eventSlug, p_people: people.slice(i, i + 300) });
+    if (error) {
+      console.error("invite_event_speakers failed", error.code, error.message);
+      if (error.code === "42501") return { error: "You can't invite speakers to this event." };
+      if (error.message.includes("1,000")) return { error: "An event can have up to 1,000 invites." };
+      return { error: rows.length ? `Invited the first ${rows.length}, then something went wrong. Try the rest again.` : "Couldn't send the invites." };
+    }
+    rows.push(...((data ?? []) as InviteRow[]));
+  }
+
+  const counts: Partial<Record<InviteOutcome, number>> = {};
+  for (const r of rows) counts[r.outcome] = (counts[r.outcome] ?? 0) + 1;
+  counts.bad_email = (counts.bad_email ?? 0) + bad.length;
+  for (const r of rows) if (r.outcome === "added" && r.profile_slug) await emailAddedSpeaker(supabase, eventSlug, r.profile_slug);
+
+  const sending = await sendWaiting(supabase, eventSlug);
+  refresh(eventSlug);
+  return { ok: [inviteSummary(counts), sendNote(sending)].filter(Boolean).join(". ") + "." };
+}
+
+/** The invite emails a big list didn't get to in one go. */
+export async function sendWaitingSpeakerInvites(eventSlug: string): Promise<PartnerFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const supabase = await createClient();
+  const { data: waiting, error } = await supabase.rpc("event_speaker_invites_waiting", { p_event_slug: eventSlug });
+  if (error) return { error: "You can't send invites for this event." };
+  if (!waiting) return { ok: "Every invite has been sent." };
+  const r = await sendWaiting(supabase, eventSlug);
+  refresh(eventSlug);
+  return { ok: sendNote(r) + "." };
+}
+
+/** Take back an invite: a typo, or someone who isn't speaking after all. */
+export async function cancelSpeakerInvite(eventSlug: string, email: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("cancel_event_speaker_invite", { p_event_slug: eventSlug, p_email: email });
+  if (error) return { error: "Couldn't cancel that invite." };
+  refresh(eventSlug);
+  return {};
 }
 
 export async function partnerRemoveEventSpeaker(eventSlug: string, profileSlug: string): Promise<{ error?: string }> {

@@ -2371,3 +2371,107 @@ describe("funding radar", () => {
     expect(await as(null, "select id from public.claim_funding_reminders($1)", [SECRET])).toEqual([{ id: "soon-fund" }]);
   });
 });
+
+describe("speaker invites", () => {
+  const TEAM = "5c5c5c5c-5c5c-5c5c-5c5c-5c5c5c5c5c5c"; // on ThinkUX's team (from "partners")
+  const SECRET = "test-secret-that-is-long-enough-1234567890"; // stored by the reminders tests
+  const NEWBIE = "6d6d6d6d-6d6d-6d6d-6d6d-6d6d6d6d6d6d";
+  const BY_EMAIL = "7e7e7e7e-7e7e-7e7e-7e7e-7e7e7e7e7e7e";
+  const people = JSON.stringify([
+    { name: "Ada Obi", email: " Ada@Speakers.test " },
+    { name: "Tunde", email: "tunde@speakers.test" },
+    { name: "Already Here", email: "SPEAKER@partner.test" },
+    { name: "Typo", email: "not-an-email" },
+  ]);
+
+  beforeAll(async () => {
+    await as(TEAM, "select public.partner_create_event('thinkux', 'epe-summit', 'Epe Tech Summit', '2099-12-05')");
+  });
+
+  it("is only for the event's team and admins", async () => {
+    await expect(as(BOB, "select * from public.invite_event_speakers('epe-summit', $1::jsonb)", [people])).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select * from public.invite_event_speakers('epe-summit', $1::jsonb)", [people])).rejects.toThrow(/permission denied/);
+    await expect(as(BOB, "select * from public.event_speaker_invites_list('epe-summit')")).rejects.toThrow(/Not allowed/);
+    await expect(as(BOB, "select * from public.event_speaker_invites")).rejects.toThrow(/permission denied/);
+  });
+
+  it("adds people who have a card, invites the rest and skips repeats", async () => {
+    const rows = await as<{ email: string; outcome: string; profile_slug: string | null }>(
+      TEAM, "select email, outcome, profile_slug from public.invite_event_speakers('epe-summit', $1::jsonb)", [people],
+    );
+    expect(rows).toEqual([
+      { email: "ada@speakers.test", outcome: "invited", profile_slug: null },
+      { email: "tunde@speakers.test", outcome: "invited", profile_slug: null },
+      { email: "speaker@partner.test", outcome: "added", profile_slug: "partner-speaker" },
+      { email: "not-an-email", outcome: "bad_email", profile_slug: null },
+    ]);
+    const again = await as<{ outcome: string }>(TEAM, "select outcome from public.invite_event_speakers('epe-summit', $1::jsonb)", [people]);
+    expect(again.map((r) => r.outcome)).toEqual(["already_invited", "already_invited", "already_speaker", "bad_email"]);
+    // Admins can invite too.
+    await as(ALICE, `select * from public.invite_event_speakers('epe-summit', '[{"email":"admin-added@speakers.test"}]'::jsonb)`);
+    expect(await as<{ email: string; status: string }>(TEAM, "select email, status from public.event_speaker_invites_list('epe-summit') order by email")).toEqual([
+      { email: "ada@speakers.test", status: "waiting" },
+      { email: "admin-added@speakers.test", status: "waiting" },
+      { email: "tunde@speakers.test", status: "waiting" },
+    ]);
+    expect(await as(TEAM, "select public.event_speaker_invites_waiting('epe-summit') as n")).toEqual([{ n: 3 }]);
+  });
+
+  it("hands each invite email out once, with the server's secret", async () => {
+    await expect(as(null, "select * from public.claim_speaker_invite_emails('wrong', 'epe-summit', 10)")).rejects.toThrow(/Not allowed/);
+    const first = await as<{ email: string; code: string; partner_name: string; event_name: string }>(
+      null, "select email, code, partner_name, event_name from public.claim_speaker_invite_emails($1, 'epe-summit', 2)", [SECRET],
+    );
+    expect(first).toHaveLength(2);
+    expect(first[0]).toMatchObject({ partner_name: "ThinkUX", event_name: "Epe Tech Summit" });
+    expect(first[0].code).toMatch(/^SPK-[0-9A-F]{10}$/);
+    const rest = await as<{ email: string }>(null, "select email from public.claim_speaker_invite_emails($1, null, 10) where event_slug = 'epe-summit'", [SECRET]);
+    expect(rest).toHaveLength(1);
+    expect(await as(null, "select * from public.claim_speaker_invite_emails($1, 'epe-summit', 10)", [SECRET])).toEqual([]);
+  });
+
+  it("joins the event when they sign up with their code and make a card", async () => {
+    const [{ code }] = (await db.query<{ code: string }>("select code from public.event_speaker_invites where email = 'ada@speakers.test'")).rows;
+    await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'ada.personal@test', $2)", [
+      NEWBIE, JSON.stringify({ access_code: code.toLowerCase() }),
+    ]);
+    expect(await as<{ status: string }>(TEAM, "select status from public.event_speaker_invites_list('epe-summit') where email = 'ada@speakers.test'")).toEqual([
+      { status: "signed_up" },
+    ]);
+    await createProfile(NEWBIE, "ada-obi");
+    expect(await as<{ status: string }>(TEAM, "select status from public.event_speaker_invites_list('epe-summit') where email = 'ada@speakers.test'")).toEqual([
+      { status: "joined" },
+    ]);
+    const speakers = (await db.query<{ slug: string }>(
+      "select p.slug from public.event_speakers s join public.profiles p on p.id = s.profile_id join public.partner_events e on e.id = s.event_id where e.slug = 'epe-summit' order by p.slug",
+    )).rows.map((r) => r.slug);
+    expect(speakers).toEqual(["ada-obi", "partner-speaker"]);
+    // The code is used up.
+    await expect(
+      db.query("insert into auth.users (id, email, raw_user_meta_data) values (gen_random_uuid(), 'other@test', $1)", [JSON.stringify({ access_code: code })]),
+    ).rejects.toThrow(/access code/);
+  });
+
+  it("lets an invited email sign up without typing the code", async () => {
+    await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, 'Tunde@Speakers.test', '{}')", [BY_EMAIL]);
+    await createProfile(BY_EMAIL, "tunde-b");
+    expect(await as<{ status: string }>(TEAM, "select status from public.event_speaker_invites_list('epe-summit') where email = 'tunde@speakers.test'")).toEqual([
+      { status: "joined" },
+    ]);
+  });
+
+  it("reminds once after 3 days, and a cancelled invite's code stops working", async () => {
+    await db.query("update public.event_speaker_invites set emailed_at = now() - interval '4 days' where email = 'admin-added@speakers.test'");
+    await expect(as(BOB, "select * from public.claim_speaker_invite_reminders('wrong', 10)")).rejects.toThrow(/Not allowed/);
+    expect(await as(null, "select email from public.claim_speaker_invite_reminders($1, 10)", [SECRET])).toEqual([{ email: "admin-added@speakers.test" }]);
+    expect(await as(null, "select email from public.claim_speaker_invite_reminders($1, 10)", [SECRET])).toEqual([]);
+
+    const [{ code }] = (await db.query<{ code: string }>("select code from public.event_speaker_invites where email = 'admin-added@speakers.test'")).rows;
+    await expect(as(BOB, "select public.cancel_event_speaker_invite('epe-summit', 'admin-added@speakers.test')")).rejects.toThrow(/Not allowed/);
+    await as(TEAM, "select public.cancel_event_speaker_invite('epe-summit', 'ADMIN-ADDED@speakers.test')");
+    expect(await as(TEAM, "select email from public.event_speaker_invites_list('epe-summit') where email = 'admin-added@speakers.test'")).toEqual([]);
+    await expect(
+      db.query("insert into auth.users (id, email, raw_user_meta_data) values (gen_random_uuid(), 'late@test', $1)", [JSON.stringify({ access_code: code })]),
+    ).rejects.toThrow(/access code/);
+  });
+});

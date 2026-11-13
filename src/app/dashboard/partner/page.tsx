@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddEventPanel, EventCard, type AdminEvent } from "@/components/admin/events-admin";
+import type { SpeakerInvite } from "@/lib/speaker-invites";
 import { CopyPartnerLink } from "@/components/dashboard/copy-partner-link";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, Card } from "@/components/ui/misc";
@@ -42,6 +43,7 @@ type PartnerEvent = {
   venue?: string | null;
   about?: string | null;
   speaker_list?: AdminEvent["speakers"];
+  invites?: SpeakerInvite[];
 };
 
 /** The shape the shared event card takes. Partners don't see payment amounts. */
@@ -54,6 +56,7 @@ const asCard = (e: PartnerEvent): AdminEvent => ({
   about: e.about ?? null,
   active: e.active,
   speakers: e.speaker_list ?? [],
+  invites: e.invites,
   payments: 0,
   revenue_kobo: 0,
 });
@@ -80,7 +83,12 @@ export default async function PartnerPage() {
     ),
     supabase.rpc("my_partner_events"),
   ]);
-  const allEvents = (eventRows ?? []) as PartnerEvent[];
+  const allEvents = await Promise.all(
+    ((eventRows ?? []) as PartnerEvent[]).map(async (e) => {
+      const { data: invites, error: inviteError } = await supabase.rpc("event_speaker_invites_list", { p_event_slug: e.slug });
+      return { ...e, invites: inviteError ? undefined : ((invites ?? []) as SpeakerInvite[]) };
+    }),
+  );
 
   return (
     <div className="flex flex-col gap-10">

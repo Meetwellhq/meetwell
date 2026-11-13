@@ -8,6 +8,8 @@ import {
   sendRadarRemindersEmail,
   sendRenewalReminderEmail,
   sendSavebackEmail,
+  sendSpeakerInviteEmails,
+  type SpeakerInviteRow,
 } from "@/lib/email";
 import type { Saver } from "@/lib/founder-emails";
 import type { Funding } from "@/lib/funding";
@@ -123,6 +125,17 @@ export async function GET(request: Request) {
   if (dueDeadlines?.length) {
     const ok = await sendFundingDeadlinesEmail(dueDeadlines as Funding[]);
     results.funding_deadlines = { sent: ok ? dueDeadlines.length : 0, failed: ok ? 0 : dueDeadlines.length };
+  }
+
+  // Speaker invites: any a partner's big list didn't finish sending, then one reminder 3 days on.
+  for (const [rpc, reminder, key] of [
+    ["claim_speaker_invite_emails", false, "speaker_invites"],
+    ["claim_speaker_invite_reminders", true, "speaker_invite_reminders"],
+  ] as const) {
+    const args = reminder ? { p_token: secret, p_limit: 40 } : { p_token: secret, p_event_slug: null, p_limit: 40 };
+    const { data: due, error: inviteError } = await supabase.rpc(rpc, args);
+    if (inviteError) console.error(`${rpc} failed`, inviteError.code, inviteError.message);
+    if (due?.length) results[key] = await sendSpeakerInviteEmails(due as SpeakerInviteRow[], reminder);
   }
 
   console.log("Reminders run", JSON.stringify(results));

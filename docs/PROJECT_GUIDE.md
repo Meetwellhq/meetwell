@@ -212,6 +212,15 @@ every migration.
   `src/lib/partners/actions.ts`, the shared `EventCard` with `who="team"`); deleting and hiding stay admin-only. Speakers
   are added straight away (Rasheed's choice, 27 Oct 2026). Partners never see a speaker's email: the server gets it from
   `claim_event_speaker_email` (cron secret), once per speaker per event (`event_speaker_emails`, kept after removal).
+- **Speaker invites (bulk)** (`20261217000000_event_speaker_invites.sql`, `src/lib/speaker-invites.ts`, `SpeakerInvites` in
+  `src/components/admin/events-admin.tsx`, actions in `src/lib/partners/actions.ts`): on each event card (Partner tab and
+  admin), paste names and emails or upload a CSV, up to 1,000 per event. People with a card are added at once and get the
+  "you're a speaker" email; the rest get a single-use `SPK-…` access code by email (`speakerInviteEmail`, sent ~40 s per
+  click, "Send the rest" for more, leftovers by the daily reminders job, one reminder after 3 days until the event).
+  Signing up with that code or the invited email links the account (`auth_users_a_speaker_invite` trigger, runs before the
+  access-code check and supplies the code when it was left out); making the card adds them to the event
+  (`profiles_join_speaker_invites`). Teams see their list's status (waiting, invited, no card yet, joined) and can cancel
+  an invite (its code stops working).
 - **Funding radar**: `/admin/funding` (`20261216000000_funding_radar.sql`, `src/lib/funding.ts`,
   `src/components/admin/funding-board.tsx`). Grants, accelerators, competitions, fellowships, investors and loans that
   suit Meetwell: amount, equity-free or not, deadline (empty = rolling), Nigeria/Africa/Global, who can apply, why it fits,
