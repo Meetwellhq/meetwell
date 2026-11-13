@@ -2630,3 +2630,29 @@ describe("speaker card photos", () => {
     expect(await as(TEAM, "select photo_url from public.event_speaker_cards_list('card-summit') where slug = 'no-email-speaker'")).toEqual([{ photo_url: null }]);
   });
 });
+
+describe("deleting a partner", () => {
+  it("removes a partner with no history, with its events and cards, and keeps people's accounts", async () => {
+    const [{ id }] = await as<{ id: string }>(ALICE, "select public.admin_create_partner('Gone Partner', 'gone-partner') as id");
+    await as(ALICE, "select public.admin_create_event('gone-partner', 'gone-summit', 'Gone Summit', '2099-01-10')");
+    await as(ALICE, `select * from public.add_speaker_cards('gone-summit', '[{"name":"Card Person","email":"card@gone.test"}]'::jsonb, true)`);
+    await as(ALICE, "select public.admin_add_partner_member($1, 'a@test')", [id]);
+    expect((await db.query("select 1 from public.partner_members where partner_id = $1", [id])).rows).toHaveLength(1);
+
+    await expect(as(BOB, "select public.admin_delete_partner($1)", [id])).rejects.toThrow(/Not allowed/);
+    await expect(as(null, "select public.admin_delete_partner($1)", [id])).rejects.toThrow(/permission denied/);
+    await as(ALICE, "select public.admin_delete_partner($1)", [id]);
+
+    expect((await db.query("select 1 from public.partners where id = $1", [id])).rows).toEqual([]);
+    expect((await db.query("select 1 from public.partner_events where slug = 'gone-summit'")).rows).toEqual([]);
+    expect((await db.query("select 1 from public.speaker_cards where email = 'card@gone.test'")).rows).toEqual([]);
+    expect((await db.query("select 1 from public.partner_members where partner_id = $1", [id])).rows).toEqual([]);
+    expect((await db.query("select 1 from auth.users where id = $1", [ALICE])).rows).toHaveLength(1);
+  });
+
+  it("refuses once money has come through the partner", async () => {
+    const [{ id }] = (await db.query<{ id: string }>("select partner_id as id from public.partner_ledger limit 1")).rows;
+    await expect(as(ALICE, "select public.admin_delete_partner($1)", [id])).rejects.toThrow(/history/);
+    expect((await db.query("select 1 from public.partners where id = $1", [id])).rows).toHaveLength(1);
+  });
+});

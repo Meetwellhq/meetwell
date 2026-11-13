@@ -388,6 +388,23 @@ export async function adminSetPartnerActive(partnerId: string, active: boolean):
   return {};
 }
 
+/**
+ * Delete a partner for good, with its link, team access, event pages and speaker
+ * cards. Refused once money or conversations came through it (pause it instead).
+ */
+export async function adminDeletePartner(partnerId: string): Promise<{ error?: string }> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const { error } = await (await createClient()).rpc("admin_delete_partner", { p_partner: partnerId });
+  if (error) {
+    if (error.message.includes("history")) {
+      return { error: "This partner has earnings or conversations on record, so it can't be deleted. Pause its link instead." };
+    }
+    return { error: error.code === "42501" ? "You don't have access to this." : "Couldn't delete the partner." };
+  }
+  revalidatePath("/admin", "layout");
+  return {};
+}
+
 /** Add an event page for a partner. Its page is /e/<slug>. */
 export async function adminCreateEvent(partnerSlugValue: string, _: AdminFormState, formData: FormData): Promise<AdminFormState> {
   if (!(await getCurrentUser())) return { error: "Please log in again." };

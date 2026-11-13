@@ -1,7 +1,8 @@
 "use client";
 
-import { Check, ChevronRight, Copy } from "lucide-react";
+import { Check, ChevronRight, Copy, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/misc";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import {
   adminAddPartnerMember,
   adminCreatePartner,
+  adminDeletePartner,
   adminRecordPartnerPayout,
   adminSetPartnerActive,
 } from "@/lib/admin/actions";
@@ -118,6 +120,41 @@ function PauseButton({ partner }: { partner: PartnerRow }) {
   );
 }
 
+/** Delete the partner for good, after a confirm that says what goes with it. Back to the list after. */
+function DeletePartner({ partner }: { partner: PartnerRow }) {
+  const toast = useToast();
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      loading={pending}
+      icon={<Trash2 className="size-4" />}
+      className="text-danger! hover:text-danger!"
+      onClick={() => {
+        const joined = partner.signups
+          ? ` The ${partner.signups} ${partner.signups === 1 ? "person who joined" : "people who joined"} through it keep their accounts and cards.`
+          : "";
+        if (
+          !confirm(
+            `Delete ${partner.name} for good? Its invite link stops working, its team loses the Partner tab, and its event pages and speaker cards are deleted.${joined} This can't be undone.`,
+          )
+        )
+          return;
+        start(async () => {
+          const { error } = await adminDeletePartner(partner.id);
+          if (error) return toast(error, "error");
+          toast(`${partner.name} is deleted.`);
+          router.push("/admin/partners");
+        });
+      }}
+    >
+      Delete partner
+    </Button>
+  );
+}
+
 /** All partners, one row each. Click a row to open that partner's page. */
 export function PartnerList({ rows }: { rows: PartnerRow[] }) {
   if (rows.length === 0) {
@@ -166,7 +203,10 @@ export function PartnerSummary({ partner, site }: { partner: PartnerRow; site: s
     <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-medium text-ink">Invite link</p>
-        <PauseButton partner={partner} />
+        <div className="flex flex-wrap items-center gap-1">
+          <PauseButton partner={partner} />
+          <DeletePartner partner={partner} />
+        </div>
       </div>
       <CopyLink link={partnerLink(site, partner.slug)} />
       <dl className="grid grid-cols-3 gap-3 text-sm">

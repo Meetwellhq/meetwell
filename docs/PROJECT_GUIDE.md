@@ -204,6 +204,9 @@ every migration.
   taken from Meetwell's 20% (mentors keep 80%); a refund takes it back (`partner_ledger`). Ready to pay after 7 days.
   Rasheed pays partners by bank transfer and records it on the partner's admin page (`admin_record_partner_payout`).
   Admin revenue (`admin_metrics`) leaves the partner's share out. Partners see totals only (`my_partner_money`).
+  "Delete partner" on its admin page (`admin_delete_partner`, `20261222000000_delete_partner.sql`) removes it with its link,
+  team access, sign-up record, events, speaker cards and invites; accounts stay. Refused once it has any `partner_ledger`
+  row or a payment or conversation from one of its event pages (pause the link instead).
   Step 3, event pages (`20261128000000_partner_events.sql`): public `/e/<slug>` with every speaker's card, an event QR
   (slides) and per-speaker QR (badges) from `/e/<slug>/qr[?speaker=]`. Speaker links carry `?event=<slug>` to the card,
   `/subscribe/<card>?event=` and `start_subscription_purchase(p_slug, p_event)`, which stores `payments.event_id` only if
