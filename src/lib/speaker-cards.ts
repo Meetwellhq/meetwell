@@ -133,6 +133,55 @@ export function webUrl(raw: string, httpsOnly = false): string | null {
   }
 }
 
+/**
+ * The file id in a Google Drive link: ".../file/d/<id>/view", "open?id=<id>",
+ * "uc?id=<id>", "thumbnail?id=<id>". Null for anything else.
+ */
+export function driveFileId(raw: string): string | null {
+  try {
+    const url = new URL(raw.trim());
+    if (!/^(drive|docs)\.google\.com$/.test(url.hostname)) return null;
+    const id = url.pathname.match(/\/file\/d\/([A-Za-z0-9_-]{10,})/)?.[1] ?? url.searchParams.get("id");
+    return id && /^[A-Za-z0-9_-]{10,100}$/.test(id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A Drive file as an image link that shows straight away (while Meetwell copies it). */
+export const driveImageUrl = (id: string) => `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
+
+export const isDrivePhoto = (url: string | null) => !!url && /^https:\/\/drive\.google\.com\/thumbnail\?id=/.test(url);
+
+/** "Ada Obi.JPG", "ada_obi.png", "ADA-OBI.jpeg" → "ada obi"; used to match photo files to speakers. */
+export const photoKey = (s: string) =>
+  s.replace(/\.[a-z0-9]{2,5}$/i, "").toLowerCase().replace(/[^a-z0-9@.]+/g, " ").trim();
+
+/**
+ * Matches photo files to speakers by file name: their full name, or their email
+ * (or the part before the @). Returns card index → file index, plus the files
+ * that matched nobody.
+ */
+export function matchPhotos(fileNames: string[], cards: Pick<SpeakerCardInput, "name" | "email">[]) {
+  const byKey = new Map<string, number>();
+  cards.forEach((c, i) => {
+    byKey.set(photoKey(c.name), i);
+    if (c.email) {
+      byKey.set(c.email, i);
+      byKey.set(photoKey(c.email.split("@")[0]), i);
+    }
+  });
+  const matches = new Map<number, number>();
+  const unmatched: string[] = [];
+  fileNames.forEach((f, fi) => {
+    const key = photoKey(f);
+    const card = byKey.get(key) ?? byKey.get(key.replace(/ /g, ""));
+    if (card === undefined || matches.has(card)) unmatched.push(f);
+    else matches.set(card, fi);
+  });
+  return { matches, unmatched };
+}
+
 /** Phone numbers as written, if they look like one (7 to 20 digits, +, spaces, brackets, dashes). */
 export const phoneValue = (raw: string) => {
   const v = raw.trim().replace(/[.]/g, " ");
@@ -201,7 +250,8 @@ export function parseSpeakerSheet(text: string): { cards: SpeakerCardInput[]; pr
     }
     const photo = get("photo");
     if (photo) {
-      card.photo = webUrl(photo, true);
+      const drive = driveFileId(photo);
+      card.photo = drive ? driveImageUrl(drive) : webUrl(photo, true);
       if (!card.photo) problems.push(`${name}: the photo link "${photo}" doesn't work, so it was left out.`);
     }
     cards.push(card);

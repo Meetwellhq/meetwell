@@ -1,4 +1,4 @@
-import { isAvatarStorageUrl } from "./profiles/avatar";
+import { isAvatarStorageUrl, isSpeakerPhotoUrl } from "./profiles/avatar";
 import type { PublicProfile } from "./profiles/types";
 
 export type VCardInput = Pick<
@@ -99,7 +99,7 @@ export function vCardFileName(fullName: string): string {
  */
 export async function fetchVCardPhoto(url: string | null): Promise<VCardInput["photo"]> {
   // Only fetch from our own storage bucket, never an arbitrary host (SSRF).
-  if (!url || !isAvatarStorageUrl(url)) return null;
+  if (!url || !(isAvatarStorageUrl(url) || isSpeakerPhotoUrl(url))) return null;
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(3000), redirect: "error" });
     if (!res.ok) return null;

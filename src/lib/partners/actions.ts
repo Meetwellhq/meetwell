@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { sendEventSpeakerEmail, sendSpeakerCardEmails, sendSpeakerInviteEmails, type SpeakerCardRow, type SpeakerInviteRow } from "../email";
 import { eventDates, linkName } from "../events";
-import { MAX_SPEAKER_CARDS, type SpeakerCardInput } from "../speaker-cards";
+import { isDrivePhoto, MAX_SPEAKER_CARDS, type SpeakerCardInput } from "../speaker-cards";
+import { copyDrivePhoto } from "../speaker-photos";
 import { inviteSummary, MAX_SPEAKER_INVITES, parseSpeakerList, type InviteOutcome } from "../speaker-invites";
 import { createClient, getCurrentUser } from "../supabase/server";
 
@@ -283,6 +284,10 @@ export async function addSpeakerCards(eventSlug: string, _: PartnerFormState, fo
   const n = (o: CardRow["outcome"]) => rows.filter((r) => r.outcome === o).length;
   for (const r of rows) if (r.outcome === "member_added" && r.slug) await emailAddedSpeaker(supabase, eventSlug, r.slug);
 
+  // Google Drive photos: copy them into Meetwell (one row came back per card, in order).
+  const drive = rows.flatMap((r, i) => (r.outcome === "created" && r.slug && isDrivePhoto(cards[i]?.photo) ? [{ slug: r.slug, url: cards[i].photo! }] : []));
+  const photos = await copyPhotos(supabase, eventSlug, drive, 20_000);
+
   const sending = await sendWaitingCards(supabase, eventSlug);
   refresh(eventSlug);
   const people = (x: number) => `${x} ${x === 1 ? "speaker" : "speakers"}`;
@@ -292,7 +297,49 @@ export async function addSpeakerCards(eventSlug: string, _: PartnerFormState, fo
     n("duplicate") && `${people(n("duplicate"))} already had a card on this event`,
     n("bad") && `${people(n("bad"))} couldn't be added (check their links)`,
   ].filter(Boolean).join(" · ");
-  return { ok: [summary, sendNote(sending)].filter(Boolean).join(". ") + "." };
+  return { ok: [summary, photoNote(photos), sendNote(sending)].filter(Boolean).join(". ") + "." };
+}
+
+/** Copies Drive photos for up to `budgetMs`, saving each copy on its card. */
+async function copyPhotos(supabase: Awaited<ReturnType<typeof createClient>>, eventSlug: string, items: { slug: string; url: string }[], budgetMs: number) {
+  const result = { copied: 0, failed: 0, left: 0 };
+  const until = Date.now() + budgetMs;
+  for (const [i, item] of items.entries()) {
+    if (Date.now() > until) {
+      result.left = items.length - i;
+      break;
+    }
+    const url = await copyDrivePhoto(supabase, eventSlug, item.url);
+    // Not copied (not shared publicly, not an image…): clear it, so the card shows initials, not a broken picture.
+    const { error } = await supabase.rpc("set_speaker_card_photo", { p_event_slug: eventSlug, p_slug: item.slug, p_url: url });
+    if (url && !error) result.copied++;
+    else result.failed++;
+  }
+  return result;
+}
+
+const photoNote = (r: { copied: number; failed: number; left: number }) =>
+  [
+    r.copied > 0 && `${r.copied} ${r.copied === 1 ? "photo" : "photos"} copied from Google Drive`,
+    r.failed > 0 && `${r.failed} ${r.failed === 1 ? "photo" : "photos"} couldn't be copied from Google Drive, so those speakers show their initials (share the photos with "Anyone with the link" and upload again, or add photo files)`,
+    r.left > 0 && `${r.left} more to copy: press "Copy Drive photos"`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+/** The Google Drive photos an upload didn't get to (or couldn't copy), tried again. */
+export async function copySpeakerDrivePhotos(eventSlug: string): Promise<PartnerFormState> {
+  if (!(await getCurrentUser())) return { error: "Please log in again." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("event_speaker_cards_list", { p_event_slug: eventSlug });
+  if (error) return { error: "You can't change this event." };
+  const items = ((data ?? []) as { slug: string; photo_url: string | null }[])
+    .filter((c) => isDrivePhoto(c.photo_url))
+    .map((c) => ({ slug: c.slug, url: c.photo_url! }));
+  if (items.length === 0) return { ok: "Every photo is already copied." };
+  const r = await copyPhotos(supabase, eventSlug, items, 45_000);
+  refresh(eventSlug);
+  return { ok: photoNote(r) + "." };
 }
 
 export async function sendWaitingSpeakerCards(eventSlug: string): Promise<PartnerFormState> {

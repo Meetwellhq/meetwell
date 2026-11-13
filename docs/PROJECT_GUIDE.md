@@ -229,6 +229,12 @@ every migration.
   is added with their own card instead. Each card with an email gets `speakerCardEmail` (see card, claim with a single-use
   code, remove in one click). Claiming = signing up with that code (it is a speaker invite marked as already emailed):
   the card's details fill the new profile's empty fields and the speaker card is deleted. Listed in the Privacy notice.
+  Photos (`20261219000000_speaker_photos.sql`, public bucket `speaker-photos`, one folder per event link name, writable
+  only by that event's team via `can_manage_event_folder`): Google Drive links in the Photo link column are copied by the
+  server as the partner (`copyDrivePhoto` in `src/lib/speaker-photos.ts`: Drive only, images only, 512px JPEG with sharp;
+  ~20 s per upload, then "Copy Drive photos"; one that can't be copied is cleared so initials show), or photo files picked
+  on the upload screen, matched to speakers by file name (`matchPhotos`), resized and uploaded from the browser.
+  `set_speaker_card_photo` only accepts that event's folder. These photos are included in the speaker card's vCard.
 - **Funding radar**: `/admin/funding` (`20261216000000_funding_radar.sql`, `src/lib/funding.ts`,
   `src/components/admin/funding-board.tsx`). Grants, accelerators, competitions, fellowships, investors and loans that
   suit Meetwell: amount, equity-free or not, deadline (empty = rolling), Nigeria/Africa/Global, who can apply, why it fits,

@@ -1,7 +1,9 @@
 "use client";
 
-import { Download, ExternalLink, Eye, EyeOff, FileSpreadsheet, Pencil, Send, Trash2, Upload, X } from "lucide-react";
-import { useActionState, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { Download, ExternalLink, Eye, EyeOff, FileSpreadsheet, ImagePlus, Pencil, Send, Trash2, Upload, X } from "lucide-react";
+import { startTransition, useActionState, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { resizeToSquareJpeg } from "@/components/editor/avatar-upload";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
@@ -19,6 +21,7 @@ import { cn } from "@/lib/cn";
 import {
   addSpeakerCards,
   cancelSpeakerInvite,
+  copySpeakerDrivePhotos,
   removeSpeakerCard,
   sendWaitingSpeakerCards,
   inviteEventSpeakers,
@@ -28,7 +31,8 @@ import {
   partnerUpdateEvent,
   sendWaitingSpeakerInvites,
 } from "@/lib/partners/actions";
-import { MAX_SPEAKER_CARDS, parseSpeakerSheet, SPEAKER_SHEET_TEMPLATE, type SpeakerCardInput } from "@/lib/speaker-cards";
+import { isDrivePhoto, matchPhotos, MAX_SPEAKER_CARDS, parseSpeakerSheet, SPEAKER_SHEET_TEMPLATE, type SpeakerCardInput } from "@/lib/speaker-cards";
+import { createClient } from "@/lib/supabase/client";
 import { INVITE_STATUS, MAX_SPEAKER_INVITES, parseSpeakerList, type SpeakerInvite } from "@/lib/speaker-invites";
 
 /**
@@ -68,6 +72,7 @@ export type SpeakerCardSummary = {
   email: string | null;
   show_phone: boolean;
   emailed_at: string | null;
+  photo_url?: string | null;
 };
 
 /**
@@ -503,8 +508,44 @@ function SpeakerCardsUpload({ eventSlug, cards }: { eventSlug: string; cards: Sp
   const [consent, setConsent] = useState(false);
   const [sending, startSending] = useTransition();
   const [sendNote, setSendNote] = useState<{ ok?: string; error?: string }>({});
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [uploading, setUploading] = useState("");
+  const [copying, startCopying] = useTransition();
   const toast = useToast();
   const waiting = cards.filter((c) => c.email && !c.emailed_at).length;
+  const drivePending = cards.filter((c) => isDrivePhoto(c.photo_url ?? null)).length;
+  const matched = sheet ? matchPhotos(photos.map((f) => f.name), sheet.cards) : null;
+
+  /** Uploads the matched photo files into Meetwell first, then sends the speakers with their photo links. */
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!sheet || !matched) return;
+    const list = sheet.cards.map((c) => ({ ...c }));
+    if (matched.matches.size > 0) {
+      const supabase = createClient();
+      let done = 0;
+      let failed = 0;
+      for (const [cardIndex, fileIndex] of matched.matches) {
+        setUploading(`Uploading photos: ${done + 1} of ${matched.matches.size}`);
+        try {
+          const blob = await resizeToSquareJpeg(photos[fileIndex]);
+          const path = `${eventSlug}/${crypto.randomUUID()}.jpg`;
+          const { error } = await supabase.storage.from("speaker-photos").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
+          if (error) throw error;
+          list[cardIndex].photo = supabase.storage.from("speaker-photos").getPublicUrl(path).data.publicUrl;
+        } catch {
+          failed++;
+        }
+        done++;
+      }
+      setUploading("");
+      if (failed) toast(`${failed} ${failed === 1 ? "photo" : "photos"} couldn't be uploaded. Those speakers are added without one.`, "error");
+    }
+    const fd = new FormData();
+    fd.set("cards", JSON.stringify(list));
+    fd.set("consent", consent ? "yes" : "");
+    startTransition(() => action(fd));
+  }
 
   // Clear the upload once it has gone in (adjusting state while rendering, not in an effect).
   const [handled, setHandled] = useState(state);
@@ -513,6 +554,7 @@ function SpeakerCardsUpload({ eventSlug, cards }: { eventSlug: string; cards: Sp
     if (state.ok) {
       setSheet(null);
       setConsent(false);
+      setPhotos([]);
     }
   }
 
@@ -525,7 +567,9 @@ function SpeakerCardsUpload({ eventSlug, cards }: { eventSlug: string; cards: Sp
         <p className="mt-0.5 text-xs text-ink-2">
           Upload your speakers&apos; details and each one gets a card on the event page straight away: Save contact, their social
           media links and a QR code for their badge. No account needed. Fill in the template in Excel or Google Sheets and save it
-          as CSV. Phone and WhatsApp numbers only show for speakers marked &quot;Yes&quot; under Show phone.
+          as CSV. Phone and WhatsApp numbers only show for speakers marked &quot;Yes&quot; under Show phone. For photos, paste
+          Google Drive links (shared with &quot;Anyone with the link&quot;) in the Photo link column, or add the photo files below,
+          each named after the speaker, like &quot;Ada Obi.jpg&quot;.
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -562,17 +606,47 @@ function SpeakerCardsUpload({ eventSlug, cards }: { eventSlug: string; cards: Sp
       {sheetError && <p className="text-xs text-danger">{sheetError}</p>}
 
       {sheet && (
-        <form action={action} className="flex flex-col gap-3">
-          <input type="hidden" name="cards" value={JSON.stringify(sheet.cards)} />
+        <form onSubmit={submit} className="flex flex-col gap-3">
           <p className="text-sm text-ink">
             <span className="font-medium">{sheet.file}</span>: {sheet.cards.length} {sheet.cards.length === 1 ? "speaker" : "speakers"}
             {", "}
-            {sheet.cards.filter((c) => c.show_phone && (c.phone || c.whatsapp)).length} with phone numbers shown
+            {sheet.cards.filter((c) => c.show_phone && (c.phone || c.whatsapp)).length} with phone numbers shown,{" "}
+            {sheet.cards.filter((c, i) => c.photo || matched?.matches.has(i)).length} with photos
           </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border-strong px-3 py-1.5 text-sm text-ink hover:bg-surface-2">
+              <ImagePlus className="size-4" aria-hidden />
+              {photos.length ? `${photos.length} photo files chosen` : "Add photo files"}
+              <input
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files ?? []).filter((f) => f.size <= 10 * 1024 * 1024);
+                  e.target.value = "";
+                  setPhotos(files);
+                }}
+              />
+            </label>
+            {matched && photos.length > 0 && (
+              <span className="text-xs text-ink-2">
+                {matched.matches.size} matched to a speaker
+                {matched.unmatched.length > 0 && <span className="text-warning"> · not matched: {matched.unmatched.slice(0, 5).join(", ")}{matched.unmatched.length > 5 ? "…" : ""}</span>}
+              </span>
+            )}
+          </div>
           <ul className="max-h-56 divide-y divide-border overflow-y-auto rounded-lg border border-border">
-            {sheet.cards.map((c) => (
+            {sheet.cards.map((c, i) => (
               <li key={`${c.email ?? ""}-${c.name}`} className="flex flex-col px-3 py-2">
-                <span className="truncate text-sm text-ink">{c.name}</span>
+                <span className="truncate text-sm text-ink">
+                  {c.name}
+                  {matched?.matches.has(i) ? (
+                    <span className="ml-2 text-xs text-success">photo file</span>
+                  ) : c.photo ? (
+                    <span className="ml-2 text-xs text-success">{isDrivePhoto(c.photo) ? "Drive photo" : "photo link"}</span>
+                  ) : null}
+                </span>
                 <span className="truncate text-xs text-ink-3">
                   {[[c.title, c.organization].filter(Boolean).join(", "), c.email, c.show_phone && (c.phone || c.whatsapp) ? "phone shown" : null,
                     [c.linkedin && "LinkedIn", c.x && "X", c.instagram && "Instagram", c.facebook && "Facebook", c.tiktok && "TikTok"].filter(Boolean).join(", ")]
@@ -601,14 +675,15 @@ function SpeakerCardsUpload({ eventSlug, cards }: { eventSlug: string; cards: Sp
             </span>
           </label>
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="submit" size="sm" icon={<Send className="size-4" />} loading={pending} disabled={!consent || sheet.cards.length > MAX_SPEAKER_CARDS}>
+            <Button type="submit" size="sm" icon={<Send className="size-4" />} loading={pending || !!uploading} disabled={!consent || sheet.cards.length > MAX_SPEAKER_CARDS}>
               Add {sheet.cards.length} {sheet.cards.length === 1 ? "speaker" : "speakers"}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={() => setSheet(null)}>
               Cancel
             </Button>
           </div>
-          {pending && <p className="text-xs text-ink-2">Adding speakers and emailing them. A long list can take up to a minute.</p>}
+          {uploading && <p className="text-xs text-ink-2">{uploading}</p>}
+          {pending && <p className="text-xs text-ink-2">Adding speakers, copying Drive photos and emailing them. A long list can take up to a minute.</p>}
         </form>
       )}
       {(state.error || state.ok) && <p className={cn("text-xs", state.error ? "text-danger" : "text-success")}>{state.error ?? state.ok}</p>}
@@ -619,16 +694,28 @@ function SpeakerCardsUpload({ eventSlug, cards }: { eventSlug: string; cards: Sp
             <p className="text-xs text-ink-2">
               {cards.length} speaker {cards.length === 1 ? "card" : "cards"} on the event page
             </p>
-            {waiting > 0 && (
-              <Button
-                size="sm"
-                variant="secondary"
-                loading={sending}
-                onClick={() => startSending(async () => setSendNote(await sendWaitingSpeakerCards(eventSlug)))}
-              >
-                Email the rest ({waiting})
-              </Button>
-            )}
+            <div className="flex flex-wrap gap-2">
+              {drivePending > 0 && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  loading={copying}
+                  onClick={() => startCopying(async () => setSendNote(await copySpeakerDrivePhotos(eventSlug)))}
+                >
+                  Copy Drive photos ({drivePending})
+                </Button>
+              )}
+              {waiting > 0 && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  loading={sending}
+                  onClick={() => startSending(async () => setSendNote(await sendWaitingSpeakerCards(eventSlug)))}
+                >
+                  Email the rest ({waiting})
+                </Button>
+              )}
+            </div>
           </div>
           {(sendNote.error || sendNote.ok) && (
             <p className={cn("text-xs", sendNote.error ? "text-danger" : "text-success")}>{sendNote.error ?? sendNote.ok}</p>
@@ -651,6 +738,7 @@ function SpeakerCardRow({ eventSlug, card: c, onRemoved }: { eventSlug: string; 
   if (gone) return null;
   return (
     <li className="flex items-center gap-2 px-3 py-2">
+      <Avatar name={c.full_name} src={c.photo_url ?? null} className="size-8 shrink-0 text-xs" />
       <span className="flex min-w-0 flex-1 flex-col">
         <a href={`/s/${c.slug}`} target="_blank" rel="noopener" className="truncate text-sm text-ink hover:underline">
           {c.full_name}

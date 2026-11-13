@@ -2580,3 +2580,31 @@ describe("speaker cards", () => {
     expect(speakers).toEqual(["femi-a", "partner-speaker"]);
   });
 });
+
+describe("speaker card photos", () => {
+  const TEAM = "5c5c5c5c-5c5c-5c5c-5c5c-5c5c5c5c5c5c"; // on ThinkUX's team; card-summit is theirs ("speaker cards")
+  const URL = "https://proj.supabase.co/storage/v1/object/public/speaker-photos/card-summit/abc-123.jpg";
+
+  it("lets only the event's team put photos in its folder", async () => {
+    // Supabase grants these itself; RLS policies decide who may actually write.
+    await db.exec("grant select, insert, delete on storage.objects to authenticated");
+    await as(TEAM, "insert into storage.objects (bucket_id, name) values ('speaker-photos', 'card-summit/abc-123.jpg')");
+    await expect(as(BOB, "insert into storage.objects (bucket_id, name) values ('speaker-photos', 'card-summit/x.jpg')")).rejects.toThrow(/row-level security/);
+    await expect(as(TEAM, "insert into storage.objects (bucket_id, name) values ('speaker-photos', 'tc-summit/x.jpg')")).rejects.toThrow(/row-level security/);
+    await expect(as(null, "insert into storage.objects (bucket_id, name) values ('speaker-photos', 'card-summit/x.jpg')")).rejects.toThrow(/permission denied|row-level security/);
+  });
+
+  it("sets a card's photo only to one in that event's folder", async () => {
+    await expect(as(BOB, "select public.set_speaker_card_photo('card-summit', 'no-email-speaker', $1)", [URL])).rejects.toThrow(/Not allowed/);
+    await expect(
+      as(TEAM, "select public.set_speaker_card_photo('card-summit', 'no-email-speaker', 'https://evil.test/x.jpg')"),
+    ).rejects.toThrow(/folder/);
+    await expect(
+      as(TEAM, "select public.set_speaker_card_photo('card-summit', 'no-email-speaker', $1)", [URL.replace("card-summit", "tc-summit")]),
+    ).rejects.toThrow(/folder/);
+    await as(TEAM, "select public.set_speaker_card_photo('card-summit', 'no-email-speaker', $1)", [URL]);
+    expect(await as(TEAM, "select photo_url from public.event_speaker_cards_list('card-summit') where slug = 'no-email-speaker'")).toEqual([{ photo_url: URL }]);
+    await as(TEAM, "select public.set_speaker_card_photo('card-summit', 'no-email-speaker', null)");
+    expect(await as(TEAM, "select photo_url from public.event_speaker_cards_list('card-summit') where slug = 'no-email-speaker'")).toEqual([{ photo_url: null }]);
+  });
+});

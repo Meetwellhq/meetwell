@@ -60,3 +60,32 @@ describe("parseSpeakerSheet", () => {
     expect(parseSpeakerSheet("Email\nada@x.com").missingName).toBe(true);
   });
 });
+
+describe("photos", () => {
+  it("finds the file in Google Drive links", async () => {
+    const { driveFileId } = await import("@/lib/speaker-cards");
+    expect(driveFileId("https://drive.google.com/file/d/1AbCdEfGhIjKlMnOp/view?usp=sharing")).toBe("1AbCdEfGhIjKlMnOp");
+    expect(driveFileId("https://drive.google.com/open?id=1AbCdEfGhIjKlMnOp")).toBe("1AbCdEfGhIjKlMnOp");
+    expect(driveFileId("https://drive.google.com/uc?export=view&id=1AbCdEfGhIjKlMnOp")).toBe("1AbCdEfGhIjKlMnOp");
+    expect(driveFileId("https://evil.test/file/d/1AbCdEfGhIjKlMnOp/view")).toBeNull();
+    expect(driveFileId("not a link")).toBeNull();
+  });
+
+  it("turns a Drive link in the sheet into an image link", () => {
+    const { cards, problems } = parseSpeakerSheet("Name,Photo link\nAda,https://drive.google.com/file/d/1AbCdEfGhIjKlMnOp/view?usp=sharing");
+    expect(problems).toEqual([]);
+    expect(cards[0].photo).toBe("https://drive.google.com/thumbnail?id=1AbCdEfGhIjKlMnOp&sz=w1000");
+  });
+
+  it("matches photo files to speakers by name or email", async () => {
+    const { matchPhotos } = await import("@/lib/speaker-cards");
+    const cards = [
+      { name: "Ada Obi", email: "ada@x.com" },
+      { name: "Tunde Bello", email: "tbello@x.com" },
+      { name: "Kemi Adeyemi", email: null },
+    ];
+    const { matches, unmatched } = matchPhotos(["ADA_OBI.JPG", "tbello.png", "kemi-adeyemi.webp", "random.jpg", "Ada Obi (2).jpg"], cards);
+    expect([...matches.entries()]).toEqual([[0, 0], [1, 1], [2, 2]]);
+    expect(unmatched).toEqual(["random.jpg", "Ada Obi (2).jpg"]);
+  });
+});

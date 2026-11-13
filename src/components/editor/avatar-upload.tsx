@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 const MAX_INPUT_BYTES = 10 * 1024 * 1024;
 
 /** Center-crop to a square and re-encode as a 512px JPEG to keep uploads small. */
-async function resizeToSquareJpeg(file: File, size = 512): Promise<Blob> {
+export async function resizeToSquareJpeg(file: File, size = 512): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const side = Math.min(bitmap.width, bitmap.height);
   const canvas = document.createElement("canvas");
